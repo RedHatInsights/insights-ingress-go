@@ -1,14 +1,19 @@
 package upload
 
 import (
+	"errors"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
+
+var contentTypePat = regexp.MustCompile(`application/vnd\.redhat\.(\w+)\.(\w+)`)
 
 func store(file io.Reader) {
 	sess := session.Must(session.NewSession())
@@ -25,6 +30,18 @@ func store(file io.Reader) {
 	log.Printf("Successfully uploaded to %s.", result.Location)
 }
 
+func validate(header *multipart.FileHeader) error {
+	contentType := header.Header.Get("Content-Type")
+	// look the content type up in a static map
+	// else parse it
+	m := contentTypePat.FindStringSubmatch(contentType)
+	if m == nil {
+		return errors.New("Failed to match on Content-Type: " + contentType)
+	}
+	log.Printf("service = %s, category = %s", m[1], m[2])
+	return nil
+}
+
 // Handle accepts incoming payloads
 func Handle(w http.ResponseWriter, r *http.Request) {
 	// look for `file` part
@@ -35,6 +52,12 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("%v, %v", file, fileHeader)
+
+	if validationErr := validate(fileHeader); validationErr != nil {
+		log.Printf("Did not validate: %v", validationErr)
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+		return
+	}
 
 	// look for the metadata part
 	metadata, metadataHeader, err := r.FormFile("metadata")
