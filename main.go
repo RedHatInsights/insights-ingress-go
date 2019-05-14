@@ -5,6 +5,7 @@ import (
 
 	"cloud.redhat.com/ingress/upload"
 
+	"github.com/RedHatInsights/platform-go-middlewares/identity"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -18,7 +19,13 @@ func LubDub(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID, middleware.RealIP, middleware.Logger, middleware.Recoverer)
+	r.Use(
+		middleware.RequestID,
+		middleware.RealIP,
+		middleware.Logger,
+		middleware.Recoverer,
+		identity.Identity,
+	)
 	r.Get("/", LubDub)
 	r.Post("/upload", upload.Handle)
 	r.Handle("/metrics", promhttp.Handler())
