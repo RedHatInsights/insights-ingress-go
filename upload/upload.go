@@ -51,8 +51,6 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("%v, %v", file, fileHeader)
-
 	if validationErr := validate(fileHeader); validationErr != nil {
 		log.Printf("Did not validate: %v", validationErr)
 		w.WriteHeader(http.StatusUnsupportedMediaType)
@@ -63,8 +61,9 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	metadata, metadataHeader, err := r.FormFile("metadata")
 	if err != nil {
 		log.Printf("Did not find `metadata` part: %v", err)
+	} else {
+		log.Printf("%v, %v", metadata, metadataHeader)
 	}
-	log.Printf("%v, %v", metadata, metadataHeader)
 	// copy to s3
 	go store(file)
 	// broadcast on kafka topic
