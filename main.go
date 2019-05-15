@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func LubDub(w http.ResponseWriter, r *http.Request) {
+func lubDub(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("lubdub"))
@@ -24,10 +24,12 @@ func main() {
 		middleware.RealIP,
 		middleware.Logger,
 		middleware.Recoverer,
+	)
+	r.Use(
 		identity.Identity,
 	)
-	r.Get("/", LubDub)
-	r.Post("/upload", upload.Handle)
+	r.Get("/", lubDub)
+	r.Post("/upload", upload.NewHandler(upload.NewS3Stager("jjaggars-test")))
 	r.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":3000", r)
 }
