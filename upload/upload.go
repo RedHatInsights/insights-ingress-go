@@ -48,6 +48,8 @@ func NewHandler(stager Stager) http.HandlerFunc {
 		} else {
 			log.Printf("%v, %v", metadata, metadataHeader)
 		}
+
+		log.Printf("%v\n", r)
 		// copy to s3
 		go stager.Stage(file, middleware.GetReqID(r.Context()))
 		// broadcast on kafka topic

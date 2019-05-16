@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"cloud.redhat.com/ingress/config"
 	"cloud.redhat.com/ingress/upload"
 
 	"github.com/RedHatInsights/platform-go-middlewares/identity"
@@ -18,6 +19,7 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	cfg := config.Get()
 	r := chi.NewRouter()
 	r.Use(
 		middleware.RequestID,
@@ -25,9 +27,11 @@ func main() {
 		middleware.Logger,
 		middleware.Recoverer,
 	)
-	r.Use(
-		identity.Identity,
-	)
+	if cfg.Auth {
+		r.Use(
+			identity.Identity,
+		)
+	}
 	r.Get("/", lubDub)
 	r.Post("/upload", upload.NewHandler(upload.NewS3Stager("jjaggars-test")))
 	r.Handle("/metrics", promhttp.Handler())
