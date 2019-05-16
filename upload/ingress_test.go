@@ -11,8 +11,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"cloud.redhat.com/ingress/upload"
 )
 
 type FakeStager struct {
@@ -65,7 +63,7 @@ func TestUploadHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 	ch := make(chan int)
 	stager := &FakeStager{Out: ch}
-	handler := upload.NewHandler(stager)
+	handler := NewHandler(stager)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusAccepted {
