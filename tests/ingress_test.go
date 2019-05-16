@@ -16,11 +16,11 @@ import (
 )
 
 type FakeStager struct {
-	Called bool
+	Out chan int
 }
 
 func (s *FakeStager) Stage(file io.Reader, key string) (string, error) {
-	s.Called = true
+	s.Out <- 1
 	fmt.Println("stager just got called")
 	return "", nil
 }
@@ -63,7 +63,8 @@ func TestUploadHandler(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	stager := &FakeStager{}
+	ch := make(chan int)
+	stager := &FakeStager{Out: ch}
 	handler := upload.NewHandler(stager)
 	handler.ServeHTTP(rr, req)
 
@@ -72,10 +73,11 @@ func TestUploadHandler(t *testing.T) {
 			status, http.StatusAccepted)
 	}
 
-	// stager is a goroutine so we need to give it time to spin up
-	time.Sleep(10 * time.Millisecond)
-
-	if !stager.Called {
+	// Give the goroutine a second
+	select {
+	case <-ch:
+		break
+	case <-time.After(1 * time.Second):
 		t.Errorf("stager was not called")
 	}
 }
