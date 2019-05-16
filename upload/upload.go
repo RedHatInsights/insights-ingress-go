@@ -31,6 +31,7 @@ func NewHandler(stager Stager) http.HandlerFunc {
 		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
 			log.Printf("Did not find `file` part: %v", err)
+			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
 

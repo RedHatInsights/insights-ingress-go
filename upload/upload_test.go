@@ -67,6 +67,13 @@ var _ = Describe("Upload", func() {
 		stagerCalled bool
 	)
 
+	var boiler = func(field string, content string, contentType string, code int) {
+		req, err := makeMultipartRequest(field, content, contentType)
+		Expect(err).To(BeNil())
+		handler.ServeHTTP(rr, req)
+		Expect(rr.Code).To(Equal(code))
+	}
+
 	BeforeEach(func() {
 		ch = make(chan int)
 		stager = &FakeStager{Out: ch}
@@ -77,18 +84,13 @@ var _ = Describe("Upload", func() {
 	Describe("Posting a file to /upload", func() {
 		Context("with a valid Content-Type", func() {
 			It("should return HTTP 202", func() {
-				req, err := makeMultipartRequest("file", "testing", "application/vnd.redhat.unit.test")
-				Expect(err).To(BeNil())
-				handler.ServeHTTP(rr, req)
-				Expect(rr.Code).To(Equal(http.StatusAccepted))
+				boiler("file", "testing", "application/vnd.redhat.unit.test", http.StatusAccepted)
 			})
 		})
 
 		Context("with a valid Content-Type", func() {
 			It("should invoke the stager", func() {
-				req, err := makeMultipartRequest("file", "testing", "application/vnd.redhat.unit.test")
-				Expect(err).To(BeNil())
-				handler.ServeHTTP(rr, req)
+				boiler("file", "testing", "application/vnd.redhat.unit.test", http.StatusAccepted)
 				select {
 				case <-ch:
 					stagerCalled = true
@@ -101,10 +103,13 @@ var _ = Describe("Upload", func() {
 
 		Context("with an invalid Content-Type", func() {
 			It("should return HTTP 415", func() {
-				req, err := makeMultipartRequest("file", "testing", "application/invalid")
-				Expect(err).To(BeNil())
-				handler.ServeHTTP(rr, req)
-				Expect(rr.Code).To(Equal(http.StatusUnsupportedMediaType))
+				boiler("file", "testing", "application/invalid", http.StatusUnsupportedMediaType)
+			})
+		})
+
+		Context("with an incorrect part name", func() {
+			It("should return HTTP 415", func() {
+				boiler("invalid", "testing", "application/vnd.redhat.unit.test", http.StatusUnsupportedMediaType)
 			})
 		})
 	})
