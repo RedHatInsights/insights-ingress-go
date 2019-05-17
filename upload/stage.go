@@ -11,9 +11,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+// StageInput contains data and metadata to be staged
+type StageInput struct {
+	Reader   io.Reader
+	Key      string
+	Metadata io.Reader
+}
+
 // Stager provides the mechanism to stage a payload
 type Stager interface {
-	Stage(io.Reader, string) (string, error)
+	Stage(*StageInput) (string, error)
 }
 
 // S3Stager provides the mechanism to stage a payload via aws S3
@@ -37,12 +44,12 @@ func NewS3Stager(bucket string) Stager {
 // TODO: use context here? We want to store other things like user-agent and such...
 
 // Stage stores the file in s3 and returns a presigned url
-func (s *S3Stager) Stage(file io.Reader, key string) (string, error) {
+func (s *S3Stager) Stage(in *StageInput) (string, error) {
 	uploader := s3manager.NewUploader(s.Sess)
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(key),
-		Body:   file,
+		Key:    aws.String(in.Key),
+		Body:   in.Reader,
 	})
 	if err != nil {
 		return "", errors.New("Failed to upload to s3: " + err.Error())
@@ -51,7 +58,7 @@ func (s *S3Stager) Stage(file io.Reader, key string) (string, error) {
 	client := s3.New(s.Sess)
 	req, _ := client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(key),
+		Key:    aws.String(in.Key),
 	})
 	url, err := req.Presign(24 * time.Hour)
 	if err != nil {

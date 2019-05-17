@@ -41,17 +41,23 @@ func NewHandler(stager Stager) http.HandlerFunc {
 			return
 		}
 
+		stageInput := &StageInput{
+			Reader: file,
+			Key:    middleware.GetReqID(r.Context()),
+		}
+
 		// look for the metadata part
 		metadata, metadataHeader, err := r.FormFile("metadata")
 		if err != nil {
 			log.Printf("Did not find `metadata` part: %v", err)
 		} else {
 			log.Printf("%v, %v", metadata, metadataHeader)
+			stageInput.Metadata = metadata
 		}
 
 		log.Printf("%v\n", r)
 		// copy to s3
-		go stager.Stage(file, middleware.GetReqID(r.Context()))
+		go stager.Stage(stageInput)
 		// broadcast on kafka topic
 		// return accepted response
 		w.Header().Set("X-Request-Id", middleware.GetReqID(r.Context()))

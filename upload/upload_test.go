@@ -18,11 +18,11 @@ import (
 )
 
 type FakeStager struct {
-	Out chan int
+	Out chan *StageInput
 }
 
-func (s *FakeStager) Stage(file io.Reader, key string) (string, error) {
-	s.Out <- 1
+func (s *FakeStager) Stage(in *StageInput) (string, error) {
+	s.Out <- in
 	return "", nil
 }
 
@@ -50,14 +50,12 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 		if err != nil {
 			return nil, err
 		}
-
-		err = writer.Close()
-		if err != nil {
-			return nil, err
-		}
 	}
 
-	fmt.Printf("body: \n%v\n", body)
+	err := writer.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
@@ -70,11 +68,10 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 
 var _ = Describe("Upload", func() {
 	var (
-		ch           chan int
-		stager       *FakeStager
-		handler      http.Handler
-		rr           *httptest.ResponseRecorder
-		stagerCalled bool
+		ch      chan *StageInput
+		stager  *FakeStager
+		handler http.Handler
+		rr      *httptest.ResponseRecorder
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
@@ -84,8 +81,17 @@ var _ = Describe("Upload", func() {
 		Expect(rr.Code).To(Equal(code))
 	}
 
+	var waitForStager = func() (bool, *StageInput) {
+		select {
+		case in := <-ch:
+			return true, in
+		case <-time.After(100 * time.Millisecond):
+			return false, nil
+		}
+	}
+
 	BeforeEach(func() {
-		ch = make(chan int)
+		ch = make(chan *StageInput)
 		stager = &FakeStager{Out: ch}
 		rr = httptest.NewRecorder()
 		handler = NewHandler(stager)
@@ -107,13 +113,8 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
-				select {
-				case <-ch:
-					stagerCalled = true
-				case <-time.After(100 * time.Millisecond):
-					stagerCalled = false
-				}
-				Expect(stagerCalled).To(BeTrue())
+				called, _ := waitForStager()
+				Expect(called).To(BeTrue())
 			})
 		})
 
@@ -131,6 +132,13 @@ var _ = Describe("Upload", func() {
 						ContentType: "text/plain",
 					},
 				)
+				called, in := waitForStager()
+				Expect(called).To(BeTrue())
+				buf := make([]byte, 2)
+				bytesRead, err := in.Metadata.Read(buf)
+				Expect(err).To(BeNil())
+				Expect(bytesRead).To(Equal(2))
+				Expect(string(buf)).To(Equal("md"))
 			})
 		})
 
