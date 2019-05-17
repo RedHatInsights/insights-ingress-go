@@ -81,12 +81,12 @@ var _ = Describe("Upload", func() {
 		Expect(rr.Code).To(Equal(code))
 	}
 
-	var waitForStager = func() (bool, *StageInput) {
+	var waitForStager = func() *StageInput {
 		select {
 		case in := <-ch:
-			return true, in
+			return in
 		case <-time.After(100 * time.Millisecond):
-			return false, nil
+			return nil
 		}
 	}
 
@@ -113,8 +113,7 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
-				called, _ := waitForStager()
-				Expect(called).To(BeTrue())
+				Expect(waitForStager()).To(Not(BeNil()))
 			})
 		})
 
@@ -132,8 +131,8 @@ var _ = Describe("Upload", func() {
 						ContentType: "text/plain",
 					},
 				)
-				called, in := waitForStager()
-				Expect(called).To(BeTrue())
+				in := waitForStager()
+				Expect(in).To(Not(BeNil()))
 				buf := make([]byte, 2)
 				bytesRead, err := in.Metadata.Read(buf)
 				Expect(err).To(BeNil())
