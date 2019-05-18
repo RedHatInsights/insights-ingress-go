@@ -4,18 +4,27 @@ import (
 	"net/http"
 
 	"cloud.redhat.com/ingress/config"
+	"cloud.redhat.com/ingress/pipeline"
+	"cloud.redhat.com/ingress/stage"
 	"cloud.redhat.com/ingress/upload"
 
-	"github.com/RedHatInsights/platform-go-middlewares/identity"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 func lubDub(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("lubdub"))
+}
+
+func getPipeline() *pipeline.Pipeline {
+	return &pipeline.Pipeline{
+		Stager:    stage.NewS3Stager("jjaggars-test"),
+		Validator: &pipeline.KafkaValidator{},
+	}
 }
 
 func main() {
@@ -33,7 +42,7 @@ func main() {
 		)
 	}
 	r.Get("/", lubDub)
-	r.Post("/upload", upload.NewHandler(upload.NewS3Stager("jjaggars-test")))
+	r.Post("/upload", upload.NewHandler(getPipeline()))
 	r.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":3000", r)
 }

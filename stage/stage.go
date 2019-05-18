@@ -1,4 +1,4 @@
-package upload
+package stage
 
 import (
 	"errors"
@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-// StageInput contains data and metadata to be staged
-type StageInput struct {
+// Input contains data and metadata to be staged
+type Input struct {
 	Reader   io.Reader
 	Key      string
 	Metadata io.Reader
@@ -20,7 +20,7 @@ type StageInput struct {
 
 // Stager provides the mechanism to stage a payload
 type Stager interface {
-	Stage(*StageInput) (string, error)
+	Stage(*Input) (string, error)
 }
 
 // S3Stager provides the mechanism to stage a payload via aws S3
@@ -44,7 +44,7 @@ func NewS3Stager(bucket string) Stager {
 // TODO: use context here? We want to store other things like user-agent and such...
 
 // Stage stores the file in s3 and returns a presigned url
-func (s *S3Stager) Stage(in *StageInput) (string, error) {
+func (s *S3Stager) Stage(in *Input) (string, error) {
 	uploader := s3manager.NewUploader(s.Sess)
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.Bucket),

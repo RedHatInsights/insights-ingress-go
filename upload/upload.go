@@ -3,29 +3,32 @@ package upload
 import (
 	"errors"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"regexp"
 
+	"cloud.redhat.com/ingress/pipeline"
+	"cloud.redhat.com/ingress/stage"
 	"github.com/go-chi/chi/middleware"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 var contentTypePat = regexp.MustCompile(`application/vnd\.redhat\.(\w+)\.(\w+)`)
 
-func validate(header *multipart.FileHeader) error {
-	contentType := header.Header.Get("Content-Type")
+func validate(contentType string) (*TopicDescriptor, error) {
 	// look the content type up in a static map
 	// else parse it
 	m := contentTypePat.FindStringSubmatch(contentType)
 	if m == nil {
-		return errors.New("Failed to match on Content-Type: " + contentType)
+		return nil, errors.New("Failed to match on Content-Type: " + contentType)
 	}
-	log.Printf("service = %s, category = %s", m[1], m[2])
-	return nil
+	return &TopicDescriptor{
+		Service:  m[1],
+		Category: m[2],
+	}, nil
 }
 
 // NewHandler returns a http handler configured with a Stager
-func NewHandler(stager Stager) http.HandlerFunc {
+func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// look for `file` part
 		file, fileHeader, err := r.FormFile("file")
@@ -35,15 +38,18 @@ func NewHandler(stager Stager) http.HandlerFunc {
 			return
 		}
 
-		if validationErr := validate(fileHeader); validationErr != nil {
+		topicDescriptor, validationErr := validate(fileHeader.Header.Get("Content-Type"))
+		if validationErr != nil {
 			log.Printf("Did not validate: %v", validationErr)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
 
-		stageInput := &StageInput{
+		reqID := middleware.GetReqID(r.Context())
+
+		stageInput := &stage.Input{
 			Reader: file,
-			Key:    middleware.GetReqID(r.Context()),
+			Key:    reqID,
 		}
 
 		// look for the metadata part
@@ -55,12 +61,28 @@ func NewHandler(stager Stager) http.HandlerFunc {
 			stageInput.Metadata = metadata
 		}
 
-		log.Printf("%v\n", r)
+		id, err := identity.Get(r.Context())
+		if err != nil {
+			log.Printf("Failed to fetch identity from context")
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		vr := &pipeline.ValidationRequest{
+			Account:   id.AccountNumber,
+			Principal: id.Internal.OrgID,
+			PayloadID: reqID,
+			Size:      fileHeader.Size,
+			Service:   topicDescriptor.Service,
+			Category:  topicDescriptor.Category,
+			Metadata:  metadata,
+		}
+
 		// copy to s3
-		go stager.Stage(stageInput)
+		go p.Submit(stageInput, vr)
 		// broadcast on kafka topic
 		// return accepted response
-		w.Header().Set("X-Request-Id", middleware.GetReqID(r.Context()))
+		w.Header().Set("X-Request-Id", reqID)
 		w.WriteHeader(http.StatusAccepted)
 	}
 }

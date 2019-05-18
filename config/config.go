@@ -6,13 +6,17 @@ import (
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
-	MaxSize            int
-	StageBucket        string
-	RejectBucket       string
-	Auth               bool
-	AWSAccessKeyID     string
-	AWSSecretAccessKey string
-	AWSRegion          string
+	MaxSize              int
+	StageBucket          string
+	RejectBucket         string
+	Auth                 bool
+	AWSAccessKeyID       string
+	AWSSecretAccessKey   string
+	AWSRegion            string
+	KafkaBrokers         []string
+	KafkaGroupID         string
+	KafkaAvailableTopic  string
+	KafkaValidationTopic string
 }
 
 // Get returns an initialized IngressConfig
@@ -22,12 +26,21 @@ func Get() *IngressConfig {
 	options.SetDefault("StageBucket", "available")
 	options.SetDefault("RejectBucket", "rejected")
 	options.SetDefault("Auth", true)
+	options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
+	options.SetDefault("KafkaGroupID", "ingress")
+	options.SetDefault("KafkaAvailableTopic", "platform.upload.available")
+	options.SetDefault("KafkaValidationTopic", "platform.upload.validation")
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 
 	return &IngressConfig{
-		MaxSize:      options.GetInt("MaxSize"),
-		StageBucket:  options.GetString("StageBucket"),
-		RejectBucket: options.GetString("RejectBucket"),
+		MaxSize:              options.GetInt("MaxSize"),
+		StageBucket:          options.GetString("StageBucket"),
+		RejectBucket:         options.GetString("RejectBucket"),
+		Auth:                 options.GetBool("Auth"),
+		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
+		KafkaGroupID:         options.GetString("KafkaGroupID"),
+		KafkaAvailableTopic:  options.GetString("KafkaAvailableTopic"),
+		KafkaValidationTopic: options.GetString("KafkaValidationTopic"),
 	}
 }

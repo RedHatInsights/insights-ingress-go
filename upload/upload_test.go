@@ -2,6 +2,7 @@ package upload_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -13,17 +14,28 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 
+	"cloud.redhat.com/ingress/pipeline"
+	"cloud.redhat.com/ingress/stage"
 	. "cloud.redhat.com/ingress/upload"
 )
 
 type FakeStager struct {
-	Out chan *StageInput
+	Out chan *stage.Input
 }
 
-func (s *FakeStager) Stage(in *StageInput) (string, error) {
+func (s *FakeStager) Stage(in *stage.Input) (string, error) {
 	s.Out <- in
-	return "", nil
+	return "fake_url", nil
+}
+
+type FakeValidator struct {
+	Out chan *pipeline.ValidationRequest
+}
+
+func (v *FakeValidator) Validate(in *pipeline.ValidationRequest) {
+	v.Out <- in
 }
 
 type FilePart struct {
@@ -62,16 +74,29 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 		return nil, err
 	}
 
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		AccountNumber: "540155",
+		Internal: identity.Internal{
+			OrgID: "12345",
+		},
+	})
+
+	req = req.WithContext(ctx)
+
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	return req, nil
 }
 
 var _ = Describe("Upload", func() {
 	var (
-		ch      chan *StageInput
-		stager  *FakeStager
-		handler http.Handler
-		rr      *httptest.ResponseRecorder
+		ch        chan *stage.Input
+		vch       chan *pipeline.ValidationRequest
+		stager    *FakeStager
+		validator *FakeValidator
+		handler   http.Handler
+		rr        *httptest.ResponseRecorder
+		pl        *pipeline.Pipeline
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
@@ -81,7 +106,7 @@ var _ = Describe("Upload", func() {
 		Expect(rr.Code).To(Equal(code))
 	}
 
-	var waitForStager = func() *StageInput {
+	var waitForStager = func() *stage.Input {
 		select {
 		case in := <-ch:
 			return in
@@ -90,11 +115,26 @@ var _ = Describe("Upload", func() {
 		}
 	}
 
+	var waitForValidator = func() *pipeline.ValidationRequest {
+		select {
+		case in := <-vch:
+			return in
+		case <-time.After(100 * time.Millisecond):
+			return nil
+		}
+	}
+
 	BeforeEach(func() {
-		ch = make(chan *StageInput)
+		ch = make(chan *stage.Input)
+		vch = make(chan *pipeline.ValidationRequest)
 		stager = &FakeStager{Out: ch}
+		validator = &FakeValidator{Out: vch}
+		pl = &pipeline.Pipeline{
+			Stager:    stager,
+			Validator: validator,
+		}
 		rr = httptest.NewRecorder()
-		handler = NewHandler(stager)
+		handler = NewHandler(pl)
 	})
 
 	Describe("Posting a file to /upload", func() {
@@ -114,6 +154,20 @@ var _ = Describe("Upload", func() {
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
 				Expect(waitForStager()).To(Not(BeNil()))
+			})
+		})
+
+		Context("with a valid Content-Type", func() {
+			It("should parse to service and category", func() {
+				boiler(http.StatusAccepted, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test"})
+				in := waitForStager()
+				Expect(in).To(Not(BeNil()))
+				vin := waitForValidator()
+				Expect(vin.Service).To(Equal("unit"))
+				Expect(vin.Category).To(Equal("test"))
 			})
 		})
 
