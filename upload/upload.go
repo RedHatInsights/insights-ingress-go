@@ -61,12 +61,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			stageInput.Metadata = metadata
 		}
 
-		id, err := identity.Get(r.Context())
-		if err != nil {
-			log.Printf("Failed to fetch identity from context")
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
+		id := identity.Get(r.Context())
 
 		vr := &pipeline.ValidationRequest{
 			Account:   id.AccountNumber,
