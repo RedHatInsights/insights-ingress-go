@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"cloud.redhat.com/ingress/config"
@@ -20,15 +21,9 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("lubdub"))
 }
 
-func getPipeline() *pipeline.Pipeline {
-	return &pipeline.Pipeline{
-		Stager:    stage.NewS3Stager("jjaggars-test"),
-		Validator: &pipeline.KafkaValidator{},
-	}
-}
-
 func main() {
 	cfg := config.Get()
+	log.Printf("cfg: %v", cfg)
 	r := chi.NewRouter()
 	r.Use(
 		middleware.RequestID,
@@ -41,8 +36,14 @@ func main() {
 			identity.Identity,
 		)
 	}
+
+	p := &pipeline.Pipeline{
+		Stager:    stage.NewS3Stager("jjaggars-test"),
+		Validator: pipeline.NewKafkaValidator(cfg),
+	}
+
 	r.Get("/", lubDub)
-	r.Post("/upload", upload.NewHandler(getPipeline()))
+	r.Post("/upload", upload.NewHandler(p))
 	r.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":3000", r)
 }

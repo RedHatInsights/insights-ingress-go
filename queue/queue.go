@@ -19,12 +19,16 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	for {
 		v := <-in
-		w.WriteMessages(context.Background(),
+		log.Printf("got %v about to write to kafka", v)
+		err := w.WriteMessages(context.Background(),
 			kafka.Message{
 				Key:   nil,
 				Value: v,
 			},
 		)
+		if err != nil {
+			log.Printf("error while writing: %v", err)
+		}
 	}
 }
 

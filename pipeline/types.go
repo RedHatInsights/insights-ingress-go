@@ -42,6 +42,8 @@ type KafkaValidator struct {
 	ValidationProducerMapping map[string]chan []byte
 	ValidationConsumerChannel chan []byte
 	AvailableProducerChannel  chan []byte
+	KafkaBrokers              []string
+	KafkaGroupID              string
 }
 
 // Pipeline defines the descrete processing steps for ingress

@@ -2,7 +2,7 @@ package stage
 
 import (
 	"errors"
-	"io"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,24 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
-
-// Input contains data and metadata to be staged
-type Input struct {
-	Reader   io.Reader
-	Key      string
-	Metadata io.Reader
-}
-
-// Stager provides the mechanism to stage a payload
-type Stager interface {
-	Stage(*Input) (string, error)
-}
-
-// S3Stager provides the mechanism to stage a payload via aws S3
-type S3Stager struct {
-	Bucket string
-	Sess   *session.Session
-}
 
 func getSession() *session.Session {
 	return session.Must(session.NewSession())
@@ -64,6 +46,8 @@ func (s *S3Stager) Stage(in *Input) (string, error) {
 	if err != nil {
 		return "", errors.New("Failed to generate presigned url: " + err.Error())
 	}
+
+	log.Printf("url: %v", url)
 
 	return url, nil
 }

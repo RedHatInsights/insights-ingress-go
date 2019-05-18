@@ -10,9 +10,6 @@ type IngressConfig struct {
 	StageBucket          string
 	RejectBucket         string
 	Auth                 bool
-	AWSAccessKeyID       string
-	AWSSecretAccessKey   string
-	AWSRegion            string
 	KafkaBrokers         []string
 	KafkaGroupID         string
 	KafkaAvailableTopic  string

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"cloud.redhat.com/ingress/config"
 	"cloud.redhat.com/ingress/pipeline"
 	"cloud.redhat.com/ingress/stage"
 	"github.com/go-chi/chi/middleware"
@@ -27,10 +28,9 @@ func validate(contentType string) (*TopicDescriptor, error) {
 	}, nil
 }
 
-// NewHandler returns a http handler configured with a Stager
+// NewHandler returns a http handler configured with a Pipeline
 func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// look for `file` part
 		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
 			log.Printf("Did not find `file` part: %v", err)
@@ -52,7 +52,6 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Key:    reqID,
 		}
 
-		// look for the metadata part
 		metadata, metadataHeader, err := r.FormFile("metadata")
 		if err != nil {
 			log.Printf("Did not find `metadata` part: %v", err)
@@ -61,11 +60,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			stageInput.Metadata = metadata
 		}
 
-		id := identity.Get(r.Context())
-
 		vr := &pipeline.ValidationRequest{
-			Account:   id.AccountNumber,
-			Principal: id.Internal.OrgID,
 			PayloadID: reqID,
 			Size:      fileHeader.Size,
 			Service:   topicDescriptor.Service,
@@ -73,10 +68,14 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Metadata:  metadata,
 		}
 
-		// copy to s3
+		if config.Get().Auth == true {
+			id := identity.Get(r.Context())
+			vr.Account = id.AccountNumber
+			vr.Principal = id.Internal.OrgID
+		}
+
 		go p.Submit(stageInput, vr)
-		// broadcast on kafka topic
-		// return accepted response
+
 		w.Header().Set("X-Request-Id", reqID)
 		w.WriteHeader(http.StatusAccepted)
 	}
