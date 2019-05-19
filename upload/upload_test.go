@@ -19,6 +19,7 @@ import (
 	"cloud.redhat.com/ingress/pipeline"
 	"cloud.redhat.com/ingress/stage"
 	. "cloud.redhat.com/ingress/upload"
+	"cloud.redhat.com/ingress/validators"
 )
 
 type FakeStager struct {
@@ -31,10 +32,10 @@ func (s *FakeStager) Stage(in *stage.Input) (string, error) {
 }
 
 type FakeValidator struct {
-	Out chan *pipeline.ValidationRequest
+	Out chan *validators.Request
 }
 
-func (v *FakeValidator) Validate(in *pipeline.ValidationRequest) {
+func (v *FakeValidator) Validate(in *validators.Request) {
 	v.Out <- in
 }
 
@@ -91,7 +92,7 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 var _ = Describe("Upload", func() {
 	var (
 		ch        chan *stage.Input
-		vch       chan *pipeline.ValidationRequest
+		vch       chan *validators.Request
 		stager    *FakeStager
 		validator *FakeValidator
 		handler   http.Handler
@@ -115,7 +116,7 @@ var _ = Describe("Upload", func() {
 		}
 	}
 
-	var waitForValidator = func() *pipeline.ValidationRequest {
+	var waitForValidator = func() *validators.Request {
 		select {
 		case in := <-vch:
 			return in
@@ -126,7 +127,7 @@ var _ = Describe("Upload", func() {
 
 	BeforeEach(func() {
 		ch = make(chan *stage.Input)
-		vch = make(chan *pipeline.ValidationRequest)
+		vch = make(chan *validators.Request)
 		stager = &FakeStager{Out: ch}
 		validator = &FakeValidator{Out: vch}
 		pl = &pipeline.Pipeline{

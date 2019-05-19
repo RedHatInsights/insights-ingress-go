@@ -9,6 +9,7 @@ import (
 	"cloud.redhat.com/ingress/config"
 	"cloud.redhat.com/ingress/pipeline"
 	"cloud.redhat.com/ingress/stage"
+	"cloud.redhat.com/ingress/validators"
 	"github.com/go-chi/chi/middleware"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -60,7 +61,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			stageInput.Metadata = metadata
 		}
 
-		vr := &pipeline.ValidationRequest{
+		vr := &validators.Request{
 			PayloadID: reqID,
 			Size:      fileHeader.Size,
 			Service:   topicDescriptor.Service,
