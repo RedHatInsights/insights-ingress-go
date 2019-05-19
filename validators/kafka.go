@@ -9,7 +9,7 @@ import (
 )
 
 // NewKafkaValidator constructs and initializes a new Kafka Validator
-func NewKafkaValidator(cfg *config.IngressConfig) *KafkaValidator {
+func NewKafkaValidator(cfg *config.IngressConfig, topics ...string) *KafkaValidator {
 	kv := &KafkaValidator{
 		ValidationProducerMapping: make(map[string]chan []byte),
 		ValidationConsumerChannel: make(chan []byte),
@@ -17,7 +17,9 @@ func NewKafkaValidator(cfg *config.IngressConfig) *KafkaValidator {
 		KafkaGroupID:              cfg.KafkaGroupID,
 	}
 	kv.addProducer(cfg.KafkaAvailableTopic)
-	kv.addProducer("platform.upload.testareno")
+	for _, topic := range topics {
+		kv.addProducer(topic)
+	}
 	return kv
 }
 

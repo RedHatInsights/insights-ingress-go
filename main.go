@@ -6,7 +6,7 @@ import (
 
 	"cloud.redhat.com/ingress/config"
 	"cloud.redhat.com/ingress/pipeline"
-	"cloud.redhat.com/ingress/stage"
+	"cloud.redhat.com/ingress/stage/s3"
 	"cloud.redhat.com/ingress/upload"
 	"cloud.redhat.com/ingress/validators"
 
@@ -39,8 +39,8 @@ func main() {
 	}
 
 	p := &pipeline.Pipeline{
-		Stager:    stage.NewS3Stager("jjaggars-test"),
-		Validator: validators.NewKafkaValidator(cfg),
+		Stager:    s3.New("jjaggars-test"),
+		Validator: validators.NewKafkaValidator(cfg, "platform.upload.testareno"),
 	}
 
 	r.Get("/", lubDub)

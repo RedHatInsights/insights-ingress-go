@@ -1,9 +1,11 @@
-package stage
+package s3
 
 import (
 	"errors"
 	"log"
 	"time"
+
+	"cloud.redhat.com/ingress/stage"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -15,8 +17,8 @@ func getSession() *session.Session {
 	return session.Must(session.NewSession())
 }
 
-// NewS3Stager constructs a new stager for the bucket
-func NewS3Stager(bucket string) Stager {
+// New constructs a new stager for the bucket
+func New(bucket string) stage.Stager {
 	return &S3Stager{
 		Bucket: bucket,
 		Sess:   getSession(),
@@ -26,7 +28,7 @@ func NewS3Stager(bucket string) Stager {
 // TODO: use context here? We want to store other things like user-agent and such...
 
 // Stage stores the file in s3 and returns a presigned url
-func (s *S3Stager) Stage(in *Input) (string, error) {
+func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 	uploader := s3manager.NewUploader(s.Sess)
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.Bucket),
