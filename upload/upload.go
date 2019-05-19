@@ -62,7 +62,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		}
 
 		vr := &validators.Request{
-			PayloadID: reqID,
+			RequestID: reqID,
 			Size:      fileHeader.Size,
 			Service:   topicDescriptor.Service,
 			Category:  topicDescriptor.Category,

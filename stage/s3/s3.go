@@ -25,8 +25,6 @@ func New(bucket string) stage.Stager {
 	}
 }
 
-// TODO: use context here? We want to store other things like user-agent and such...
-
 // Stage stores the file in s3 and returns a presigned url
 func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 	uploader := s3manager.NewUploader(s.Sess)

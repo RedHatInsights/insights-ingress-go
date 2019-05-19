@@ -31,14 +31,6 @@ func (s *FakeStager) Stage(in *stage.Input) (string, error) {
 	return "fake_url", nil
 }
 
-type FakeValidator struct {
-	Out chan *validators.Request
-}
-
-func (v *FakeValidator) Validate(in *validators.Request) {
-	v.Out <- in
-}
-
 type FilePart struct {
 	Name        string
 	Content     string
@@ -94,7 +86,7 @@ var _ = Describe("Upload", func() {
 		ch        chan *stage.Input
 		vch       chan *validators.Request
 		stager    *FakeStager
-		validator *FakeValidator
+		validator *validators.Fake
 		handler   http.Handler
 		rr        *httptest.ResponseRecorder
 		pl        *pipeline.Pipeline
@@ -129,7 +121,7 @@ var _ = Describe("Upload", func() {
 		ch = make(chan *stage.Input)
 		vch = make(chan *validators.Request)
 		stager = &FakeStager{Out: ch}
-		validator = &FakeValidator{Out: vch}
+		validator = &validators.Fake{Out: vch}
 		pl = &pipeline.Pipeline{
 			Stager:    stager,
 			Validator: validator,
@@ -145,30 +137,6 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
-			})
-		})
-
-		Context("with a valid Content-Type", func() {
-			It("should invoke the stager", func() {
-				boiler(http.StatusAccepted, &FilePart{
-					Name:        "file",
-					Content:     "testing",
-					ContentType: "application/vnd.redhat.unit.test"})
-				Expect(waitForStager()).To(Not(BeNil()))
-			})
-		})
-
-		Context("with a valid Content-Type", func() {
-			It("should parse to service and category", func() {
-				boiler(http.StatusAccepted, &FilePart{
-					Name:        "file",
-					Content:     "testing",
-					ContentType: "application/vnd.redhat.unit.test"})
-				in := waitForStager()
-				Expect(in).To(Not(BeNil()))
-				vin := waitForValidator()
-				Expect(vin.Service).To(Equal("unit"))
-				Expect(vin.Category).To(Equal("test"))
 			})
 		})
 
@@ -213,6 +181,30 @@ var _ = Describe("Upload", func() {
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
 				})
+			})
+		})
+
+		Context("with a valid Content-Type", func() {
+			It("should invoke the stager", func() {
+				boiler(http.StatusAccepted, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test"})
+				Expect(waitForStager()).To(Not(BeNil()))
+			})
+		})
+
+		Context("with a valid Content-Type", func() {
+			It("should parse to service and category", func() {
+				boiler(http.StatusAccepted, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test"})
+				in := waitForStager()
+				Expect(in).To(Not(BeNil()))
+				vin := waitForValidator()
+				Expect(vin.Service).To(Equal("unit"))
+				Expect(vin.Category).To(Equal("test"))
 			})
 		})
 	})

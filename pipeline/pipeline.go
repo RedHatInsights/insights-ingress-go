@@ -7,8 +7,6 @@ import (
 	"cloud.redhat.com/ingress/validators"
 )
 
-// NewKafkaValidator constructs and initializes a new Kafka Validator
-
 // Submit accepts a stage request and a validation request
 func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	url, err := p.Stager.Stage(in)
@@ -20,7 +18,8 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	p.Validator.Validate(vr)
 }
 
-func (p *Pipeline) run() {
+// Start enables the consumer loop and watches for validation responses
+func (p *Pipeline) Start() {
 	for {
 
 	}

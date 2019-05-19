@@ -6,11 +6,20 @@ type Request struct {
 	B64Identity []byte      `json:"b64_identity"`
 	Category    string      `json:"category"`
 	Metadata    interface{} `json:"metadata"`
-	PayloadID   string      `json:"payload_id"`
+	RequestID   string      `json:"request_id"`
 	Principal   string      `json:"principal"`
 	Service     string      `json:"service"`
 	Size        int64       `json:"size"`
 	URL         string      `json:"url"`
+}
+
+type Response struct {
+	RequestID  string `json:"request_id"`
+	Validation string `json:"validation"`
+	URL        string `json:"url"`
+	Account    string `json:"account"`
+	Principal  string `json:"principal"`
+	Service    string `json:"service"`
 }
 
 // Validator validates requests
