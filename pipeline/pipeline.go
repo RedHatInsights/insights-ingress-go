@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"log"
+	"context"
 
 	"cloud.redhat.com/ingress/stage"
 	"cloud.redhat.com/ingress/validators"
@@ -18,9 +19,14 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	p.Validator.Validate(vr)
 }
 
-// Start enables the consumer loop and watches for validation responses
-func (p *Pipeline) Start() {
+// Start watches the announcer channel for new events and calls announce
+func (p *Pipeline) Start(ctx context.Context) {
 	for {
-
+		select {
+		case ev := <- p.AnnouncerChan:
+			p.Announcer.Announce(ev)
+		case <-ctx.Done():
+			return
+		}
 	}
 }
