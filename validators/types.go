@@ -1,6 +1,8 @@
 package validators
 
-// ValidationRequest is sent to the validation topic for each new payload
+import "cloud.redhat.com/ingress/announcers"
+
+// Request is sent to the validation topic for each new payload
 type Request struct {
 	Account     string      `json:"account"`
 	B64Identity []byte      `json:"b64_identity"`
@@ -33,4 +35,25 @@ type KafkaValidator struct {
 	ValidationConsumerChannel chan []byte
 	KafkaBrokers              []string
 	KafkaGroupID              string
+}
+
+// ProducerConfig configures a producer
+type ProducerConfig struct {
+	Topic   string
+	Brokers []string
+}
+
+// ConsumerConfig configures a consumer
+type ConsumerConfig struct {
+	Topic   string
+	Brokers []string
+	GroupID string
+}
+
+type KafkaConfig struct {
+	Brokers []string
+	GroupID string
+	AvailableTopic string
+	ValidationTopic string
+	AnnouncerChan chan *announcers.AvailableEvent
 }

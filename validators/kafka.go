@@ -1,20 +1,14 @@
 package validators
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 
-	"cloud.redhat.com/ingress/queue"
 	"cloud.redhat.com/ingress/announcers"
+	"github.com/segmentio/kafka-go"
 )
 
-type KafkaConfig struct {
-	Brokers []string
-	GroupID string
-	AvailableTopic string
-	ValidationTopic string
-	AnnouncerChan chan *announcers.AvailableEvent
-}
 
 // NewKafkaValidator constructs and initializes a new Kafka Validator
 func NewKafkaValidator(cfg *KafkaConfig, topics ...string) *KafkaValidator {
@@ -28,7 +22,7 @@ func NewKafkaValidator(cfg *KafkaConfig, topics ...string) *KafkaValidator {
 	for _, topic := range topics {
 		kv.addProducer(topic)
 	}
-	go queue.Consumer(kv.ValidationConsumerChannel, &queue.ConsumerConfig{
+	go Consumer(kv.ValidationConsumerChannel, &ConsumerConfig{
 		Brokers: kv.KafkaBrokers,
 		GroupID: kv.KafkaGroupID,
 		Topic: cfg.ValidationTopic,
@@ -63,9 +57,56 @@ func (kv *KafkaValidator) Validate(vr *Request) {
 
 func (kv *KafkaValidator) addProducer(topic string) {
 	ch := make(chan []byte)
-	go queue.Producer(ch, &queue.ProducerConfig{
+	go Producer(ch, &ProducerConfig{
 		Brokers: kv.KafkaBrokers,
 		Topic:   topic,
 	})
 	kv.ValidationProducerMapping[topic] = ch
+}
+
+
+
+//Producer consumes in and produces to the topic in config
+func Producer(in chan []byte, config *ProducerConfig) {
+	w := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:  config.Brokers,
+		Topic:    config.Topic,
+		Balancer: &kafka.Hash{},
+	})
+
+	defer w.Close()
+
+	for {
+		v := <-in
+		log.Printf("got %v about to write to kafka", v)
+		err := w.WriteMessages(context.Background(),
+			kafka.Message{
+				Key:   nil,
+				Value: v,
+			},
+		)
+		if err != nil {
+			log.Printf("error while writing: %v", err)
+		}
+	}
+}
+
+// Consumer consumes a topic and puts the messages into out
+func Consumer(out chan []byte, config *ConsumerConfig) {
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: config.Brokers,
+		GroupID: config.GroupID,
+		Topic:   config.Topic,
+	})
+
+	defer r.Close()
+
+	for {
+		m, err := r.ReadMessage(context.Background())
+		if err != nil {
+			log.Printf("Error while reading message: %v", err)
+		} else {
+			out <- m.Value
+		}
+	}
 }
