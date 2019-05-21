@@ -6,11 +6,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"cloud.redhat.com/ingress/announcers"
 	. "cloud.redhat.com/ingress/pipeline"
 	"cloud.redhat.com/ingress/stage"
 	"cloud.redhat.com/ingress/stage/local"
 	"cloud.redhat.com/ingress/validators"
-	"cloud.redhat.com/ingress/announcers"
 )
 
 var _ = Describe("Pipeline", func() {
@@ -24,20 +24,24 @@ var _ = Describe("Pipeline", func() {
 
 	BeforeEach(func() {
 		stager = local.New("/tmp")
-		vch := make(chan *validators.Request)
-		ach := make(chan *announcers.AvailableEvent)
+		reqCh := make(chan *validators.Request)
+		vCh := make(chan *validators.Response)
+		iCh := make(chan *validators.Response)
 
 		validator = &validators.Fake{
-			Out: vch,
-			AnnouncerChan: ach,
+			In:              reqCh,
+			Valid:           vCh,
+			Invalid:         iCh,
+			DesiredResponse: "success",
 		}
 		announcer = &announcers.Fake{}
 
 		p = &Pipeline{
-			Stager:    stager,
-			Validator: validator,
-			AnnouncerChan: ach,
-			Announcer: announcer,
+			Stager:      stager,
+			Validator:   validator,
+			Announcer:   announcer,
+			ValidChan:   vCh,
+			InvalidChan: iCh,
 		}
 	})
 
@@ -56,7 +60,7 @@ var _ = Describe("Pipeline", func() {
 			}
 			go p.Submit(stageIn, r)
 
-			vout := validator.Wait()
+			vout := validator.WaitForIn()
 
 			Expect(r.URL).To(Not(BeNil()))
 			Expect(vout).To(Not(BeNil()))
@@ -75,29 +79,30 @@ var _ = Describe("Pipeline", func() {
 			}
 			go p.Submit(stageIn, r)
 
-			validator.Wait()
-			aout := validator.WaitForAnnounce()
+			validator.WaitForIn()
+			aout := validator.WaitFor(validator.Valid)
 
 			Expect(aout).To(Not(BeNil()))
 			Expect(aout.URL).To(Equal(r.URL))
 		})
 	})
 
-	Describe("Submitting a payload that fails to validate", func(){
+	Describe("Submitting a payload that fails to validate", func() {
 		It("should call stager.Reject", func() {
 			stageIn := &stage.Input{
 				Reader: strings.NewReader("invalid"),
 			}
 			r := &validators.Request{
-				Account: "123",
+				Account:   "123",
 				RequestID: "invalid",
 			}
+			validator.DesiredResponse = "failure"
 			go p.Submit(stageIn, r)
 
-			_ = validator.Wait()
+			_ = validator.WaitForIn()
 
-			aout := validator.WaitForAnnounce()
-			Expect(aout).To(BeNil())
+			aout := validator.WaitFor(validator.Invalid)
+			Expect(aout).To(Not(BeNil()))
 		})
 	})
 })

@@ -1,39 +1,52 @@
 package validators
 
 import (
+	"fmt"
 	"time"
-	"cloud.redhat.com/ingress/announcers"
 )
 
 type Fake struct {
-	Out chan *Request
-	AnnouncerChan chan *announcers.AvailableEvent
+	In              chan *Request
+	Valid           chan *Response
+	Invalid         chan *Response
+	DesiredResponse string
 }
 
 func (v *Fake) Validate(in *Request) {
-	v.Out <- in
-	v.AnnouncerChan <- &announcers.AvailableEvent{
-		Account: in.Account,
-		RequestID: in.RequestID,
-		Principal: in.Principal,
-		Service: in.Service,
-		URL: in.URL,
+	fmt.Println("About to push to v.In")
+	v.In <- in
+	r := &Response{
+		RequestID:  in.RequestID,
+		Validation: v.DesiredResponse,
+		URL:        in.URL,
+		Account:    in.Account,
+		Principal:  in.Principal,
+		Service:    in.Service,
+	}
+	if v.DesiredResponse == "success" {
+		fmt.Println("About to push to v.Valid")
+		v.Valid <- r
+	} else if v.DesiredResponse == "failure" {
+		fmt.Println("About to push to v.Invalid")
+		v.Invalid <- r
+	} else {
+		return
 	}
 }
 
-func (v *Fake) Wait() *Request {
+func (v *Fake) WaitForIn() *Request {
 	select {
-	case in := <-v.Out:
-		return in
+	case o := <-v.In:
+		return o
 	case <-time.After(100 * time.Millisecond):
 		return nil
 	}
 }
 
-func (v *Fake) WaitForAnnounce() *announcers.AvailableEvent {
+func (v *Fake) WaitFor(ch chan *Response) *Response {
 	select {
-	case in := <-v.AnnouncerChan:
-		return in
+	case o := <-ch:
+		return o
 	case <-time.After(100 * time.Millisecond):
 		return nil
 	}

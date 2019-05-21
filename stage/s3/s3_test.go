@@ -1,6 +1,8 @@
 package s3_test
 
 import (
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -20,6 +22,7 @@ var _ = Describe("S3", func() {
 	Describe("An invalid s3 url", func() {
 		It("Should return an error", func() {
 			spec, err := FromURL("https://localhost/?q=foo")
+			fmt.Printf("spec: %v", spec)
 			Expect(err).To(Not(BeNil()))
 			Expect(spec).To(BeNil())
 		})

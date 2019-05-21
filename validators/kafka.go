@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"cloud.redhat.com/ingress/announcers"
 	"github.com/segmentio/kafka-go"
 )
-
 
 // NewKafkaValidator constructs and initializes a new Kafka Validator
 func NewKafkaValidator(cfg *KafkaConfig, topics ...string) *KafkaValidator {
@@ -25,18 +23,22 @@ func NewKafkaValidator(cfg *KafkaConfig, topics ...string) *KafkaValidator {
 	go Consumer(kv.ValidationConsumerChannel, &ConsumerConfig{
 		Brokers: kv.KafkaBrokers,
 		GroupID: kv.KafkaGroupID,
-		Topic: cfg.ValidationTopic,
+		Topic:   cfg.ValidationTopic,
 	})
 
 	go func() {
 		for {
-			data := <- kv.ValidationConsumerChannel
-			ev := &announcers.AvailableEvent{}
+			data := <-kv.ValidationConsumerChannel
+			ev := &Response{}
 			err := json.Unmarshal(data, ev)
 			if err != nil {
 				log.Printf("failed to unarshal data: %v", err)
 			} else {
-				cfg.AnnouncerChan <- ev
+				if ev.Validation == "success" {
+					cfg.ValidChan <- ev
+				} else if ev.Validation == "failure" {
+					cfg.InvalidChan <- ev
+				}
 			}
 		}
 	}()
@@ -63,8 +65,6 @@ func (kv *KafkaValidator) addProducer(topic string) {
 	})
 	kv.ValidationProducerMapping[topic] = ch
 }
-
-
 
 //Producer consumes in and produces to the topic in config
 func Producer(in chan []byte, config *ProducerConfig) {

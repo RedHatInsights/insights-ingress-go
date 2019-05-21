@@ -22,9 +22,9 @@ func getSession() *session.Session {
 // New constructs a new stager for the bucket
 func New(bucket string) stage.Stager {
 	return &S3Stager{
-		Bucket: bucket,
+		Bucket:   bucket,
 		Rejected: bucket + "-rejected",
-		Sess:   getSession(),
+		Sess:     getSession(),
 	}
 }
 
@@ -66,7 +66,7 @@ func (s *S3Stager) Reject(rawurl string) error {
 
 type S3Spec struct {
 	Bucket string
-	Key string
+	Key    string
 }
 
 // FromURL creates a S3Spec from a url string
@@ -77,9 +77,12 @@ func FromURL(rawurl string) (*S3Spec, error) {
 	}
 	hostParts := strings.Split(u.Hostname(), ".")
 	objectName := strings.TrimLeft(u.Path, `/`)
+	if len(objectName) == 0 {
+		return nil, errors.New("objectName is of 0 length")
+	}
 	return &S3Spec{
 		Bucket: hostParts[0],
-		Key: objectName,
+		Key:    objectName,
 	}, nil
 }
 

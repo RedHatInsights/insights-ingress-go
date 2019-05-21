@@ -1,8 +1,8 @@
 package pipeline
 
 import (
-	"log"
 	"context"
+	"log"
 
 	"cloud.redhat.com/ingress/stage"
 	"cloud.redhat.com/ingress/validators"
@@ -23,8 +23,10 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 func (p *Pipeline) Start(ctx context.Context) {
 	for {
 		select {
-		case ev := <- p.AnnouncerChan:
+		case ev := <-p.ValidChan:
 			p.Announcer.Announce(ev)
+		case iev := <-p.InvalidChan:
+			p.Stager.Reject(iev.URL)
 		case <-ctx.Done():
 			return
 		}

@@ -88,7 +88,9 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 var _ = Describe("Upload", func() {
 	var (
 		ch        chan *stage.Input
-		vch       chan *validators.Request
+		reqCh     chan *validators.Request
+		vCh       chan *validators.Response
+		iCh       chan *validators.Response
 		stager    *FakeStager
 		validator *validators.Fake
 		handler   http.Handler
@@ -112,23 +114,46 @@ var _ = Describe("Upload", func() {
 		}
 	}
 
-	var waitForValidator = func() *validators.Request {
+	var waitForValidator = func() (*validators.Request, *validators.Response) {
+		var req *validators.Request
+		var res *validators.Response
+
+		fmt.Printf("About to read from reqCh: %v\n", reqCh)
 		select {
-		case in := <-vch:
-			return in
+		case in := <-reqCh:
+			req = in
 		case <-time.After(100 * time.Millisecond):
-			return nil
+			return nil, nil
 		}
+
+		fmt.Printf("About to read from vCh: %v\n", vCh)
+		select {
+		case in := <-vCh:
+			res = in
+		case <-time.After(100 * time.Millisecond):
+			return nil, nil
+		}
+
+		return req, res
 	}
 
 	BeforeEach(func() {
 		ch = make(chan *stage.Input)
-		vch = make(chan *validators.Request)
+		reqCh = make(chan *validators.Request)
+		vCh = make(chan *validators.Response)
+		iCh = make(chan *validators.Response)
 		stager = &FakeStager{Out: ch}
-		validator = &validators.Fake{Out: vch}
+		validator = &validators.Fake{
+			In:              reqCh,
+			Valid:           vCh,
+			Invalid:         iCh,
+			DesiredResponse: "success",
+		}
 		pl = &pipeline.Pipeline{
-			Stager:    stager,
-			Validator: validator,
+			Stager:      stager,
+			Validator:   validator,
+			ValidChan:   vCh,
+			InvalidChan: iCh,
 		}
 		rr = httptest.NewRecorder()
 		handler = NewHandler(pl)
@@ -206,9 +231,11 @@ var _ = Describe("Upload", func() {
 					ContentType: "application/vnd.redhat.unit.test"})
 				in := waitForStager()
 				Expect(in).To(Not(BeNil()))
-				vin := waitForValidator()
-				Expect(vin.Service).To(Equal("unit"))
-				Expect(vin.Category).To(Equal("test"))
+				req, res := waitForValidator()
+				Expect(req).To(Not(BeNil()))
+				Expect(req.Service).To(Equal("unit"))
+				Expect(req.Category).To(Equal("test"))
+				Expect(res.Validation).To(Equal("success"))
 			})
 		})
 	})

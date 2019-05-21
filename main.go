@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
+	"cloud.redhat.com/ingress/announcers"
 	"cloud.redhat.com/ingress/config"
 	"cloud.redhat.com/ingress/pipeline"
 	"cloud.redhat.com/ingress/stage/s3"
 	"cloud.redhat.com/ingress/upload"
 	"cloud.redhat.com/ingress/validators"
-	"cloud.redhat.com/ingress/announcers"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -40,19 +40,22 @@ func main() {
 		)
 	}
 
-	vch := make(chan *announcers.AvailableEvent)
+	valCh := make(chan *validators.Response)
+	invCh := make(chan *validators.Response)
 
 	p := &pipeline.Pipeline{
-		Stager:    s3.New("jjaggars-test"),
+		Stager: s3.New("jjaggars-test"),
 		Validator: validators.NewKafkaValidator(&validators.KafkaConfig{
-			Brokers: cfg.KafkaBrokers,
-			GroupID: cfg.KafkaGroupID,
-			AvailableTopic: cfg.KafkaAvailableTopic,
+			Brokers:         cfg.KafkaBrokers,
+			GroupID:         cfg.KafkaGroupID,
+			AvailableTopic:  cfg.KafkaAvailableTopic,
 			ValidationTopic: cfg.KafkaValidationTopic,
-			AnnouncerChan: vch,
+			ValidChan:       valCh,
+			InvalidChan:     invCh,
 		}, "platform.upload.testareno"),
-		AnnouncerChan: vch,
-		Announcer: &announcers.Fake{},
+		Announcer:   &announcers.Fake{},
+		ValidChan:   valCh,
+		InvalidChan: invCh,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
