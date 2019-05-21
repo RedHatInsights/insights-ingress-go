@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"net/url"
 )
 
 func New(workingDir string) *LocalStager {
@@ -41,6 +42,15 @@ func (l *LocalStager) Stage(in *stage.Input) (string, error) {
 	}
 
 	return "file://" + f.Name(), nil
+}
+
+func (l *LocalStager) Reject(rawurl string) error {
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		return err
+	}
+	os.Remove(u.Path)
+	return nil
 }
 
 // CleanUp removes the temp directory used by LocalStager

@@ -82,4 +82,22 @@ var _ = Describe("Pipeline", func() {
 			Expect(aout.URL).To(Equal(r.URL))
 		})
 	})
+
+	Describe("Submitting a payload that fails to validate", func(){
+		It("should call stager.Reject", func() {
+			stageIn := &stage.Input{
+				Reader: strings.NewReader("invalid"),
+			}
+			r := &validators.Request{
+				Account: "123",
+				RequestID: "invalid",
+			}
+			go p.Submit(stageIn, r)
+
+			_ = validator.Wait()
+
+			aout := validator.WaitForAnnounce()
+			Expect(aout).To(BeNil())
+		})
+	})
 })

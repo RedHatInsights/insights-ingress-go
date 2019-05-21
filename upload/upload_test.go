@@ -31,6 +31,10 @@ func (s *FakeStager) Stage(in *stage.Input) (string, error) {
 	return "fake_url", nil
 }
 
+func (s *FakeStager) Reject(rawurl string) error {
+	return nil
+}
+
 type FilePart struct {
 	Name        string
 	Content     string

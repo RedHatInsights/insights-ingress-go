@@ -3,6 +3,8 @@ package s3
 import (
 	"errors"
 	"log"
+	"net/url"
+	"strings"
 	"time"
 
 	"cloud.redhat.com/ingress/stage"
@@ -21,6 +23,7 @@ func getSession() *session.Session {
 func New(bucket string) stage.Stager {
 	return &S3Stager{
 		Bucket: bucket,
+		Rejected: bucket + "-rejected",
 		Sess:   getSession(),
 	}
 }
@@ -52,13 +55,41 @@ func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 	return url, nil
 }
 
-func (s *S3Stager) copy(fromBucket string, fromKey string, toBucket string) error {
-	src := fromBucket + "/" + fromKey
+// Reject moves a payload to the rejected bucket
+func (s *S3Stager) Reject(rawurl string) error {
+	fromSpec, err := FromURL(rawurl)
+	if err != nil {
+		return err
+	}
+	return s.copy(fromSpec, s.Rejected)
+}
+
+type S3Spec struct {
+	Bucket string
+	Key string
+}
+
+// FromURL creates a S3Spec from a url string
+func FromURL(rawurl string) (*S3Spec, error) {
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		return nil, err
+	}
+	hostParts := strings.Split(u.Hostname(), ".")
+	objectName := strings.TrimLeft(u.Path, `/`)
+	return &S3Spec{
+		Bucket: hostParts[0],
+		Key: objectName,
+	}, nil
+}
+
+func (s *S3Stager) copy(from *S3Spec, toBucket string) error {
+	src := from.Bucket + "/" + from.Key
 	client := s3.New(s.Sess)
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(toBucket),
 		CopySource: aws.String(src),
-		Key:        aws.String(fromKey),
+		Key:        aws.String(from.Key),
 	}
 	_, err := client.CopyObject(input)
 	if err != nil {
