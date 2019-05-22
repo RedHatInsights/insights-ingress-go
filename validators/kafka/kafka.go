@@ -31,7 +31,7 @@ func New(cfg *Config, topics ...string) *Validator {
 			ev := &validators.Response{}
 			err := json.Unmarshal(data, ev)
 			if err != nil {
-				log.Printf("failed to unarshal data: %v", err)
+				log.Printf("failed to unmarshal data: %v", err)
 			} else {
 				if ev.Validation == "success" {
 					cfg.ValidChan <- ev
