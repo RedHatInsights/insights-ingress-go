@@ -44,7 +44,10 @@ func main() {
 	invCh := make(chan *validators.Response)
 
 	p := &pipeline.Pipeline{
-		Stager: s3.New("jjaggars-test"),
+		Stager: s3.WithSession(&s3.S3Stager{
+			Bucket:   cfg.StageBucket,
+			Rejected: cfg.RejectBucket,
+		}),
 		Validator: validators.NewKafkaValidator(&validators.KafkaConfig{
 			Brokers:         cfg.KafkaBrokers,
 			GroupID:         cfg.KafkaGroupID,

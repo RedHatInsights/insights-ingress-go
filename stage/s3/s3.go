@@ -19,13 +19,10 @@ func getSession() *session.Session {
 	return session.Must(session.NewSession())
 }
 
-// New constructs a new stager for the bucket
-func New(bucket string) stage.Stager {
-	return &S3Stager{
-		Bucket:   bucket,
-		Rejected: bucket + "-rejected",
-		Sess:     getSession(),
-	}
+// WithSession returns a stager with a s3 session attached
+func WithSession(stager *S3Stager) stage.Stager {
+	stager.Sess = getSession()
+	return stager
 }
 
 // Stage stores the file in s3 and returns a presigned url
