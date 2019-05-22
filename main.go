@@ -9,6 +9,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
+	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -50,15 +51,17 @@ func main() {
 			Bucket:   cfg.StageBucket,
 			Rejected: cfg.RejectBucket,
 		}),
-		Validator: kafka.New(&kafka.KafkaConfig{
+		Validator: kafka.New(&kafka.Config{
 			Brokers:         cfg.KafkaBrokers,
 			GroupID:         cfg.KafkaGroupID,
-			AvailableTopic:  cfg.KafkaAvailableTopic,
 			ValidationTopic: cfg.KafkaValidationTopic,
 			ValidChan:       valCh,
 			InvalidChan:     invCh,
 		}, "platform.upload.testareno"),
-		Announcer:   &announcers.Fake{},
+		Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
+			Brokers: cfg.KafkaBrokers,
+			Topic:   cfg.KafkaAvailableTopic,
+		}),
 		ValidChan:   valCh,
 		InvalidChan: invCh,
 	}
