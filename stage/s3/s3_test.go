@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "cloud.redhat.com/ingress/stage/s3"
+	. "github.com/redhatinsights/insights-ingress-go/stage/s3"
 )
 
 var _ = Describe("S3", func() {

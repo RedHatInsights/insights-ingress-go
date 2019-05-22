@@ -14,12 +14,14 @@ type IngressConfig struct {
 	KafkaGroupID         string
 	KafkaAvailableTopic  string
 	KafkaValidationTopic string
+	Port                 int
 }
 
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
 	options := viper.New()
 	options.SetDefault("MaxSize", 10*1024*1024)
+	options.SetDefault("Port", 3000)
 	options.SetDefault("StageBucket", "available")
 	options.SetDefault("RejectBucket", "rejected")
 	options.SetDefault("Auth", true)
@@ -39,5 +41,6 @@ func Get() *IngressConfig {
 		KafkaGroupID:         options.GetString("KafkaGroupID"),
 		KafkaAvailableTopic:  options.GetString("KafkaAvailableTopic"),
 		KafkaValidationTopic: options.GetString("KafkaValidationTopic"),
+		Port:                 options.GetInt("Port"),
 	}
 }

@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	"cloud.redhat.com/ingress/announcers"
-	"cloud.redhat.com/ingress/config"
-	"cloud.redhat.com/ingress/pipeline"
-	"cloud.redhat.com/ingress/stage/s3"
-	"cloud.redhat.com/ingress/upload"
-	"cloud.redhat.com/ingress/validators"
+	"github.com/redhatinsights/insights-ingress-go/announcers"
+	"github.com/redhatinsights/insights-ingress-go/config"
+	"github.com/redhatinsights/insights-ingress-go/pipeline"
+	"github.com/redhatinsights/insights-ingress-go/stage/s3"
+	"github.com/redhatinsights/insights-ingress-go/upload"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"

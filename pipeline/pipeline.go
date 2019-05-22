@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"cloud.redhat.com/ingress/stage"
-	"cloud.redhat.com/ingress/validators"
+	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
 // Submit accepts a stage request and a validation request

@@ -1,9 +1,9 @@
 package pipeline
 
 import (
-	"cloud.redhat.com/ingress/announcers"
-	"cloud.redhat.com/ingress/stage"
-	"cloud.redhat.com/ingress/validators"
+	"github.com/redhatinsights/insights-ingress-go/announcers"
+	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
 // Pipeline defines the descrete processing steps for ingress

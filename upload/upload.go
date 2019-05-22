@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"regexp"
 
-	"cloud.redhat.com/ingress/config"
-	"cloud.redhat.com/ingress/pipeline"
-	"cloud.redhat.com/ingress/stage"
-	"cloud.redhat.com/ingress/validators"
+	"github.com/redhatinsights/insights-ingress-go/config"
+	"github.com/redhatinsights/insights-ingress-go/pipeline"
+	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/go-chi/chi/middleware"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )

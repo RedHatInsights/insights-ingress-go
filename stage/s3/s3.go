@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"cloud.redhat.com/ingress/stage"
+	"github.com/redhatinsights/insights-ingress-go/stage"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

@@ -1,6 +1,6 @@
 package announcers
 
-import "cloud.redhat.com/ingress/validators"
+import "github.com/redhatinsights/insights-ingress-go/validators"
 
 // Announcer
 type Announcer interface {

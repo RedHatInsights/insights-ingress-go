@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"os"
 
-	"cloud.redhat.com/ingress/stage"
+	"github.com/redhatinsights/insights-ingress-go/stage"
 )
 
 func New(workingDir string) *LocalStager {

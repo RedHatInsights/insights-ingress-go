@@ -6,11 +6,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"cloud.redhat.com/ingress/announcers"
-	. "cloud.redhat.com/ingress/pipeline"
-	"cloud.redhat.com/ingress/stage"
-	"cloud.redhat.com/ingress/stage/local"
-	"cloud.redhat.com/ingress/validators"
+	"github.com/redhatinsights/insights-ingress-go/announcers"
+	. "github.com/redhatinsights/insights-ingress-go/pipeline"
+	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/stage/local"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
 var _ = Describe("Pipeline", func() {

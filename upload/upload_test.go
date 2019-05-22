@@ -16,10 +16,10 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 
-	"cloud.redhat.com/ingress/pipeline"
-	"cloud.redhat.com/ingress/stage"
-	. "cloud.redhat.com/ingress/upload"
-	"cloud.redhat.com/ingress/validators"
+	"github.com/redhatinsights/insights-ingress-go/pipeline"
+	"github.com/redhatinsights/insights-ingress-go/stage"
+	. "github.com/redhatinsights/insights-ingress-go/upload"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
 type FakeStager struct {
