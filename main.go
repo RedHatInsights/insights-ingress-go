@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -68,5 +69,5 @@ func main() {
 	r.Get("/", lubDub)
 	r.Post("/upload", upload.NewHandler(p))
 	r.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":3000", r)
+	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
 }
