@@ -1,11 +1,12 @@
 package local
 
 import (
-	"cloud.redhat.com/ingress/stage"
 	"io/ioutil"
 	"log"
-	"os"
 	"net/url"
+	"os"
+
+	"cloud.redhat.com/ingress/stage"
 )
 
 func New(workingDir string) *LocalStager {
@@ -18,26 +19,26 @@ func New(workingDir string) *LocalStager {
 	}
 }
 
-func cleanUp(f *os.File) {
-	f.Close()
-	os.Remove(f.Name())
-}
-
 func (l *LocalStager) Stage(in *stage.Input) (string, error) {
 	f, err := ioutil.TempFile(l.WorkingDir, "stage")
 	if err != nil {
 		return "", err
 	}
 
+	defer func() {
+		if err != nil {
+			f.Close()
+			os.Remove(f.Name())
+		}
+	}()
+
 	buf, err := ioutil.ReadAll(in.Reader)
 	if err != nil {
-		cleanUp(f)
 		return "", err
 	}
 
 	_, err = f.Write(buf)
 	if err != nil {
-		cleanUp(f)
 		return "", nil
 	}
 
