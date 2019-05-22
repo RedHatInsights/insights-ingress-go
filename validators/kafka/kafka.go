@@ -1,15 +1,16 @@
-package validators
+package kafka
 
 import (
 	"context"
 	"encoding/json"
 	"log"
 
+	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/segmentio/kafka-go"
 )
 
-// NewKafkaValidator constructs and initializes a new Kafka Validator
-func NewKafkaValidator(cfg *KafkaConfig, topics ...string) *KafkaValidator {
+// New constructs and initializes a new Kafka Validator
+func New(cfg *KafkaConfig, topics ...string) *KafkaValidator {
 	kv := &KafkaValidator{
 		ValidationProducerMapping: make(map[string]chan []byte),
 		ValidationConsumerChannel: make(chan []byte),
@@ -29,7 +30,7 @@ func NewKafkaValidator(cfg *KafkaConfig, topics ...string) *KafkaValidator {
 	go func() {
 		for {
 			data := <-kv.ValidationConsumerChannel
-			ev := &Response{}
+			ev := &validators.Response{}
 			err := json.Unmarshal(data, ev)
 			if err != nil {
 				log.Printf("failed to unarshal data: %v", err)
@@ -47,7 +48,7 @@ func NewKafkaValidator(cfg *KafkaConfig, topics ...string) *KafkaValidator {
 }
 
 // Validate validates a ValidationRequest
-func (kv *KafkaValidator) Validate(vr *Request) {
+func (kv *KafkaValidator) Validate(vr *validators.Request) {
 	data, err := json.Marshal(vr)
 	if err != nil {
 		log.Printf("failed to marshal json: %v", err)

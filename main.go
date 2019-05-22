@@ -12,6 +12,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
+	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -49,7 +50,7 @@ func main() {
 			Bucket:   cfg.StageBucket,
 			Rejected: cfg.RejectBucket,
 		}),
-		Validator: validators.NewKafkaValidator(&validators.KafkaConfig{
+		Validator: kafka.New(&kafka.KafkaConfig{
 			Brokers:         cfg.KafkaBrokers,
 			GroupID:         cfg.KafkaGroupID,
 			AvailableTopic:  cfg.KafkaAvailableTopic,
