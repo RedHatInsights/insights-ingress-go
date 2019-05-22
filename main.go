@@ -38,7 +38,7 @@ func main() {
 	)
 	if cfg.Auth {
 		r.Use(
-			identity.Identity,
+			identity.EnforceIdentity,
 		)
 	}
 

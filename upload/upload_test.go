@@ -73,9 +73,11 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
-		AccountNumber: "540155",
-		Internal: identity.Internal{
-			OrgID: "12345",
+		Identity: identity.Identity{
+			AccountNumber: "540155",
+			Internal: identity.Internal{
+				OrgID: "12345",
+			},
 		},
 	})
 
