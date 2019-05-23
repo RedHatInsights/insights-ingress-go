@@ -2,7 +2,6 @@ package s3
 
 import (
 	"errors"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -46,8 +45,6 @@ func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 	if err != nil {
 		return "", errors.New("Failed to generate presigned url: " + err.Error())
 	}
-
-	log.Printf("url: %v", url)
 
 	return url, nil
 }

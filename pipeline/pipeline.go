@@ -2,17 +2,18 @@ package pipeline
 
 import (
 	"context"
-	"log"
 
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
+	"go.uber.org/zap"
 )
 
 // Submit accepts a stage request and a validation request
 func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	url, err := p.Stager.Stage(in)
 	if err != nil {
-		log.Printf("Error staging %v: %v", in, err)
+		l.Log.Error("Error staging", zap.String("key", in.Key), zap.Error(err))
 		return
 	}
 	vr.URL = url

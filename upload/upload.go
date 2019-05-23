@@ -2,16 +2,17 @@ package upload
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"regexp"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/redhatinsights/insights-ingress-go/config"
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"go.uber.org/zap"
 )
 
 var contentTypePat = regexp.MustCompile(`application/vnd\.redhat\.(\w+)\.(\w+)`)
@@ -34,14 +35,14 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
-			log.Printf("Did not find `file` part: %v", err)
+			l.Log.Info("Did not find `file` part", zap.Error(err))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
 
 		topicDescriptor, validationErr := validate(fileHeader.Header.Get("Content-Type"))
 		if validationErr != nil {
-			log.Printf("Did not validate: %v", validationErr)
+			l.Log.Info("Did not validate", zap.Error(validationErr))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
@@ -55,11 +56,10 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Key:    reqID,
 		}
 
-		metadata, metadataHeader, err := r.FormFile("metadata")
+		metadata, _, err := r.FormFile("metadata")
 		if err != nil {
-			log.Printf("Did not find `metadata` part: %v", err)
+			l.Log.Info("Did not find `metadata` part", zap.Error(err))
 		} else {
-			log.Printf("%v, %v", metadata, metadataHeader)
 			stageInput.Metadata = metadata
 		}
 

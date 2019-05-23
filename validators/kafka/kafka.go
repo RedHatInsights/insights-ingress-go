@@ -2,10 +2,11 @@ package kafka
 
 import (
 	"encoding/json"
-	"log"
 
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/validators"
+	"go.uber.org/zap"
 )
 
 // New constructs and initializes a new Kafka Validator
@@ -33,7 +34,7 @@ func New(cfg *Config, topics ...string) *Validator {
 			ev := &validators.Response{}
 			err := json.Unmarshal(data, ev)
 			if err != nil {
-				log.Printf("failed to unmarshal data: %v", err)
+				l.Log.Error("failed to unmarshal data", zap.Error(err))
 			} else {
 				kv.RouteResponse(ev)
 			}
@@ -51,7 +52,7 @@ func (kv *Validator) RouteResponse(response *validators.Response) {
 	case "failure":
 		kv.InvalidChan <- response
 	default:
-		log.Printf("Invalid validation in response: %s", response)
+		l.Log.Error("Invalid validation in response", zap.String("response.validation", response.Validation))
 	}
 }
 
@@ -59,11 +60,12 @@ func (kv *Validator) RouteResponse(response *validators.Response) {
 func (kv *Validator) Validate(vr *validators.Request) {
 	data, err := json.Marshal(vr)
 	if err != nil {
-		log.Printf("failed to marshal json: %v", err)
+		l.Log.Error("failed to marshal json", zap.Error(err))
 		return
 	}
-	log.Printf("About to pass %s to testareno", data)
-	kv.ValidationProducerMapping["platform.upload.testareno"] <- data
+	topic := "platform.upload.testareno"
+	l.Log.Debug("Posting data to topic", zap.ByteString("data", data), zap.String("topic", topic))
+	kv.ValidationProducerMapping[topic] <- data
 }
 
 func (kv *Validator) addProducer(topic string) {

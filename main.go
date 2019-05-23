@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
@@ -19,6 +19,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"go.uber.org/zap"
 )
 
 func lubDub(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,7 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	cfg := config.Get()
-	log.Printf("cfg: %v", cfg)
+	l.InitLogger()
 	r := chi.NewRouter()
 	r.Use(
 		middleware.RequestID,
@@ -70,8 +71,14 @@ func main() {
 	defer cancel()
 	go p.Start(ctx)
 
+	r.Route("/api/ingress/v1", func(r chi.Router) {
+		r.Get("/", lubDub)
+		r.Post("/upload", upload.NewHandler(p))
+		r.Handle("/metrics", promhttp.Handler())
+	})
 	r.Get("/", lubDub)
-	r.Post("/api/ingress/v1/upload", upload.NewHandler(p))
 	r.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
+	l.Log.Info("Starting service", zap.Int("port", cfg.Port))
+	err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
+	l.Log.Fatal("Service stopped", zap.Error(err))
 }

@@ -2,10 +2,11 @@ package announcers
 
 import (
 	"encoding/json"
-	"log"
 
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/validators"
+	"go.uber.org/zap"
 )
 
 // Fake is a fake announcer
@@ -36,7 +37,7 @@ func NewKafkaAnnouncer(cfg *queue.ProducerConfig) *Kafka {
 func (k *Kafka) Announce(e *validators.Response) {
 	data, err := json.Marshal(e)
 	if err != nil {
-		log.Printf("failed to marshal json: %v", err)
+		l.Log.Error("failed to marshal json", zap.Error(err))
 		return
 	}
 	k.In <- data

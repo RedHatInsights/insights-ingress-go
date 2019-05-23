@@ -2,8 +2,10 @@ package queue
 
 import (
 	"context"
+
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/segmentio/kafka-go"
-	"log"
+	"go.uber.org/zap"
 )
 
 //Producer consumes in and produces to the topic in config
@@ -18,7 +20,6 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	for {
 		v := <-in
-		log.Printf("got %v about to write to kafka", v)
 		err := w.WriteMessages(context.Background(),
 			kafka.Message{
 				Key:   nil,
@@ -26,7 +27,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			},
 		)
 		if err != nil {
-			log.Printf("error while writing: %v", err)
+			l.Log.Error("error while writing", zap.Error(err))
 		}
 	}
 }
@@ -44,7 +45,7 @@ func Consumer(out chan []byte, config *ConsumerConfig) {
 	for {
 		m, err := r.ReadMessage(context.Background())
 		if err != nil {
-			log.Printf("Error while reading message: %v", err)
+			l.Log.Error("Error while reading message", zap.Error(err))
 		} else {
 			out <- m.Value
 		}
