@@ -8,6 +8,8 @@ type Validator struct {
 	ValidationConsumerChannel chan []byte
 	KafkaBrokers              []string
 	KafkaGroupID              string
+	ValidChan                 chan *validators.Response
+	InvalidChan               chan *validators.Response
 }
 
 // Config configures a new Kafka Validator

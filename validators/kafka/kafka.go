@@ -15,6 +15,8 @@ func New(cfg *Config, topics ...string) *Validator {
 		ValidationConsumerChannel: make(chan []byte),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
+		ValidChan:                 cfg.ValidChan,
+		InvalidChan:               cfg.InvalidChan,
 	}
 	for _, topic := range topics {
 		kv.addProducer(topic)
@@ -33,16 +35,24 @@ func New(cfg *Config, topics ...string) *Validator {
 			if err != nil {
 				log.Printf("failed to unmarshal data: %v", err)
 			} else {
-				if ev.Validation == "success" {
-					cfg.ValidChan <- ev
-				} else if ev.Validation == "failure" {
-					cfg.InvalidChan <- ev
-				}
+				kv.RouteResponse(ev)
 			}
 		}
 	}()
 
 	return kv
+}
+
+// RouteResponse passes along responses based on their validation status
+func (kv *Validator) RouteResponse(response *validators.Response) {
+	switch response.Validation {
+	case "success":
+		kv.ValidChan <- response
+	case "failure":
+		kv.InvalidChan <- response
+	default:
+		log.Printf("Invalid validation in response: %s", response)
+	}
 }
 
 // Validate validates a ValidationRequest
