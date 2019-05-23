@@ -1,7 +1,9 @@
 package pipeline_test
 
 import (
+	"context"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -9,7 +11,6 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	. "github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
-	"github.com/redhatinsights/insights-ingress-go/stage/local"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
@@ -18,18 +19,16 @@ var _ = Describe("Pipeline", func() {
 	var (
 		p         *Pipeline
 		validator *validators.Fake
-		stager    *local.LocalStager
+		stager    *stage.Fake
 		announcer *announcers.Fake
 	)
 
 	BeforeEach(func() {
-		stager = local.New("/tmp")
-		reqCh := make(chan *validators.Request)
+		stager = &stage.Fake{}
 		vCh := make(chan *validators.Response)
 		iCh := make(chan *validators.Response)
 
 		validator = &validators.Fake{
-			In:              reqCh,
 			Valid:           vCh,
 			Invalid:         iCh,
 			DesiredResponse: "success",
@@ -45,10 +44,6 @@ var _ = Describe("Pipeline", func() {
 		}
 	})
 
-	AfterEach(func() {
-		stager.CleanUp()
-	})
-
 	Describe("Submitting a valid stage.Input", func() {
 		It("should return a URL", func() {
 			stageIn := &stage.Input{
@@ -60,7 +55,7 @@ var _ = Describe("Pipeline", func() {
 			}
 			go p.Submit(stageIn, r)
 
-			vout := validator.WaitForIn()
+			vout := validator.WaitFor(p.ValidChan)
 
 			Expect(r.URL).To(Not(BeNil()))
 			Expect(vout).To(Not(BeNil()))
@@ -79,8 +74,11 @@ var _ = Describe("Pipeline", func() {
 			}
 			go p.Submit(stageIn, r)
 
-			validator.WaitForIn()
-			aout := validator.WaitFor(validator.Valid)
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+			p.Tick(ctx)
+
+			aout := announcer.Event
 
 			Expect(aout).To(Not(BeNil()))
 			Expect(aout.URL).To(Equal(r.URL))
@@ -99,10 +97,33 @@ var _ = Describe("Pipeline", func() {
 			validator.DesiredResponse = "failure"
 			go p.Submit(stageIn, r)
 
-			_ = validator.WaitForIn()
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+			p.Tick(ctx)
 
-			aout := validator.WaitFor(validator.Invalid)
-			Expect(aout).To(Not(BeNil()))
+			Expect(stager.RejectCalled).To(BeTrue())
+		})
+	})
+
+	Describe("An error during stage", func() {
+		It("should not return a URL", func() {
+			stager.ShouldError = true
+			p.Stager = stager
+			stageIn := &stage.Input{}
+			r := &validators.Request{
+				Account:   "123",
+				RequestID: "test",
+			}
+			p.Submit(stageIn, r)
+			Expect(validator.Called).To(BeFalse())
+		})
+	})
+
+	Describe("When a context cancels", func() {
+		It("pipeline should stop running", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			p.Start(ctx)
 		})
 	})
 })

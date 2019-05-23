@@ -1,21 +1,22 @@
 package validators
 
 import (
-	"fmt"
 	"time"
 )
 
 type Fake struct {
-	In              chan *Request
+	In              *Request
+	Out             *Response
 	Valid           chan *Response
 	Invalid         chan *Response
+	Called          bool
 	DesiredResponse string
 }
 
 func (v *Fake) Validate(in *Request) {
-	fmt.Println("About to push to v.In")
-	v.In <- in
-	r := &Response{
+	v.Called = true
+	v.In = in
+	v.Out = &Response{
 		RequestID:  in.RequestID,
 		Validation: v.DesiredResponse,
 		URL:        in.URL,
@@ -24,22 +25,11 @@ func (v *Fake) Validate(in *Request) {
 		Service:    in.Service,
 	}
 	if v.DesiredResponse == "success" {
-		fmt.Println("About to push to v.Valid")
-		v.Valid <- r
+		v.Valid <- v.Out
 	} else if v.DesiredResponse == "failure" {
-		fmt.Println("About to push to v.Invalid")
-		v.Invalid <- r
+		v.Invalid <- v.Out
 	} else {
 		return
-	}
-}
-
-func (v *Fake) WaitForIn() *Request {
-	select {
-	case o := <-v.In:
-		return o
-	case <-time.After(100 * time.Millisecond):
-		return nil
 	}
 }
 

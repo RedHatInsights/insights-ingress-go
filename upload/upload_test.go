@@ -16,24 +16,12 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 
+	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	. "github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 )
-
-type FakeStager struct {
-	Out chan *stage.Input
-}
-
-func (s *FakeStager) Stage(in *stage.Input) (string, error) {
-	s.Out <- in
-	return "fake_url", nil
-}
-
-func (s *FakeStager) Reject(rawurl string) error {
-	return nil
-}
 
 type FilePart struct {
 	Name        string
@@ -89,11 +77,9 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 
 var _ = Describe("Upload", func() {
 	var (
-		ch        chan *stage.Input
-		reqCh     chan *validators.Request
 		vCh       chan *validators.Response
 		iCh       chan *validators.Response
-		stager    *FakeStager
+		stager    *stage.Fake
 		validator *validators.Fake
 		handler   http.Handler
 		rr        *httptest.ResponseRecorder
@@ -105,48 +91,16 @@ var _ = Describe("Upload", func() {
 		Expect(err).To(BeNil())
 		handler.ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(code))
-	}
-
-	var waitForStager = func() *stage.Input {
-		select {
-		case in := <-ch:
-			return in
-		case <-time.After(100 * time.Millisecond):
-			return nil
-		}
-	}
-
-	var waitForValidator = func() (*validators.Request, *validators.Response) {
-		var req *validators.Request
-		var res *validators.Response
-
-		fmt.Printf("About to read from reqCh: %v\n", reqCh)
-		select {
-		case in := <-reqCh:
-			req = in
-		case <-time.After(100 * time.Millisecond):
-			return nil, nil
-		}
-
-		fmt.Printf("About to read from vCh: %v\n", vCh)
-		select {
-		case in := <-vCh:
-			res = in
-		case <-time.After(100 * time.Millisecond):
-			return nil, nil
-		}
-
-		return req, res
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+		pl.Tick(ctx)
 	}
 
 	BeforeEach(func() {
-		ch = make(chan *stage.Input)
-		reqCh = make(chan *validators.Request)
 		vCh = make(chan *validators.Response)
 		iCh = make(chan *validators.Response)
-		stager = &FakeStager{Out: ch}
+		stager = &stage.Fake{ShouldError: false}
 		validator = &validators.Fake{
-			In:              reqCh,
 			Valid:           vCh,
 			Invalid:         iCh,
 			DesiredResponse: "success",
@@ -154,6 +108,7 @@ var _ = Describe("Upload", func() {
 		pl = &pipeline.Pipeline{
 			Stager:      stager,
 			Validator:   validator,
+			Announcer:   &announcers.Fake{},
 			ValidChan:   vCh,
 			InvalidChan: iCh,
 		}
@@ -185,7 +140,7 @@ var _ = Describe("Upload", func() {
 						ContentType: "text/plain",
 					},
 				)
-				in := waitForStager()
+				in := stager.Input
 				Expect(in).To(Not(BeNil()))
 				buf := make([]byte, 2)
 				bytesRead, err := in.Metadata.Read(buf)
@@ -221,7 +176,7 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
-				Expect(waitForStager()).To(Not(BeNil()))
+				Expect(stager.StageCalled).To(BeTrue())
 			})
 		})
 
@@ -231,9 +186,10 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
-				in := waitForStager()
+				in := stager.Input
+				req := validator.In
+				res := validator.Out
 				Expect(in).To(Not(BeNil()))
-				req, res := waitForValidator()
 				Expect(req).To(Not(BeNil()))
 				Expect(req.Service).To(Equal("unit"))
 				Expect(req.Category).To(Equal("test"))

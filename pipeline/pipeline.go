@@ -19,16 +19,23 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	p.Validator.Validate(vr)
 }
 
+// Tick handles one loop for handling post-validation activities
+func (p *Pipeline) Tick(ctx context.Context) bool {
+	select {
+	case ev := <-p.ValidChan:
+		p.Announcer.Announce(ev)
+	case iev := <-p.InvalidChan:
+		p.Stager.Reject(iev.URL)
+	case <-ctx.Done():
+		return false
+	}
+	return true
+}
+
 // Start watches the announcer channel for new events and calls announce
 func (p *Pipeline) Start(ctx context.Context) {
-	for {
-		select {
-		case ev := <-p.ValidChan:
-			p.Announcer.Announce(ev)
-		case iev := <-p.InvalidChan:
-			p.Stager.Reject(iev.URL)
-		case <-ctx.Done():
-			return
-		}
+	keepGoing := true
+	for keepGoing {
+		keepGoing = p.Tick(ctx)
 	}
 }

@@ -10,12 +10,12 @@ import (
 
 // Fake is a fake announcer
 type Fake struct {
-	event *validators.Response
+	Event *validators.Response
 }
 
 // Announce does nothing
 func (f *Fake) Announce(e *validators.Response) {
-	f.event = e
+	f.Event = e
 }
 
 // Kafka is an announcer that broadcases on a kafka topic
