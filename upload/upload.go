@@ -59,8 +59,6 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		metadata, _, err := r.FormFile("metadata")
 		if err != nil {
 			l.Log.Info("Did not find `metadata` part", zap.Error(err))
-		} else {
-			stageInput.Metadata = metadata
 		}
 
 		vr := &validators.Request{

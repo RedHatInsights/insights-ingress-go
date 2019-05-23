@@ -6,7 +6,7 @@ type Fake struct {
 	Input        *Input
 	StageCalled  bool
 	RejectCalled bool
-	RejectedURL  string
+	RequestID  string
 	ShouldError  bool
 	URL          string
 }
@@ -20,8 +20,8 @@ func (f *Fake) Stage(input *Input) (string, error) {
 	return f.URL, nil
 }
 
-func (f *Fake) Reject(rawurl string) error {
+func (f *Fake) Reject(requestID string) error {
 	f.RejectCalled = true
-	f.RejectedURL = rawurl
+	f.RequestID = requestID
 	return nil
 }

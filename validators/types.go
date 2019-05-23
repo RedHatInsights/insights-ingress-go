@@ -1,10 +1,14 @@
 package validators
 
+import (
+	"io"
+)
+
 // Request is sent to the validation topic for each new payload
 type Request struct {
 	Account     string      `json:"account"`
 	Category    string      `json:"category"`
-	Metadata    interface{} `json:"metadata"`
+	Metadata    io.Reader   `json:"metadata"`
 	RequestID   string      `json:"request_id"`
 	Principal   string      `json:"principal"`
 	Service     string      `json:"service"`

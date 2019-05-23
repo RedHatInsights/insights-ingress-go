@@ -2,8 +2,6 @@ package s3
 
 import (
 	"errors"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/stage"
@@ -50,37 +48,19 @@ func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 }
 
 // Reject moves a payload to the rejected bucket
-func (s *S3Stager) Reject(rawurl string) error {
-	fromSpec, err := FromURL(rawurl)
-	if err != nil {
-		return err
-	}
-	return s.copy(fromSpec, s.Rejected)
+func (s *S3Stager) Reject(requestID string) error {
+	return s.copy(&bucketKey{
+		Bucket: s.Bucket,
+		Key:    requestID,
+	}, s.Rejected)
 }
 
-type S3Spec struct {
+type bucketKey struct {
 	Bucket string
 	Key    string
 }
 
-// FromURL creates a S3Spec from a url string
-func FromURL(rawurl string) (*S3Spec, error) {
-	u, err := url.Parse(rawurl)
-	if err != nil {
-		return nil, err
-	}
-	hostParts := strings.Split(u.Hostname(), ".")
-	objectName := strings.TrimLeft(u.Path, `/`)
-	if len(objectName) == 0 {
-		return nil, errors.New("objectName is of 0 length")
-	}
-	return &S3Spec{
-		Bucket: hostParts[0],
-		Key:    objectName,
-	}, nil
-}
-
-func (s *S3Stager) copy(from *S3Spec, toBucket string) error {
+func (s *S3Stager) copy(from *bucketKey, toBucket string) error {
 	src := from.Bucket + "/" + from.Key
 	client := s3.New(s.Sess)
 	input := &s3.CopyObjectInput{

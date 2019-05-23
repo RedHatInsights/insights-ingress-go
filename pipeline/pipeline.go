@@ -24,9 +24,11 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 func (p *Pipeline) Tick(ctx context.Context) bool {
 	select {
 	case ev := <-p.ValidChan:
+		inc("success")
 		p.Announcer.Announce(ev)
 	case iev := <-p.InvalidChan:
-		p.Stager.Reject(iev.URL)
+		inc("failure")
+		p.Stager.Reject(iev.RequestID)
 	case <-ctx.Done():
 		return false
 	}
@@ -35,8 +37,9 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 
 // Start watches the announcer channel for new events and calls announce
 func (p *Pipeline) Start(ctx context.Context) {
-	keepGoing := true
-	for keepGoing {
-		keepGoing = p.Tick(ctx)
+	for {
+		if !p.Tick(ctx) {
+			return
+		}
 	}
 }

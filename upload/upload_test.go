@@ -142,8 +142,10 @@ var _ = Describe("Upload", func() {
 				)
 				in := stager.Input
 				Expect(in).To(Not(BeNil()))
+				vin := validator.In
+				Expect(vin).To(Not(BeNil()))
 				buf := make([]byte, 2)
-				bytesRead, err := in.Metadata.Read(buf)
+				bytesRead, err := vin.Metadata.Read(buf)
 				Expect(err).To(BeNil())
 				Expect(bytesRead).To(Equal(2))
 				Expect(string(buf)).To(Equal("md"))
