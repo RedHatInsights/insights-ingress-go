@@ -37,9 +37,5 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 
 // Start watches the announcer channel for new events and calls announce
 func (p *Pipeline) Start(ctx context.Context) {
-	for {
-		if !p.Tick(ctx) {
-			return
-		}
-	}
+	for p.Tick(ctx) {}
 }
