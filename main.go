@@ -71,7 +71,7 @@ func main() {
 	go p.Start(ctx)
 
 	r.Get("/", lubDub)
-	r.Post("/upload", upload.NewHandler(p))
+	r.Post("/api/ingress/v1/upload", upload.NewHandler(p))
 	r.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
 }

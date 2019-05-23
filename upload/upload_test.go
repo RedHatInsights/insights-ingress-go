@@ -87,7 +87,7 @@ var _ = Describe("Upload", func() {
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
-		req, err := makeMultipartRequest("/upload", parts...)
+		req, err := makeMultipartRequest("/api/ingress/v1/upload", parts...)
 		Expect(err).To(BeNil())
 		handler.ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(code))

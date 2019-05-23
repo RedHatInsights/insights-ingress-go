@@ -46,6 +46,8 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			return
 		}
 
+		b64Identity := r.Header.Get("x-rh-identity")
+
 		reqID := middleware.GetReqID(r.Context())
 
 		stageInput := &stage.Input{
@@ -62,11 +64,12 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		}
 
 		vr := &validators.Request{
-			RequestID: reqID,
-			Size:      fileHeader.Size,
-			Service:   topicDescriptor.Service,
-			Category:  topicDescriptor.Category,
-			Metadata:  metadata,
+			RequestID:   reqID,
+			Size:        fileHeader.Size,
+			Service:     topicDescriptor.Service,
+			Category:    topicDescriptor.Category,
+			B64Identity: b64Identity,
+			Metadata:    metadata,
 		}
 
 		if config.Get().Auth == true {

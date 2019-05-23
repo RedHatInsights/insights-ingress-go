@@ -31,7 +31,7 @@ func New(cfg *Config, topics ...string) *Validator {
 			ev := &validators.Response{}
 			err := json.Unmarshal(data, ev)
 			if err != nil {
-				log.Printf("failed to unarshal data: %v", err)
+				log.Printf("failed to unmarshal data: %v", err)
 			} else {
 				if ev.Validation == "success" {
 					cfg.ValidChan <- ev
@@ -52,7 +52,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		log.Printf("failed to marshal json: %v", err)
 		return
 	}
-	log.Printf("About to pass %v to testareno", data)
+	log.Printf("About to pass %s to testareno", data)
 	kv.ValidationProducerMapping["platform.upload.testareno"] <- data
 }
 
