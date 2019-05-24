@@ -1,9 +1,7 @@
 package upload
 
 import (
-	"errors"
 	"net/http"
-	"regexp"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/redhatinsights/insights-ingress-go/config"
@@ -15,34 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var contentTypePat = regexp.MustCompile(`application/vnd\.redhat\.(\w+)\.(\w+)`)
-
-func isValidTopic(service string) bool {
-	list := config.Get().ValidTopics
-	for _, validService := range list {
-		if validService == service {
-			return true
-		}
-	}
-	return false
-}
-
-func validate(contentType string) (*TopicDescriptor, error) {
-	// look the content type up in a static map
-	// else parse it
-	m := contentTypePat.FindStringSubmatch(contentType)
-	if m == nil {
-		return nil, errors.New("Failed to match on Content-Type: " + contentType)
-	}
-	if isValidTopic(m[1]) == false {
-		return nil, errors.New("Invalid Service: " + m[1])
-	}
-	return &TopicDescriptor{
-		Service:  m[1],
-		Category: m[2],
-	}, nil
-}
-
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -53,9 +23,15 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			return
 		}
 
-		topicDescriptor, validationErr := validate(fileHeader.Header.Get("Content-Type"))
+		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
 		if validationErr != nil {
 			l.Log.Info("Did not validate", zap.Error(validationErr))
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		if err := p.Validator.ValidateService(serviceDescriptor); err != nil {
+			l.Log.Info("Unrecognized service", zap.Error(err))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
@@ -77,8 +53,8 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		vr := &validators.Request{
 			RequestID:   reqID,
 			Size:        fileHeader.Size,
-			Service:     topicDescriptor.Service,
-			Category:    topicDescriptor.Category,
+			Service:     serviceDescriptor.Service,
+			Category:    serviceDescriptor.Category,
 			B64Identity: b64Identity,
 			Metadata:    metadata,
 		}

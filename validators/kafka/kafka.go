@@ -2,12 +2,22 @@ package kafka
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
+	"github.com/redhatinsights/insights-ingress-go/config"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"go.uber.org/zap"
 )
+
+var tdMapping map[string]string
+
+func init() {
+	tdMapping = make(map[string]string)
+	tdMapping["openshift"] = "platform.upload.buckit"
+}
 
 // New constructs and initializes a new Kafka Validator
 func New(cfg *Config, topics ...string) *Validator {
@@ -64,7 +74,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		l.Log.Error("failed to marshal json", zap.Error(err))
 		return
 	}
-	topic := "platform.upload.testareno"
+	topic := serviceToTopic(vr.Service)
 	l.Log.Debug("Posting data to topic", zap.ByteString("data", data), zap.String("topic", topic))
 	kv.ValidationProducerMapping[topic] <- data
 }
@@ -76,4 +86,23 @@ func (kv *Validator) addProducer(topic string) {
 		Topic:   topic,
 	})
 	kv.ValidationProducerMapping[topic] = ch
+}
+
+// ValidateService ensures that a service maps to a real topic
+func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) error {
+	topic := serviceToTopic(service.Service)	
+	for _, validTopic := range config.Get().ValidTopics {
+		if validTopic == topic {
+			return nil
+		}
+	}
+	return errors.New("Validation topic is invalid")
+}
+
+func serviceToTopic(service string) string {
+	topic := tdMapping[service]		
+	if topic != "" {
+		return topic
+	}
+	return fmt.Sprintf("platform.upload.%s", service)
 }

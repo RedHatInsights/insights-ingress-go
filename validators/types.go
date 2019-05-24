@@ -29,7 +29,14 @@ type Response struct {
 	Extras      map[string]string `json:"extras"`
 }
 
+// ServiceDescriptor is used to select a message topic
+type ServiceDescriptor struct {
+	Service  string
+	Category string
+}
+
 // Validator validates requests
 type Validator interface {
 	Validate(req *Request)
+	ValidateService(service *ServiceDescriptor) error
 }

@@ -199,6 +199,16 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
+		Context("with legacy content type", func() {
+			It("should validate and be processed", func() {
+				boiler(http.StatusAccepted, &FilePart{
+					Name: "file",
+					Content: "testing",
+					ContentType: "application/x-gzip; charset=binary",
+				})
+			})
+		})
+
 		Context("with invalid service name", func() {
 			It("should return 415", func() {
 				boiler(http.StatusUnsupportedMediaType, &FilePart{

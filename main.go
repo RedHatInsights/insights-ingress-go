@@ -76,7 +76,7 @@ func main() {
 				ValidationTopic: cfg.KafkaValidationTopic,
 				ValidChan:       valCh,
 				InvalidChan:     invCh,
-			}, "platform.upload.testareno"),
+			}, cfg.ValidTopics...),
 			Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
 				Brokers: cfg.KafkaBrokers,
 				Topic:   cfg.KafkaAvailableTopic,

@@ -37,7 +37,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("KafkaAvailableTopic", "platform.upload.available")
 	options.SetDefault("KafkaValidationTopic", "platform.upload.validation")
-	options.SetDefault("ValidTopics", "unit")
+	options.SetDefault("ValidTopics", "platform.upload.unit")
 	options.SetDefault("Simulate", false)
 	options.SetDefault("SimulationStageDelay", 100)
 	options.SetDefault("SimulationValidateDelay", 5000)

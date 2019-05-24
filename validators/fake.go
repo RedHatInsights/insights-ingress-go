@@ -2,6 +2,7 @@ package validators
 
 import (
 	"time"
+	"errors"
 )
 
 type Fake struct {
@@ -31,6 +32,13 @@ func (v *Fake) Validate(in *Request) {
 	} else {
 		return
 	}
+}
+
+func (v *Fake) ValidateService(service *ServiceDescriptor) error {
+	if service.Service == "failed" {
+		return errors.New("failed is an invalid service")
+	}
+	return nil
 }
 
 func (v *Fake) WaitFor(ch chan *Response) *Response {
@@ -63,4 +71,8 @@ func (s *Simulation) Validate(request *Request) {
 		}
 	}()
 	time.Sleep(s.CallDelay)
+}
+
+func (s *Simulation) ValidateService(service *ServiceDescriptor) error {
+	return nil
 }
