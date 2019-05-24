@@ -1,6 +1,10 @@
 package stage
 
-import "errors"
+import (
+	"fmt"
+	"errors"
+	"time"
+)
 
 type Fake struct {
 	Input        *Input
@@ -23,5 +27,20 @@ func (f *Fake) Stage(input *Input) (string, error) {
 func (f *Fake) Reject(requestID string) error {
 	f.RejectCalled = true
 	f.RequestID = requestID
+	return nil
+}
+
+type Simulation struct {
+	Input *Input
+	Delay time.Duration
+}
+
+func (s *Simulation) Stage(input *Input) (string, error) {
+	time.Sleep(s.Delay)
+	return fmt.Sprintf("https://example.com/%s", input.Key), nil
+}
+
+func (s *Simulation) Reject(requestID string) error {
+	time.Sleep(s.Delay)
 	return nil
 }

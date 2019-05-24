@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 
+	"time"
 	"github.com/spf13/viper"
 )
 
@@ -18,6 +19,10 @@ type IngressConfig struct {
 	KafkaValidationTopic string
 	ValidTopics          []string
 	Port                 int
+	Simulate                    bool
+	SimulationStageDelay time.Duration
+	SimulationValidateCallDelay time.Duration
+	SimulationValidateDelay time.Duration
 }
 
 // Get returns an initialized IngressConfig
@@ -33,6 +38,10 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaAvailableTopic", "platform.upload.available")
 	options.SetDefault("KafkaValidationTopic", "platform.upload.validation")
 	options.SetDefault("ValidTopics", "unit")
+	options.SetDefault("Simulate", false)
+	options.SetDefault("SimulationStageDelay", 100)
+	options.SetDefault("SimulationValidateDelay", 5000)
+	options.SetDefault("SimulationValidateCallDelay", 100)
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 
@@ -47,5 +56,9 @@ func Get() *IngressConfig {
 		KafkaValidationTopic: options.GetString("KafkaValidationTopic"),
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                 options.GetInt("Port"),
+		Simulate: options.GetBool("Simulate"),
+		SimulationStageDelay: options.GetDuration("SimulationStageDelay"),
+		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
+		SimulationValidateDelay: options.GetDuration("SimulationValidateDelay"),
 	}
 }

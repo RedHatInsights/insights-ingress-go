@@ -41,3 +41,25 @@ func (v *Fake) WaitFor(ch chan *Response) *Response {
 		return nil
 	}
 }
+
+type Simulation struct {
+	CallDelay time.Duration
+	Delay time.Duration
+	ValidChan chan *Response
+	InvalidChan chan *Response
+}
+
+func (s *Simulation) Validate(request *Request) {
+	go func() {
+		time.Sleep(s.Delay)
+		s.ValidChan <- &Response{
+			Account: request.Account,
+			Validation: "success",
+			RequestID: request.RequestID,
+			Principal: request.Principal,
+			Service: request.Service,
+			URL: request.URL,
+			B64Identity: request.B64Identity,
+	}}()
+	time.Sleep(s.CallDelay)
+}

@@ -20,14 +20,12 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	p.Validator.Validate(vr)
 }
 
-// Tick handles one loop for handling post-validation activities
+// Tick is one loop iteration that handles post-validation activities
 func (p *Pipeline) Tick(ctx context.Context) bool {
 	select {
 	case ev := <-p.ValidChan:
-		inc("success")
 		p.Announcer.Announce(ev)
 	case iev := <-p.InvalidChan:
-		inc("failure")
 		p.Stager.Reject(iev.RequestID)
 	case <-ctx.Done():
 		return false
@@ -35,7 +33,7 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 	return true
 }
 
-// Start watches the announcer channel for new events and calls announce
+// Start loops forever until Tick is canceled
 func (p *Pipeline) Start(ctx context.Context) {
 	for p.Tick(ctx) {}
 }

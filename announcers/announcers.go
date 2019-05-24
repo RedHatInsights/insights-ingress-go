@@ -17,6 +17,7 @@ type Fake struct {
 // Announce does nothing
 func (f *Fake) Announce(e *validators.Response) {
 	f.Event = e
+	l.Log.Info("Announce called", zap.String("request_id", e.RequestID))
 }
 
 // Kafka is an announcer that broadcases on a kafka topic

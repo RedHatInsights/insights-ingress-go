@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
+	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -47,24 +49,41 @@ func main() {
 	valCh := make(chan *validators.Response)
 	invCh := make(chan *validators.Response)
 
-	p := &pipeline.Pipeline{
-		Stager: s3.WithSession(&s3.S3Stager{
-			Bucket:   cfg.StageBucket,
-			Rejected: cfg.RejectBucket,
-		}),
-		Validator: kafka.New(&kafka.Config{
-			Brokers:         cfg.KafkaBrokers,
-			GroupID:         cfg.KafkaGroupID,
-			ValidationTopic: cfg.KafkaValidationTopic,
-			ValidChan:       valCh,
-			InvalidChan:     invCh,
-		}, "platform.upload.testareno"),
-		Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
-			Brokers: cfg.KafkaBrokers,
-			Topic:   cfg.KafkaAvailableTopic,
-		}),
-		ValidChan:   valCh,
-		InvalidChan: invCh,
+	var p *pipeline.Pipeline
+
+	if cfg.Simulate {
+		p = &pipeline.Pipeline{
+			Stager: &stage.Simulation{Delay: cfg.SimulationStageDelay * time.Millisecond},
+			Validator: &validators.Simulation{
+				CallDelay: cfg.SimulationValidateCallDelay * time.Millisecond,
+				Delay: cfg.SimulationValidateDelay * time.Millisecond,
+				ValidChan: valCh,
+				InvalidChan: invCh,
+			},
+			Announcer: &announcers.Fake{},
+			ValidChan: valCh,
+			InvalidChan: invCh,
+		}
+	} else {
+		p = &pipeline.Pipeline{
+			Stager: s3.WithSession(&s3.S3Stager{
+				Bucket:   cfg.StageBucket,
+				Rejected: cfg.RejectBucket,
+			}),
+			Validator: kafka.New(&kafka.Config{
+				Brokers:         cfg.KafkaBrokers,
+				GroupID:         cfg.KafkaGroupID,
+				ValidationTopic: cfg.KafkaValidationTopic,
+				ValidChan:       valCh,
+				InvalidChan:     invCh,
+			}, "platform.upload.testareno"),
+			Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
+				Brokers: cfg.KafkaBrokers,
+				Topic:   cfg.KafkaAvailableTopic,
+			}),
+			ValidChan:   valCh,
+			InvalidChan: invCh,
+		}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

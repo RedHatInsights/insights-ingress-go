@@ -46,6 +46,7 @@ func New(cfg *Config, topics ...string) *Validator {
 
 // RouteResponse passes along responses based on their validation status
 func (kv *Validator) RouteResponse(response *validators.Response) {
+	inc(response.Validation)
 	switch response.Validation {
 	case "success":
 		kv.ValidChan <- response
