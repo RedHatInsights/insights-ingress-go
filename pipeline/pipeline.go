@@ -35,5 +35,6 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 
 // Start loops forever until Tick is canceled
 func (p *Pipeline) Start(ctx context.Context) {
-	for p.Tick(ctx) {}
+	for p.Tick(ctx) {
+	}
 }

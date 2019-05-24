@@ -1,8 +1,8 @@
 package stage
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -10,7 +10,7 @@ type Fake struct {
 	Input        *Input
 	StageCalled  bool
 	RejectCalled bool
-	RequestID  string
+	RequestID    string
 	ShouldError  bool
 	URL          string
 }

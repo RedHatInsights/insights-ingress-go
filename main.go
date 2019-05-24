@@ -55,13 +55,13 @@ func main() {
 		p = &pipeline.Pipeline{
 			Stager: &stage.Simulation{Delay: cfg.SimulationStageDelay * time.Millisecond},
 			Validator: &validators.Simulation{
-				CallDelay: cfg.SimulationValidateCallDelay * time.Millisecond,
-				Delay: cfg.SimulationValidateDelay * time.Millisecond,
-				ValidChan: valCh,
+				CallDelay:   cfg.SimulationValidateCallDelay * time.Millisecond,
+				Delay:       cfg.SimulationValidateDelay * time.Millisecond,
+				ValidChan:   valCh,
 				InvalidChan: invCh,
 			},
-			Announcer: &announcers.Fake{},
-			ValidChan: valCh,
+			Announcer:   &announcers.Fake{},
+			ValidChan:   valCh,
 			InvalidChan: invCh,
 		}
 	} else {

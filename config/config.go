@@ -3,26 +3,26 @@ package config
 import (
 	"strings"
 
-	"time"
 	"github.com/spf13/viper"
+	"time"
 )
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
-	MaxSize              int
-	StageBucket          string
-	RejectBucket         string
-	Auth                 bool
-	KafkaBrokers         []string
-	KafkaGroupID         string
-	KafkaAvailableTopic  string
-	KafkaValidationTopic string
-	ValidTopics          []string
-	Port                 int
+	MaxSize                     int
+	StageBucket                 string
+	RejectBucket                string
+	Auth                        bool
+	KafkaBrokers                []string
+	KafkaGroupID                string
+	KafkaAvailableTopic         string
+	KafkaValidationTopic        string
+	ValidTopics                 []string
+	Port                        int
 	Simulate                    bool
-	SimulationStageDelay time.Duration
+	SimulationStageDelay        time.Duration
 	SimulationValidateCallDelay time.Duration
-	SimulationValidateDelay time.Duration
+	SimulationValidateDelay     time.Duration
 }
 
 // Get returns an initialized IngressConfig
@@ -46,19 +46,19 @@ func Get() *IngressConfig {
 	options.AutomaticEnv()
 
 	return &IngressConfig{
-		MaxSize:              options.GetInt("MaxSize"),
-		StageBucket:          options.GetString("StageBucket"),
-		RejectBucket:         options.GetString("RejectBucket"),
-		Auth:                 options.GetBool("Auth"),
-		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
-		KafkaGroupID:         options.GetString("KafkaGroupID"),
-		KafkaAvailableTopic:  options.GetString("KafkaAvailableTopic"),
-		KafkaValidationTopic: options.GetString("KafkaValidationTopic"),
-		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
-		Port:                 options.GetInt("Port"),
-		Simulate: options.GetBool("Simulate"),
-		SimulationStageDelay: options.GetDuration("SimulationStageDelay"),
+		MaxSize:                     options.GetInt("MaxSize"),
+		StageBucket:                 options.GetString("StageBucket"),
+		RejectBucket:                options.GetString("RejectBucket"),
+		Auth:                        options.GetBool("Auth"),
+		KafkaBrokers:                options.GetStringSlice("KafkaBrokers"),
+		KafkaGroupID:                options.GetString("KafkaGroupID"),
+		KafkaAvailableTopic:         options.GetString("KafkaAvailableTopic"),
+		KafkaValidationTopic:        options.GetString("KafkaValidationTopic"),
+		ValidTopics:                 strings.Split(options.GetString("ValidTopics"), ","),
+		Port:                        options.GetInt("Port"),
+		Simulate:                    options.GetBool("Simulate"),
+		SimulationStageDelay:        options.GetDuration("SimulationStageDelay"),
 		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
-		SimulationValidateDelay: options.GetDuration("SimulationValidateDelay"),
+		SimulationValidateDelay:     options.GetDuration("SimulationValidateDelay"),
 	}
 }

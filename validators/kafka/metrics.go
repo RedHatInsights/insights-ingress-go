@@ -4,6 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
+
 var (
 	payloadsProcessed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "ingress_processed_payloads",
