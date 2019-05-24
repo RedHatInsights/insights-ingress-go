@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -14,6 +16,7 @@ type IngressConfig struct {
 	KafkaGroupID         string
 	KafkaAvailableTopic  string
 	KafkaValidationTopic string
+	ValidTopics          []string
 	Port                 int
 }
 
@@ -29,6 +32,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("KafkaAvailableTopic", "platform.upload.available")
 	options.SetDefault("KafkaValidationTopic", "platform.upload.validation")
+	options.SetDefault("ValidTopics", "unit")
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 
@@ -41,6 +45,7 @@ func Get() *IngressConfig {
 		KafkaGroupID:         options.GetString("KafkaGroupID"),
 		KafkaAvailableTopic:  options.GetString("KafkaAvailableTopic"),
 		KafkaValidationTopic: options.GetString("KafkaValidationTopic"),
+		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                 options.GetInt("Port"),
 	}
 }

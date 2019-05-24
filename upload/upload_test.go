@@ -198,5 +198,14 @@ var _ = Describe("Upload", func() {
 				Expect(res.Validation).To(Equal("success"))
 			})
 		})
+
+		Context("with invalid service name", func() {
+			It("should return 415", func() {
+				boiler(http.StatusUnsupportedMediaType, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.failed.test"})
+			})
+		})
 	})
 })

@@ -17,12 +17,25 @@ import (
 
 var contentTypePat = regexp.MustCompile(`application/vnd\.redhat\.(\w+)\.(\w+)`)
 
+func isValidTopic(service string) bool {
+	list := config.Get().ValidTopics
+	for _, validService := range list {
+		if validService == service {
+			return true
+		}
+	}
+	return false
+}
+
 func validate(contentType string) (*TopicDescriptor, error) {
 	// look the content type up in a static map
 	// else parse it
 	m := contentTypePat.FindStringSubmatch(contentType)
 	if m == nil {
 		return nil, errors.New("Failed to match on Content-Type: " + contentType)
+	}
+	if isValidTopic(m[1]) == false {
+		return nil, errors.New("Invalid Service: " + m[1])
 	}
 	return &TopicDescriptor{
 		Service:  m[1],
