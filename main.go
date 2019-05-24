@@ -74,7 +74,6 @@ func main() {
 	r.Route("/api/ingress/v1", func(r chi.Router) {
 		r.Get("/", lubDub)
 		r.Post("/upload", upload.NewHandler(p))
-		r.Handle("/metrics", promhttp.Handler())
 	})
 	r.Get("/", lubDub)
 	r.Handle("/metrics", promhttp.Handler())
