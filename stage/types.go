@@ -8,6 +8,13 @@ type Input struct {
 	Key     string
 }
 
+// Close closes the underlying ReadCloser as long as it isn't nil
+func (i *Input) Close() {
+	if i.Payload != nil {
+		i.Payload.Close()
+	}
+}
+
 // Stager provides the mechanism to stage a payload
 type Stager interface {
 	Stage(*Input) (string, error)
