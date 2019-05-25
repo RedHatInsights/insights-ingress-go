@@ -41,8 +41,8 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		reqID := middleware.GetReqID(r.Context())
 
 		stageInput := &stage.Input{
-			Reader: file,
-			Key:    reqID,
+			Payload: file,
+			Key:     reqID,
 		}
 
 		metadata, _, err := r.FormFile("metadata")

@@ -28,7 +28,7 @@ func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.Bucket),
 		Key:    aws.String(in.Key),
-		Body:   in.Reader,
+		Body:   in.Payload,
 	})
 	if err != nil {
 		return "", errors.New("Failed to upload to s3: " + err.Error())

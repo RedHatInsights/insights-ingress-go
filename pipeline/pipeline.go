@@ -16,6 +16,7 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 		l.Log.Error("Error staging", zap.String("key", in.Key), zap.Error(err))
 		return
 	}
+	defer in.Payload.Close()
 	vr.URL = url
 	p.Validator.Validate(vr)
 }

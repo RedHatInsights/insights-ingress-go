@@ -4,8 +4,8 @@ import "io"
 
 // Input contains data and metadata to be staged
 type Input struct {
-	Reader io.Reader
-	Key    string
+	Payload io.ReadCloser
+	Key     string
 }
 
 // Stager provides the mechanism to stage a payload

@@ -2,6 +2,7 @@ package pipeline_test
 
 import (
 	"context"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -47,7 +48,7 @@ var _ = Describe("Pipeline", func() {
 	Describe("Submitting a valid stage.Input", func() {
 		It("should return a URL", func() {
 			stageIn := &stage.Input{
-				Reader: strings.NewReader("test"),
+				Payload: ioutil.NopCloser(strings.NewReader("test")),
 			}
 			r := &validators.Request{
 				Account:   "123",
@@ -66,7 +67,7 @@ var _ = Describe("Pipeline", func() {
 	Describe("Submitting a valid stage.Input", func() {
 		It("should validate", func() {
 			stageIn := &stage.Input{
-				Reader: strings.NewReader("test"),
+				Payload: ioutil.NopCloser(strings.NewReader("test")),
 			}
 			r := &validators.Request{
 				Account:   "123",
@@ -88,7 +89,7 @@ var _ = Describe("Pipeline", func() {
 	Describe("Submitting a payload that fails to validate", func() {
 		It("should call stager.Reject", func() {
 			stageIn := &stage.Input{
-				Reader: strings.NewReader("invalid"),
+				Payload: ioutil.NopCloser(strings.NewReader("invalid")),
 			}
 			r := &validators.Request{
 				Account:   "123",
