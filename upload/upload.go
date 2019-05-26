@@ -16,12 +16,18 @@ import (
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userAgent := r.Header.Get("User-Agent")
+
+		incRequests(userAgent)
+
 		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
 			l.Log.Info("Did not find `file` part", zap.Error(err))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
+
+		observeSize(userAgent, fileHeader.Size)
 
 		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
 		if validationErr != nil {

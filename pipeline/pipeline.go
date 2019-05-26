@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/stage"
@@ -12,12 +13,15 @@ import (
 // Submit accepts a stage request and a validation request
 func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	defer in.Close()
+	start := time.Now()
 	url, err := p.Stager.Stage(in)
+	observeStageElapsed(time.Since(start))
 	if err != nil {
 		l.Log.Error("Error staging", zap.String("key", in.Key), zap.Error(err))
 		return
 	}
 	vr.URL = url
+	vr.Timestamp = time.Now()
 	p.Validator.Validate(vr)
 }
 
@@ -25,8 +29,10 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 func (p *Pipeline) Tick(ctx context.Context) bool {
 	select {
 	case ev := <-p.ValidChan:
+		observeValidationElapsed(ev.Timestamp, "success")
 		p.Announcer.Announce(ev)
 	case iev := <-p.InvalidChan:
+		observeValidationElapsed(iev.Timestamp, "failure")
 		p.Stager.Reject(iev.RequestID)
 	case <-ctx.Done():
 		return false

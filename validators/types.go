@@ -2,6 +2,7 @@ package validators
 
 import (
 	"io"
+	"time"
 )
 
 // Request is sent to the validation topic for each new payload
@@ -15,6 +16,7 @@ type Request struct {
 	Size        int64     `json:"size"`
 	URL         string    `json:"url"`
 	B64Identity string    `json:"b64_identity"`
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 // Response is returned by validators and sent via the announcement
@@ -27,6 +29,7 @@ type Response struct {
 	URL         string            `json:"url"`
 	B64Identity string            `json:"b64_identity"`
 	Extras      map[string]string `json:"extras"`
+	Timestamp   time.Time         `json:"timestamp"`
 }
 
 // ServiceDescriptor is used to select a message topic

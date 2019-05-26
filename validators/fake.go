@@ -1,8 +1,8 @@
 package validators
 
 import (
-	"time"
 	"errors"
+	"time"
 )
 
 type Fake struct {
@@ -68,6 +68,7 @@ func (s *Simulation) Validate(request *Request) {
 			Service:     request.Service,
 			URL:         request.URL,
 			B64Identity: request.B64Identity,
+			Timestamp:   request.Timestamp,
 		}
 	}()
 	time.Sleep(s.CallDelay)
