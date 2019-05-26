@@ -2,6 +2,7 @@ module github.com/redhatinsights/insights-ingress-go
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/RedHatInsights/platform-go-middlewares v0.3.0 // indirect
 	github.com/aws/aws-sdk-go v1.19.29
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/onsi/ginkgo v1.8.0
