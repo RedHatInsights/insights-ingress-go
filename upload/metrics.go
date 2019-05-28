@@ -1,17 +1,17 @@
 package upload
 
 import (
-	. "github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	p "github.com/prometheus/client_golang/prometheus"
+	pa "github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
-	requests = promauto.NewCounterVec(CounterOpts{
+	requests = pa.NewCounterVec(p.CounterOpts{
 		Name: "ingress_requests",
 		Help: "Total number of POSTs to /upload",
 	}, []string{"useragent"})
 
-	payloadSize = promauto.NewHistogramVec(HistogramOpts{
+	payloadSize = pa.NewHistogramVec(p.HistogramOpts{
 		Name: "ingress_payload_sizes",
 		Help: "Size of payloads posted",
 		Buckets: []float64{
@@ -24,9 +24,9 @@ var (
 )
 
 func incRequests(userAgent string) {
-	requests.With(Labels{"useragent": userAgent}).Inc()
+	requests.With(p.Labels{"useragent": userAgent}).Inc()
 }
 
 func observeSize(userAgent string, size int64) {
-	payloadSize.With(Labels{"useragent": userAgent}).Observe(float64(size))
+	payloadSize.With(p.Labels{"useragent": userAgent}).Observe(float64(size))
 }

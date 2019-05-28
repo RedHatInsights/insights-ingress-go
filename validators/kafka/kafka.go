@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
-	"github.com/redhatinsights/insights-ingress-go/config"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"go.uber.org/zap"
 )
@@ -56,7 +56,9 @@ func New(cfg *Config, topics ...string) *Validator {
 
 // RouteResponse passes along responses based on their validation status
 func (kv *Validator) RouteResponse(response *validators.Response) {
-	inc(response.Validation)
+	if !response.Timestamp.IsZero() {
+		observeValidationElapsed(response.Timestamp, response.Validation)
+	}
 	switch response.Validation {
 	case "success":
 		kv.ValidChan <- response
@@ -64,6 +66,7 @@ func (kv *Validator) RouteResponse(response *validators.Response) {
 		kv.InvalidChan <- response
 	default:
 		l.Log.Error("Invalid validation in response", zap.String("response.validation", response.Validation))
+		return
 	}
 }
 
@@ -90,7 +93,7 @@ func (kv *Validator) addProducer(topic string) {
 
 // ValidateService ensures that a service maps to a real topic
 func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) error {
-	topic := serviceToTopic(service.Service)	
+	topic := serviceToTopic(service.Service)
 	for _, validTopic := range config.Get().ValidTopics {
 		if validTopic == topic {
 			return nil
@@ -100,7 +103,7 @@ func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) erro
 }
 
 func serviceToTopic(service string) string {
-	topic := tdMapping[service]		
+	topic := tdMapping[service]
 	if topic != "" {
 		return topic
 	}

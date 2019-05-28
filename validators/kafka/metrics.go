@@ -1,17 +1,21 @@
 package kafka
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	"time"
+
+	p "github.com/prometheus/client_golang/prometheus"
+	pa "github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
-	payloadsProcessed = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "ingress_processed_payloads",
-		Help: "The total number of processed events",
-	}, []string{"validation"})
+	validationElapsed = pa.NewHistogramVec(p.HistogramOpts{
+		Name: "ingress_validate_elapsed_seconds",
+		Help: "Number of seconds spent to validating",
+	}, []string{"outcome"})
 )
 
-func inc(value string) {
-	payloadsProcessed.With(prometheus.Labels{"validation": value}).Inc()
+func observeValidationElapsed(timestamp time.Time, outcome string) {
+	validationElapsed.With(p.Labels{
+		"outcome": outcome,
+	}).Observe(time.Since(timestamp).Seconds())
 }
