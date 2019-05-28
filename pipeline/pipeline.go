@@ -29,10 +29,8 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 func (p *Pipeline) Tick(ctx context.Context) bool {
 	select {
 	case ev := <-p.ValidChan:
-		observeValidationElapsed(ev.Timestamp, "success")
 		p.Announcer.Announce(ev)
 	case iev := <-p.InvalidChan:
-		observeValidationElapsed(iev.Timestamp, "failure")
 		p.Stager.Reject(iev.RequestID)
 	case <-ctx.Done():
 		return false
