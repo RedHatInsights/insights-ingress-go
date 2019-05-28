@@ -56,9 +56,13 @@ func New(cfg *Config, topics ...string) *Validator {
 
 // RouteResponse passes along responses based on their validation status
 func (kv *Validator) RouteResponse(response *validators.Response) {
+	// Since we only want to track the elapsed times of responses with
+	// Timestamps, we need a second counter to make we at least count the
+	// number of responses accurately
 	if !response.Timestamp.IsZero() {
 		observeValidationElapsed(response.Timestamp, response.Validation)
 	}
+	inc(response.Validation)
 	switch response.Validation {
 	case "success":
 		kv.ValidChan <- response
