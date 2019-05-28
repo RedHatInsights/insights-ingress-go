@@ -13,6 +13,15 @@ import (
 	"go.uber.org/zap"
 )
 
+func getRequestID(h, fallback string) string {
+
+	reqID := h
+	if h == "" {
+		reqID = fallback
+	}
+	return reqID
+}
+
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +47,8 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 
 		b64Identity := r.Header.Get("x-rh-identity")
 
-		reqID := middleware.GetReqID(r.Context())
+		reqID := getRequestID(r.Header.Get("x-rh-insights-request-id"),
+			middleware.GetReqID(r.Context()))
 
 		stageInput := &stage.Input{
 			Payload: file,

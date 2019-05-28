@@ -72,6 +72,7 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 	req = req.WithContext(ctx)
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("x-rh-insights-request-id", "foo-bar")
 	return req, nil
 }
 
@@ -202,8 +203,8 @@ var _ = Describe("Upload", func() {
 		Context("with legacy content type", func() {
 			It("should validate and be processed", func() {
 				boiler(http.StatusAccepted, &FilePart{
-					Name: "file",
-					Content: "testing",
+					Name:        "file",
+					Content:     "testing",
 					ContentType: "application/x-gzip; charset=binary",
 				})
 			})
@@ -215,6 +216,20 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.failed.test"})
+			})
+		})
+
+		Context("with 3scale provided requestID", func() {
+			It("should return that requestID", func() {
+				boiler(http.StatusAccepted, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test"})
+				in := stager.Input
+				req := validator.In
+				Expect(in).To(Not(BeNil()))
+				Expect(req).To(Not(BeNil()))
+				Expect(req.RequestID).To(Equal("foo-bar"))
 			})
 		})
 	})
