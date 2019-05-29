@@ -36,6 +36,7 @@ var _ = Describe("Kafka", func() {
 			It("should forward to the Valid channel", func() {
 				go kv.RouteResponse(&validators.Response{
 					Validation: "success",
+					Timestamp:  time.Now(),
 				})
 				Expect(wait(kv.ValidChan)).To(BeTrue())
 			})
