@@ -17,6 +17,7 @@ type Request struct {
 	URL         string    `json:"url"`
 	B64Identity string    `json:"b64_identity"`
 	Timestamp   time.Time `json:"timestamp"`
+	ID          string    `json:"id"`
 }
 
 // Response is returned by validators and sent via the announcement

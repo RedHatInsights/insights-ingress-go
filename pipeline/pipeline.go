@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -21,6 +22,14 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 		return
 	}
 	vr.URL = url
+	if vr.Metadata != nil {
+		vr.ID, err = i.PostInventory(vr)
+		if err != nil {
+			l.Log.Error("Unable to post to inventory", zap.Error(err),
+				zap.String("request_id", vr.RequestID))
+		}
+	}
+	l.Log.Info("Inventory ID: ", zap.String("ID", vr.ID))
 	vr.Timestamp = time.Now()
 	p.Validator.Validate(vr)
 }

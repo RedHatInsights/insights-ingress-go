@@ -3,8 +3,9 @@ package config
 import (
 	"strings"
 
-	"github.com/spf13/viper"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 // IngressConfig represents the runtime configuration
@@ -23,6 +24,7 @@ type IngressConfig struct {
 	SimulationStageDelay        time.Duration
 	SimulationValidateCallDelay time.Duration
 	SimulationValidateDelay     time.Duration
+	InventoryURL                string
 }
 
 // Get returns an initialized IngressConfig
@@ -42,6 +44,7 @@ func Get() *IngressConfig {
 	options.SetDefault("SimulationStageDelay", 100)
 	options.SetDefault("SimulationValidateDelay", 5000)
 	options.SetDefault("SimulationValidateCallDelay", 100)
+	options.SetDefault("InventoryURL", "http://inventory:8080/api/inventory/v1/hosts")
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 
@@ -60,5 +63,6 @@ func Get() *IngressConfig {
 		SimulationStageDelay:        options.GetDuration("SimulationStageDelay"),
 		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
 		SimulationValidateDelay:     options.GetDuration("SimulationValidateDelay"),
+		InventoryURL:                options.GetString("InventoryURL"),
 	}
 }
