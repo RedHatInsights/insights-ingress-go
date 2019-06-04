@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
@@ -42,8 +43,22 @@ func FormatJSON(response io.ReadCloser) Inventory {
 	return r
 }
 
+// Post JSON data to given URL
+func Post(identity string, data io.Reader, url string) (*http.Response, error) {
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	req, _ := http.NewRequest("POST", url, data)
+	req.Header.Add("x-rh-identity", identity)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+
+	return resp, err
+}
+
 // PostInventory does an HTTP Request with the metadata provided
-func PostInventory(vr *validators.Request) (string, error) {
+func CallInventory(vr *validators.Request) (string, error) {
 
 	var r Inventory
 
@@ -58,14 +73,11 @@ func PostInventory(vr *validators.Request) (string, error) {
 	postBody.Account = vr.Account
 
 	post, _ := json.Marshal([]Metadata{*&postBody})
+	data := bytes.NewReader(post)
 
-	client := &http.Client{}
-	req, _ := http.NewRequest("POST", cfg.InventoryURL, bytes.NewReader(post))
-	req.Header.Add("x-rh-identity", vr.B64Identity)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
+	resp, err := Post(vr.B64Identity, data, cfg.InventoryURL)
 	if err != nil {
-		l.Log.Error("Unable to contact Inventory", zap.Error(err),
+		l.Log.Error("Unable to post to Inventory", zap.Error(err),
 			zap.String("request_id", vr.RequestID))
 	}
 	if resp.StatusCode == 207 {
