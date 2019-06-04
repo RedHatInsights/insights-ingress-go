@@ -23,7 +23,7 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 	}
 	vr.URL = url
 	if vr.Metadata != nil {
-		vr.ID, err = i.PostInventory(vr)
+		vr.ID, err = i.CallInventory(vr)
 		if err != nil {
 			l.Log.Error("Unable to post to inventory", zap.Error(err),
 				zap.String("request_id", vr.RequestID))
