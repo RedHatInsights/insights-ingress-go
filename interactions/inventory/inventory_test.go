@@ -2,6 +2,7 @@ package inventory_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -103,7 +105,8 @@ var _ = Describe("Inventory", func() {
 			}))
 
 			defer ts.Close()
-			res, _ := i.Post("12345", r, ts.URL)
+			jd := []byte(validJSON)
+			res, _ := i.Post("12345", jd, ts.URL)
 
 			Expect(res.StatusCode).To(Equal(207))
 			Expect(res.Header.Get("Content-Type")).To(Equal("application/json"))
@@ -117,11 +120,31 @@ var _ = Describe("Inventory", func() {
 				fmt.Fprintln(w, invBadResponse)
 			}))
 			defer ts.Close()
-
-			res, _ := i.Post("12345", r, ts.URL)
+			jd := []byte(badJSON)
+			res, _ := i.Post("12345", jd, ts.URL)
 
 			Expect(res.StatusCode).To(Equal(415))
 			Expect(res.Header.Get("Content-Type")).To(Equal(("application/json")))
+		})
+	})
+
+	Describe("Creating a post", func() {
+		It("should return valid data", func() {
+
+			vr := &validators.Request{
+				Metadata: strings.NewReader(validJSON),
+				Account:  "000001",
+			}
+
+			var m []i.Metadata
+
+			data, _ := i.CreatePost(vr)
+			err := json.NewDecoder(bytes.NewReader(data)).Decode(&m)
+
+			Expect(err).To(BeNil())
+			Expect(m[0].Account).To(Equal("000001"))
+			Expect(m[0].IPAddresses).To(ContainElement("127.0.0.1"))
+
 		})
 	})
 })
