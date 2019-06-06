@@ -47,17 +47,35 @@ func FormatJSON(response io.ReadCloser) (Inventory, error) {
 }
 
 // Post JSON data to given URL
-func Post(identity string, data io.Reader, url string) (*http.Response, error) {
+func Post(identity string, data []byte, url string) (*http.Response, error) {
 
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
-	req, _ := http.NewRequest("POST", url, data)
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	req.Header.Add("x-rh-identity", identity)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 
 	return resp, err
+}
+
+// CreatePost puts together the post to be sent to inventory
+func CreatePost(vr *validators.Request) ([]byte, error) {
+
+	postBody, err := GetJSON(vr.Metadata)
+	if err != nil {
+		l.Log.Error("Unable to get valid PostBody", zap.Error(err),
+			zap.String("request_id", vr.RequestID))
+		return nil, err
+	}
+
+	postBody.Account = vr.Account
+
+	post, _ := json.Marshal([]Metadata{*&postBody})
+
+	return post, nil
 }
 
 // CallInventory does an HTTP Request with the metadata provided
@@ -66,17 +84,7 @@ func CallInventory(vr *validators.Request) (string, error) {
 	var r Inventory
 
 	cfg := config.Get()
-	postBody, err := GetJSON(vr.Metadata)
-	if err != nil {
-		l.Log.Error("Unable to get valid PostBody", zap.Error(err),
-			zap.String("request_id", vr.RequestID))
-		return "", err
-	}
-
-	postBody.Account = vr.Account
-
-	post, _ := json.Marshal([]Metadata{*&postBody})
-	data := bytes.NewReader(post)
+	data, err := CreatePost(vr)
 
 	resp, err := Post(vr.B64Identity, data, cfg.InventoryURL)
 	if err != nil {
@@ -85,12 +93,12 @@ func CallInventory(vr *validators.Request) (string, error) {
 	}
 	if resp.StatusCode == 207 {
 		r, err = FormatJSON(resp.Body)
-	} else if resp.StatusCode == 415 {
+		l.Log.Info("Successfully post to Inventory", zap.String("request_id", vr.RequestID))
+	} else {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
 		bodyString := string(bodyBytes)
 		l.Log.Error("Inventory post failure", zap.String("error", bodyString),
 			zap.String("request_id", vr.RequestID))
 	}
-	l.Log.Info("Successfully post to Inventory", zap.String("request_id", vr.RequestID))
 	return r.Data[0].Host.ID, nil
 }

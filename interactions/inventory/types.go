@@ -12,11 +12,11 @@ type Inventory struct {
 
 // Metadata is the expected data from a client
 type Metadata struct {
-	IPAddresses  []string `json:"ip_addresses"`
-	Account      string   `json:"account"`
-	InsightsID   string   `json:"insights_id"`
-	MachineID    string   `json:"machine_id"`
-	SubManID     string   `json:"subscription_manager_id"`
-	MacAddresses []string `json:"mac_addresses"`
-	FQDN         string   `json:"fqdn"`
+	IPAddresses  []string `json:"ip_addresses,omitempty"`
+	Account      string   `json:"account,omitempty"`
+	InsightsID   string   `json:"insights_id,omitempty"`
+	MachineID    string   `json:"machine_id,omitempty"`
+	SubManID     string   `json:"subscription_manager_id,omitempty"`
+	MacAddresses []string `json:"mac_addresses,omitempty"`
+	FQDN         string   `json:"fqdn,omitempty"`
 }
