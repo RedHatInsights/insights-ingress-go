@@ -21,26 +21,29 @@ func GetJSON(metadata io.Reader) (Metadata, error) {
 	err := json.NewDecoder(metadata).Decode(&dj)
 	if err != nil {
 		l.Log.Error("Unable to decode metadata JSON", zap.Error(err))
+		return Metadata{}, err
 	}
 
 	return dj, nil
 }
 
 // FormatJSON encodes the inventory response
-func FormatJSON(response io.ReadCloser) Inventory {
+func FormatJSON(response io.ReadCloser) (Inventory, error) {
 
 	var r Inventory
 
 	body, err := ioutil.ReadAll(response)
 	if err != nil {
 		l.Log.Error("Unable to read inventory response", zap.Error(err))
+		return Inventory{}, err
 	}
 	err = json.Unmarshal(body, &r)
 	if err != nil {
 		l.Log.Error("Unable to unmarshal inventory JSON Response", zap.Error(err))
+		return Inventory{}, err
 	}
 
-	return r
+	return r, nil
 }
 
 // Post JSON data to given URL
@@ -57,7 +60,7 @@ func Post(identity string, data io.Reader, url string) (*http.Response, error) {
 	return resp, err
 }
 
-// PostInventory does an HTTP Request with the metadata provided
+// CallInventory does an HTTP Request with the metadata provided
 func CallInventory(vr *validators.Request) (string, error) {
 
 	var r Inventory
@@ -81,7 +84,7 @@ func CallInventory(vr *validators.Request) (string, error) {
 			zap.String("request_id", vr.RequestID))
 	}
 	if resp.StatusCode == 207 {
-		r = FormatJSON(resp.Body)
+		r, err = FormatJSON(resp.Body)
 	} else if resp.StatusCode == 415 {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
 		bodyString := string(bodyBytes)
