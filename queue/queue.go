@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"io"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/segmentio/kafka-go"
@@ -19,7 +20,10 @@ func Producer(in chan []byte, config *ProducerConfig) {
 	defer w.Close()
 
 	for {
-		v := <-in
+		v, ok := <-in
+		if !ok {
+			return
+		}
 		err := w.WriteMessages(context.Background(),
 			kafka.Message{
 				Key:   nil,
@@ -33,7 +37,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 }
 
 // Consumer consumes a topic and puts the messages into out
-func Consumer(out chan []byte, config *ConsumerConfig) {
+func Consumer(ctx context.Context, out chan []byte, config *ConsumerConfig) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: config.Brokers,
 		GroupID: config.GroupID,
@@ -43,9 +47,13 @@ func Consumer(out chan []byte, config *ConsumerConfig) {
 	defer r.Close()
 
 	for {
-		m, err := r.ReadMessage(context.Background())
+		m, err := r.ReadMessage(ctx)
 		if err != nil {
-			l.Log.Error("Error while reading message", zap.Error(err))
+			if err == io.EOF {
+				l.Log.Info("Closing consumer")
+				close(out)
+				return
+			}
 		} else {
 			out <- m.Value
 		}

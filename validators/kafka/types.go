@@ -1,6 +1,10 @@
 package kafka
 
-import "github.com/redhatinsights/insights-ingress-go/validators"
+import (
+	"context"
+
+	"github.com/redhatinsights/insights-ingress-go/validators"
+)
 
 // Validator posts requests to topics for validation
 type Validator struct {
@@ -19,4 +23,5 @@ type Config struct {
 	ValidationTopic string
 	ValidChan       chan *validators.Response
 	InvalidChan     chan *validators.Response
+	Context         context.Context
 }

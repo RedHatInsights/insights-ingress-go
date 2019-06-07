@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"context"
 	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
@@ -26,20 +25,26 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 }
 
 // Tick is one loop iteration that handles post-validation activities
-func (p *Pipeline) Tick(ctx context.Context) bool {
+func (p *Pipeline) Tick() bool {
 	select {
-	case ev := <-p.ValidChan:
+	case ev, ok := <-p.ValidChan:
+		if !ok {
+			return false
+		}
 		p.Announcer.Announce(ev)
-	case iev := <-p.InvalidChan:
+	case iev, ok := <-p.InvalidChan:
+		if !ok {
+			return false
+		}
 		p.Stager.Reject(iev.RequestID)
-	case <-ctx.Done():
-		return false
 	}
 	return true
 }
 
 // Start loops forever until Tick is canceled
-func (p *Pipeline) Start(ctx context.Context) {
-	for p.Tick(ctx) {
+func (p *Pipeline) Start(stopped chan struct{}) {
+	for p.Tick() {
 	}
+	l.Log.Info("Tick returned false, closing stopped channel")
+	close(stopped)
 }
