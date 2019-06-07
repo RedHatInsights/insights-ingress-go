@@ -114,4 +114,39 @@ var _ = Describe("Pipeline", func() {
 			Expect(validator.Called).To(BeFalse())
 		})
 	})
+
+	Describe("Canceling the context", func() {
+		It("Should stop the Start() loop", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			stopped := make(chan struct{})
+			p.Start(ctx, stopped)
+			_, ok := <-stopped
+			Expect(ok).To(BeFalse())
+		})
+	})
+
+	Describe("Closing the valid channel", func() {
+		It("should stop the Start() loop", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			stopped := make(chan struct{})
+			close(p.ValidChan)
+			p.Start(ctx, stopped)
+			_, ok := <-stopped
+			Expect(ok).To(BeFalse())
+		})
+	})
+
+	Describe("Closing the invalid channel", func() {
+		It("should stop the Start() loop", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			stopped := make(chan struct{})
+			close(p.InvalidChan)
+			p.Start(ctx, stopped)
+			_, ok := <-stopped
+			Expect(ok).To(BeFalse())
+		})
+	})
 })
