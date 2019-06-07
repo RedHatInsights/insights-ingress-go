@@ -94,7 +94,7 @@ func main() {
 	}
 
 	pipelineClosed := make(chan struct{})
-	go p.Start(pipelineClosed)
+	go p.Start(context.Background(), pipelineClosed)
 
 	r.Route("/api/ingress/v1", func(r chi.Router) {
 		r.Get("/", lubDub)
