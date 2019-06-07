@@ -16,3 +16,8 @@ func (f *Fake) Announce(e *validators.Response) {
 	f.Event = e
 	l.Log.Info("Announce called", zap.String("request_id", e.RequestID))
 }
+
+// Stop does nothing
+func (f *Fake) Stop() {
+	l.Log.Info("Stop called")
+}

@@ -32,3 +32,7 @@ func (k *Kafka) Announce(e *validators.Response) {
 	}
 	k.In <- data
 }
+
+func (k *Kafka) Stop() {
+	close(k.In)
+}

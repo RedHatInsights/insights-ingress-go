@@ -32,7 +32,7 @@ func New(cfg *Config, topics ...string) *Validator {
 	for _, topic := range topics {
 		kv.addProducer(topic)
 	}
-	go queue.Consumer(kv.ValidationConsumerChannel, &queue.ConsumerConfig{
+	go queue.Consumer(cfg.Context, kv.ValidationConsumerChannel, &queue.ConsumerConfig{
 		Brokers: kv.KafkaBrokers,
 		GroupID: kv.KafkaGroupID,
 		Topic:   cfg.ValidationTopic,
@@ -40,7 +40,13 @@ func New(cfg *Config, topics ...string) *Validator {
 
 	go func() {
 		for {
-			data := <-kv.ValidationConsumerChannel
+			data, ok := <-kv.ValidationConsumerChannel
+			if !ok {
+				l.Log.Info("consumer channel closed, shutting down")
+				close(kv.ValidChan)
+				close(kv.InvalidChan)
+				return
+			}
 			ev := &validators.Response{}
 			err := json.Unmarshal(data, ev)
 			if err != nil {

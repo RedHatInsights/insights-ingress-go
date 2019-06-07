@@ -1,8 +1,11 @@
 package validators
 
 import (
+	"context"
 	"errors"
 	"time"
+
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 )
 
 type Fake struct {
@@ -55,11 +58,18 @@ type Simulation struct {
 	Delay       time.Duration
 	ValidChan   chan *Response
 	InvalidChan chan *Response
+	Context     context.Context
 }
 
 func (s *Simulation) Validate(request *Request) {
 	go func() {
 		time.Sleep(s.Delay)
+		select {
+		case <-s.Context.Done():
+			l.Log.Info("requested to stop, bailing")
+			return
+		default:
+		}
 		s.ValidChan <- &Response{
 			Account:     request.Account,
 			Validation:  "success",
@@ -76,4 +86,20 @@ func (s *Simulation) Validate(request *Request) {
 
 func (s *Simulation) ValidateService(service *ServiceDescriptor) error {
 	return nil
+}
+
+func NewSimulation(s *Simulation) *Simulation {
+	go func() {
+		for {
+			select {
+			case <-s.Context.Done():
+				l.Log.Info("requested to stop")
+				close(s.ValidChan)
+				close(s.InvalidChan)
+				return
+			default:
+			}
+		}
+	}()
+	return s
 }
