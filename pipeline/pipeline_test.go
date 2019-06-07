@@ -4,7 +4,6 @@ import (
 	"context"
 	"io/ioutil"
 	"strings"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -75,9 +74,7 @@ var _ = Describe("Pipeline", func() {
 			}
 			go p.Submit(stageIn, r)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			defer cancel()
-			p.Tick(ctx)
+			p.Tick(context.Background())
 
 			aout := announcer.Event
 
@@ -98,9 +95,7 @@ var _ = Describe("Pipeline", func() {
 			validator.DesiredResponse = "failure"
 			go p.Submit(stageIn, r)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			defer cancel()
-			p.Tick(ctx)
+			p.Tick(context.Background())
 
 			Expect(stager.RejectCalled).To(BeTrue())
 		})
@@ -117,14 +112,6 @@ var _ = Describe("Pipeline", func() {
 			}
 			p.Submit(stageIn, r)
 			Expect(validator.Called).To(BeFalse())
-		})
-	})
-
-	Describe("When a context cancels", func() {
-		It("pipeline should stop running", func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			cancel()
-			p.Start(ctx)
 		})
 	})
 })
