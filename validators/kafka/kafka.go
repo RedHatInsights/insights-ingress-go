@@ -16,6 +16,7 @@ var tdMapping map[string]string
 
 func init() {
 	tdMapping = make(map[string]string)
+	tdMapping["unit2"] = "platform.upload.unit"
 	tdMapping["openshift"] = "platform.upload.buckit"
 }
 
