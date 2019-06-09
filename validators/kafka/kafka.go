@@ -39,14 +39,7 @@ func New(cfg *Config, topics ...string) *Validator {
 	})
 
 	go func() {
-		for {
-			data, ok := <-kv.ValidationConsumerChannel
-			if !ok {
-				l.Log.Info("consumer channel closed, shutting down")
-				close(kv.ValidChan)
-				close(kv.InvalidChan)
-				return
-			}
+		for data := range kv.ValidationConsumerChannel {
 			ev := &validators.Response{}
 			err := json.Unmarshal(data, ev)
 			if err != nil {
@@ -55,6 +48,9 @@ func New(cfg *Config, topics ...string) *Validator {
 				kv.RouteResponse(ev)
 			}
 		}
+		l.Log.Info("consumer channel closed, shutting down")
+		close(kv.ValidChan)
+		close(kv.InvalidChan)
 	}()
 
 	return kv

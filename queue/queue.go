@@ -19,11 +19,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	defer w.Close()
 
-	for {
-		v, ok := <-in
-		if !ok {
-			return
-		}
+	for v := range in {
 		err := w.WriteMessages(context.Background(),
 			kafka.Message{
 				Key:   nil,
