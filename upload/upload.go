@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/redhatinsights/insights-ingress-go/config"
+	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
@@ -69,6 +70,16 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			id := identity.Get(r.Context())
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.Internal.OrgID
+		}
+
+		if metadata != nil {
+			invID, err := i.CallInventory(vr)
+			if err != nil {
+				l.Log.Error("Unable to post to inventory", zap.Error(err),
+					zap.String("request_id", vr.RequestID))
+			}
+			l.Log.Info("Inventory ID: ", zap.String("ID", invID))
+			vr.ID = invID
 		}
 
 		go p.Submit(stageInput, vr)
