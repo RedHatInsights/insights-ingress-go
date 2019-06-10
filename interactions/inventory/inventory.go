@@ -90,9 +90,14 @@ func CallInventory(vr *validators.Request) (string, error) {
 	if err != nil {
 		l.Log.Error("Unable to post to Inventory", zap.Error(err),
 			zap.String("request_id", vr.RequestID))
+		return "", err
 	}
 	if resp.StatusCode == 207 {
 		r, err = FormatJSON(resp.Body)
+		if err != nil {
+			l.Log.Info("Unable to get valid inventory response", zap.Error(err), zap.String("request_id", vr.RequestID))
+			return "", err
+		}
 		l.Log.Info("Successfully post to Inventory", zap.String("request_id", vr.RequestID))
 	} else {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)

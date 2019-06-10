@@ -15,9 +15,9 @@ type Request struct {
 	Service     string    `json:"service"`
 	Size        int64     `json:"size"`
 	URL         string    `json:"url"`
+	ID          string    `json:"id,omitempty"`
 	B64Identity string    `json:"b64_identity"`
 	Timestamp   time.Time `json:"timestamp"`
-	ID          string    `json:"id"`
 }
 
 // Response is returned by validators and sent via the announcement
@@ -29,6 +29,7 @@ type Response struct {
 	Service     string            `json:"service"`
 	URL         string            `json:"url"`
 	B64Identity string            `json:"b64_identity"`
+	ID          string            `json:"id,omitempty"`
 	Extras      map[string]string `json:"extras"`
 	Timestamp   time.Time         `json:"timestamp"`
 }
