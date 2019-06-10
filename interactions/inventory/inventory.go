@@ -57,8 +57,11 @@ func Post(identity string, data []byte, url string) (*http.Response, error) {
 	req.Header.Add("x-rh-identity", identity)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
+	if err != nil {
+		l.Log.Error("Unable to post to inventory", zap.Error(err))
+	}
 
-	return resp, err
+	return resp, nil
 }
 
 // CreatePost puts together the post to be sent to inventory
@@ -85,6 +88,11 @@ func CallInventory(vr *validators.Request) (string, error) {
 
 	cfg := config.Get()
 	data, err := CreatePost(vr)
+	if err != nil {
+		l.Log.Error("Unable to get valid inventory post body", zap.Error(err),
+			zap.String("request_id", vr.RequestID))
+		return "", err
+	}
 
 	resp, err := Post(vr.B64Identity, data, cfg.InventoryURL)
 	if err != nil {
