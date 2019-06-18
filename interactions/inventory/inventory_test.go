@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -45,14 +44,10 @@ var _ = Describe("Inventory", func() {
 	var r io.Reader
 	var b io.Reader
 	var bj io.Reader
-	var p io.ReadCloser
-	var bp io.ReadCloser
 
 	r = strings.NewReader(validJSON)
 	b = strings.NewReader(emptyFields)
 	bj = strings.NewReader(badJSON)
-	p = ioutil.NopCloser(bytes.NewReader([]byte(invResponse)))
-	bp = ioutil.NopCloser(bytes.NewReader([]byte(badJSON)))
 
 	Describe("Submitting JSON data to inventory", func() {
 		It("should return a valid metadata object", func() {
@@ -77,20 +72,6 @@ var _ = Describe("Inventory", func() {
 
 		It("should error on bad JSON", func() {
 			_, err := i.GetJSON(bj)
-			Expect(err).NotTo(BeNil())
-		})
-	})
-
-	Describe("Receiving JSON response from inventory", func() {
-		It("should contain a host ID", func() {
-			response, err := i.FormatJSON(p)
-			Expect(response.Data[0].Host.ID).To(Equal("123456"))
-			Expect(response.Data[0].Status).To(Equal(200))
-			Expect(err).To(BeNil())
-		})
-
-		It("should fail on bad JSON from inventory", func() {
-			_, err := i.FormatJSON(bp)
 			Expect(err).NotTo(BeNil())
 		})
 	})
