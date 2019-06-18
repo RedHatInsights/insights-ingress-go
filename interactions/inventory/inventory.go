@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"go.uber.org/zap"
@@ -25,25 +24,6 @@ func GetJSON(metadata io.Reader) (Metadata, error) {
 	}
 
 	return dj, nil
-}
-
-// FormatJSON encodes the inventory response
-func FormatJSON(response io.ReadCloser) (Inventory, error) {
-
-	var r Inventory
-
-	body, err := ioutil.ReadAll(response)
-	if err != nil {
-		l.Log.Error("Unable to read inventory response", zap.Error(err))
-		return Inventory{}, err
-	}
-	err = json.Unmarshal(body, &r)
-	if err != nil {
-		l.Log.Error("Unable to unmarshal inventory JSON Response", zap.Error(err))
-		return Inventory{}, err
-	}
-
-	return r, nil
 }
 
 // Post JSON data to given URL
@@ -81,12 +61,13 @@ func CreatePost(vr *validators.Request) ([]byte, error) {
 	return post, nil
 }
 
-// CallInventory does an HTTP Request with the metadata provided
-func CallInventory(vr *validators.Request) (string, error) {
+type HTTP struct {
+	Endpoint string
+}
 
-	var r Inventory
+// GetID does an HTTP Request with the metadata provided
+func (h *HTTP) GetID(vr *validators.Request) (string, error) {
 
-	cfg := config.Get()
 	data, err := CreatePost(vr)
 	if err != nil {
 		l.Log.Error("Unable to get valid inventory post body", zap.Error(err),
@@ -94,24 +75,23 @@ func CallInventory(vr *validators.Request) (string, error) {
 		return "", err
 	}
 
-	resp, err := Post(vr.B64Identity, data, cfg.InventoryURL)
+	resp, err := Post(vr.B64Identity, data, h.Endpoint)
 	if err != nil {
 		l.Log.Error("Unable to post to Inventory", zap.Error(err),
 			zap.String("request_id", vr.RequestID))
 		return "", err
 	}
+
+	r := &Response{}
 	if resp.StatusCode == 207 {
-		r, err = FormatJSON(resp.Body)
-		if err != nil {
-			l.Log.Info("Unable to get valid inventory response", zap.Error(err), zap.String("request_id", vr.RequestID))
-			return "", err
-		}
 		l.Log.Info("Successfully post to Inventory", zap.String("request_id", vr.RequestID))
+		json.NewDecoder(resp.Body).Decode(&r)
 	} else {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
 		bodyString := string(bodyBytes)
 		l.Log.Error("Inventory post failure", zap.String("error", bodyString),
 			zap.String("request_id", vr.RequestID))
 	}
+
 	return r.Data[0].Host.ID, nil
 }

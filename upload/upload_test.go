@@ -17,6 +17,7 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
+	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	. "github.com/redhatinsights/insights-ingress-go/upload"
@@ -111,6 +112,7 @@ var _ = Describe("Upload", func() {
 			Announcer:   &announcers.Fake{},
 			ValidChan:   vCh,
 			InvalidChan: iCh,
+			Inventory:   &inventory.Fake{},
 		}
 		rr = httptest.NewRecorder()
 		handler = NewHandler(pl)
