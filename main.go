@@ -10,6 +10,7 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
+	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
@@ -69,6 +70,7 @@ func main() {
 			Announcer:   &announcers.Fake{},
 			ValidChan:   valCh,
 			InvalidChan: invCh,
+			Inventory:   &inventory.Fake{},
 		}
 	} else {
 		p = &pipeline.Pipeline{
@@ -90,6 +92,9 @@ func main() {
 			}),
 			ValidChan:   valCh,
 			InvalidChan: invCh,
+			Inventory: &inventory.HTTP{
+				Endpoint: cfg.InventoryURL,
+			},
 		}
 	}
 
