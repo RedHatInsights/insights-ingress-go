@@ -44,7 +44,6 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 
 		b64Identity := r.Header.Get("x-rh-identity")
 
-		request_id.ConfiguredRequestID("x-rh-insights-request-id")
 		reqID := request_id.GetReqID(r.Context())
 
 		stageInput := &stage.Input{

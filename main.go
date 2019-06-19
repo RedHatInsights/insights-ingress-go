@@ -24,6 +24,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"go.uber.org/zap"
 )
 
@@ -38,7 +39,7 @@ func main() {
 	l.InitLogger()
 	r := chi.NewRouter()
 	r.Use(
-		middleware.RequestID,
+		request_id.ConfiguredRequestID("x-rh-insights-request-id"),
 		middleware.RealIP,
 		middleware.Logger,
 		middleware.Recoverer,
