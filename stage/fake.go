@@ -30,6 +30,10 @@ func (f *Fake) Reject(requestID string) error {
 	return nil
 }
 
+func (f *Fake) GetURL(requestID string) (string, error) {
+	return f.URL, nil
+}
+
 type Simulation struct {
 	Input *Input
 	Delay time.Duration
@@ -43,4 +47,9 @@ func (s *Simulation) Stage(input *Input) (string, error) {
 func (s *Simulation) Reject(requestID string) error {
 	time.Sleep(s.Delay)
 	return nil
+}
+
+func (s *Simulation) GetURL(requestID string) (string, error) {
+	time.Sleep(s.Delay)
+	return fmt.Sprintf("https://example.com/%s", requestID), nil
 }

@@ -32,6 +32,12 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 		if !ok {
 			return false
 		}
+		url, err := p.Stager.GetURL(ev.RequestID)
+		if err != nil {
+			l.Log.Error("Failed to GetURL", zap.String("request_id", ev.RequestID), zap.Error(err))
+			return true
+		}
+		ev.URL = url
 		p.Announcer.Announce(ev)
 	case iev, ok := <-p.InvalidChan:
 		if !ok {
