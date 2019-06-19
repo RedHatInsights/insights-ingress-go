@@ -65,6 +65,8 @@ github.com/redhatinsights/platform-go-middlewares v0.2.1 h1:Cb+GyNvdME1D/gIQIiBj
 github.com/redhatinsights/platform-go-middlewares v0.2.1/go.mod h1:rRCteJQClf/CPqV81N73E3olVwTqpSg7twSAK9piH6s=
 github.com/redhatinsights/platform-go-middlewares v0.3.0 h1:wMV6FjVXDF4Q6fB3IAtEl2CdkbHH6Y5KsA/4PUZdVHk=
 github.com/redhatinsights/platform-go-middlewares v0.3.0/go.mod h1:rRCteJQClf/CPqV81N73E3olVwTqpSg7twSAK9piH6s=
+github.com/redhatinsights/platform-go-middlewares v0.4.0 h1:mKF14PPeLpaSGgz17SVOsqgI9TWAUyMR4LDspDmF8Tk=
+github.com/redhatinsights/platform-go-middlewares v0.4.0/go.mod h1:4CdH83sXYBKiIvtw5diluLRyHGTOEX15sEWyPj/qGBA=
 github.com/segmentio/kafka-go v0.2.4 h1:gib3gdWC+PnrR16gYQ+nf1H1ilXGw6IXLVESRXa9qes=
 github.com/segmentio/kafka-go v0.2.4/go.mod h1:MyX8oKJCSypBXY66FgANfFbqN8aFXAGoLlnR3eKCzoU=
 github.com/spf13/afero v1.1.2 h1:m8/z1t7/fwjysjQRYbP0RD+bUIF/8tJwPdEZsI83ACI=
