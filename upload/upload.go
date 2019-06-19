@@ -80,7 +80,6 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 
 		go p.Submit(stageInput, vr)
 
-		w.Header().Set("X-Request-Id", reqID)
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
