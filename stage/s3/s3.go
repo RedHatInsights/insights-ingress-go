@@ -34,14 +34,19 @@ func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 		return "", errors.New("Failed to upload to s3: " + err.Error())
 	}
 
+	return s.GetURL(in.Key)
+}
+
+// GetURL gets a Presigned URL from S3
+func (s *S3Stager) GetURL(requestID string) (string, error) {
 	client := s3.New(s.Sess)
 	req, _ := client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(in.Key),
+		Key:    aws.String(requestID),
 	})
 	url, err := req.Presign(24 * time.Hour)
 	if err != nil {
-		return "", errors.New("Failed to generate presigned url: " + err.Error())
+		return "", errors.New("Failed to generate persigned url: " + err.Error())
 	}
 
 	return url, nil

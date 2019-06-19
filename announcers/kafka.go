@@ -24,8 +24,8 @@ func NewKafkaAnnouncer(cfg *queue.ProducerConfig) *Kafka {
 }
 
 // Announce broadcasts the response
-func (k *Kafka) Announce(e *validators.Response) {
-	data, err := json.Marshal(e)
+func (k *Kafka) Announce(vr *validators.Response) {
+	data, err := json.Marshal(vr)
 	if err != nil {
 		l.Log.Error("failed to marshal json", zap.Error(err))
 		return

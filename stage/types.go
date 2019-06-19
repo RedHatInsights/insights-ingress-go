@@ -18,5 +18,6 @@ func (i *Input) Close() {
 // Stager provides the mechanism to stage a payload
 type Stager interface {
 	Stage(*Input) (string, error)
+	GetURL(requestID string) (string, error)
 	Reject(requestID string) error
 }
