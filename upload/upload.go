@@ -3,13 +3,13 @@ package upload
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"go.uber.org/zap"
 )
 
@@ -44,7 +44,8 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 
 		b64Identity := r.Header.Get("x-rh-identity")
 
-		reqID := middleware.GetReqID(r.Context())
+		request_id.ConfiguredRequestID("x-rh-insights-request-id")
+		reqID := request_id.GetReqID(r.Context())
 
 		stageInput := &stage.Input{
 			Payload: file,
