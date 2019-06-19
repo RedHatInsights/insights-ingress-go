@@ -43,11 +43,6 @@ func main() {
 		middleware.Logger,
 		middleware.Recoverer,
 	)
-	if cfg.Auth {
-		r.Use(
-			identity.EnforceIdentity,
-		)
-	}
 
 	valCh := make(chan *validators.Response)
 	invCh := make(chan *validators.Response)
@@ -102,8 +97,13 @@ func main() {
 	go p.Start(context.Background(), pipelineClosed)
 
 	r.Route("/api/ingress/v1", func(r chi.Router) {
-		r.Get("/", lubDub)
-		r.Post("/upload", upload.NewHandler(p))
+		if cfg.Auth {
+			r.With(identity.EnforceIdentity).Get("/", lubDub)
+			r.With(identity.EnforceIdentity).Post("/upload", upload.NewHandler(p))
+		} else {
+			r.Get("/", lubDub)
+			r.Post("/upload", upload.NewHandler(p))
+		}
 	})
 	r.Get("/", lubDub)
 	r.Handle("/metrics", promhttp.Handler())
