@@ -106,9 +106,9 @@ func main() {
 			r.Get("/", lubDub)
 			r.Post("/upload", upload.NewHandler(p))
 		}
+		r.Get("/version", version.GetVersion)
 	})
 	r.Get("/", lubDub)
-	r.Get("/version", version.GetVersion)
 	r.Handle("/metrics", promhttp.Handler())
 	l.Log.Info("Starting service", zap.Int("port", cfg.Port))
 
