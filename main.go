@@ -19,6 +19,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
+	"github.com/redhatinsights/insights-ingress-go/version"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -107,6 +108,7 @@ func main() {
 		}
 	})
 	r.Get("/", lubDub)
+	r.Get("/version", version.GetVersion)
 	r.Handle("/metrics", promhttp.Handler())
 	l.Log.Info("Starting service", zap.Int("port", cfg.Port))
 
