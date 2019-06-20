@@ -11,7 +11,7 @@ import (
 )
 
 func GetServer() (*httptest.ResponseRecorder, *http.Request) {
-	req, _ := http.NewRequest("GET", "/version", nil)
+	req, _ := http.NewRequest("GET", "/api/ingress/v1/version", nil)
 	rr := httptest.NewRecorder()
 
 	return rr, req
