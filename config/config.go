@@ -21,6 +21,7 @@ type IngressConfig struct {
 	ValidTopics                 []string
 	Port                        int
 	OpenshiftBuildCommit        string
+	Version                     string
 	Simulate                    bool
 	SimulationStageDelay        time.Duration
 	SimulationValidateCallDelay time.Duration
@@ -62,6 +63,7 @@ func Get() *IngressConfig {
 		ValidTopics:                 strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                        options.GetInt("Port"),
 		OpenshiftBuildCommit:        options.GetString("OpenshiftBuildCommit"),
+		Version:                     "1.0.0",
 		Simulate:                    options.GetBool("Simulate"),
 		SimulationStageDelay:        options.GetDuration("SimulationStageDelay"),
 		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
