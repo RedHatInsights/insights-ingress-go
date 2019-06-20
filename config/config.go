@@ -20,6 +20,7 @@ type IngressConfig struct {
 	KafkaValidationTopic        string
 	ValidTopics                 []string
 	Port                        int
+	OpenshiftBuildCommit        string
 	Simulate                    bool
 	SimulationStageDelay        time.Duration
 	SimulationValidateCallDelay time.Duration
@@ -40,6 +41,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaAvailableTopic", "platform.upload.available")
 	options.SetDefault("KafkaValidationTopic", "platform.upload.validation")
 	options.SetDefault("ValidTopics", "platform.upload.unit")
+	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("Simulate", false)
 	options.SetDefault("SimulationStageDelay", 100)
 	options.SetDefault("SimulationValidateDelay", 5000)
@@ -59,6 +61,7 @@ func Get() *IngressConfig {
 		KafkaValidationTopic:        options.GetString("KafkaValidationTopic"),
 		ValidTopics:                 strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                        options.GetInt("Port"),
+		OpenshiftBuildCommit:        options.GetString("OpenshiftBuildCommit"),
 		Simulate:                    options.GetBool("Simulate"),
 		SimulationStageDelay:        options.GetDuration("SimulationStageDelay"),
 		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
