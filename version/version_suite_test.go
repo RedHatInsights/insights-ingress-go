@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 )
 
