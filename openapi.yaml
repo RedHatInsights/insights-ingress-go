@@ -1,0 +1,36 @@
+openapi: 3.0.0
+info:
+  title: Ingress
+  description: Payload Ingress Service
+  version: 1.0.0
+
+servers:
+  - url: https://cloud.redhat.com/api/ingress/v1
+    description: Production
+
+paths:
+  /upload:
+    post:
+      summary: Accepts a payload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: string
+      responses:
+        "202":
+          description: Payload was accepted for processing.
+        "415":
+          description: Content type of payload is unsupported.
+  /version:
+    get:
+      summary: Returns version information
+      responses:
+        "200":
+          description: Version information
