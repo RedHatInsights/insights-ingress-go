@@ -29,9 +29,11 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 
 // ReadVersion gets the version from a version file
 func ReadVersion() string {
+	var dat []byte
 	dat, err := ioutil.ReadFile("/tmp/src/VERSION")
 	if err != nil {
 		l.Log.Error("Unable to read version", zap.Error(err))
+		dat = []byte("0.0.0")
 	}
 	return string(dat)
 }
