@@ -28,6 +28,7 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 		RequestID: vr.RequestID,
 		Status:    "processing",
 		StatusMsg: "Sent to validation service",
+		Date:      time.Now().Format(time.RFC3339),
 	}
 	p.Tracker.Status(ps)
 	p.Validator.Validate(vr)
@@ -47,16 +48,19 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 		}
 		ev.URL = url
 		ps := &validators.Status{
-			Account:   ev.Account,
-			Service:   "ingress",
-			RequestID: ev.RequestID,
-			Status:    "validated",
-			StatusMsg: "Payload validated by service",
+			Account:     ev.Account,
+			Service:     "ingress",
+			RequestID:   ev.RequestID,
+			Status:      "validated",
+			StatusMsg:   "Payload validated by service",
+			InventoryID: ev.ID,
+			Date:        time.Now().Format(time.RFC3339),
 		}
 		p.Tracker.Status(ps)
 		p.Announcer.Announce(ev)
 		ps.Status = "announced"
 		ps.StatusMsg = "Announced to platform"
+		ps.Date = time.Now().Format(time.RFC3339)
 		p.Tracker.Status(ps)
 	case iev, ok := <-p.InvalidChan:
 		if !ok {
@@ -68,6 +72,7 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 			RequestID: iev.RequestID,
 			Status:    "Rejected",
 			StatusMsg: "Payload not valid. rejecting",
+			Date:      time.Now().Format(time.RFC3339),
 		}
 		p.Tracker.Status(ps)
 		p.Stager.Reject(iev.RequestID)

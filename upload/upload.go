@@ -3,6 +3,7 @@ package upload
 import (
 	"mime/multipart"
 	"net/http"
+	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
@@ -99,6 +100,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			RequestID: reqID,
 			Status:    "recieved",
 			StatusMsg: "Payload recived by ingress",
+			Date:      time.Now().Format(time.RFC3339),
 		}
 		p.Tracker.Status(ps)
 
