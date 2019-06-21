@@ -93,4 +93,60 @@ var _ = Describe("Kafka", func() {
 			})
 		})
 	})
+
+	Describe("Updating the extras field in a response", func() {
+		Context("with an empty ID and SatelliteManaged field", func() {
+			It("should copy the zero values to the Extras field", func() {
+				vr := &validators.Response{}
+				UpdateExtras(vr)
+				Expect(vr.Extras["id"]).To(Equal(""))
+				Expect(vr.Extras["satellite_managed"]).To(BeNil())
+			})
+		})
+
+		Context("with a value for ID and SatelliteManaged", func() {
+			It("should copy the values to the Extras field", func() {
+				bp := true
+				vr := &validators.Response{
+					ID:               "testing",
+					SatelliteManaged: &bp,
+				}
+				UpdateExtras(vr)
+				Expect(vr.Extras["id"]).To(Equal("testing"))
+				sm := vr.Extras["satellite_managed"].(*bool)
+				Expect(*sm).To(BeTrue())
+			})
+		})
+
+		Context("with extras already filled out", func() {
+			It("should not overwrite the contents of extra", func() {
+				vr := &validators.Response{
+					Extras: map[string]interface{}{
+						"id":                "testing",
+						"satellite_managed": nil,
+					},
+				}
+				UpdateExtras(vr)
+				Expect(vr.Extras["id"]).To(Equal("testing"))
+				Expect(vr.Extras["satellite_managed"]).To(BeNil())
+			})
+		})
+
+		Context("with extras partially filled", func() {
+			It("should fill in the remainder", func() {
+				b := true
+				vr := &validators.Response{
+					SatelliteManaged: &b,
+					Extras: map[string]interface{}{
+						"id": "testing",
+					},
+				}
+				UpdateExtras(vr)
+				Expect(vr.Extras["id"]).To(Equal("testing"))
+
+				sm := vr.Extras["satellite_managed"].(*bool)
+				Expect(*sm).To(BeTrue())
+			})
+		})
+	})
 })
