@@ -45,9 +45,10 @@ func New(cfg *Config, topics ...string) *Validator {
 			err := json.Unmarshal(data, ev)
 			if err != nil {
 				l.Log.Error("failed to unmarshal data", zap.Error(err))
-			} else {
-				kv.RouteResponse(ev)
+				continue
 			}
+			UpdateExtras(ev)
+			kv.RouteResponse(ev)
 		}
 		l.Log.Info("consumer channel closed, shutting down")
 		close(kv.ValidChan)
@@ -55,6 +56,21 @@ func New(cfg *Config, topics ...string) *Validator {
 	}()
 
 	return kv
+}
+
+// UpdateExtras copies legacy values from the top layer of a Response to the extras mapping
+func UpdateExtras(vr *validators.Response) {
+	if vr.Extras == nil {
+		vr.Extras = make(map[string]interface{})
+	}
+
+	if _, ok := vr.Extras["id"]; !ok {
+		vr.Extras["id"] = vr.ID
+	}
+
+	if _, ok := vr.Extras["satellite_managed"]; !ok {
+		vr.Extras["satellite_managed"] = vr.SatelliteManaged
+	}
 }
 
 // RouteResponse passes along responses based on their validation status
