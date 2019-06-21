@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"mime/multipart"
 	"net/http"
 
 	"github.com/redhatinsights/insights-ingress-go/config"
@@ -13,20 +14,34 @@ import (
 	"go.uber.org/zap"
 )
 
+// GetFile verifies that the proper upload field is in place and returns the file
+func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
+	var err error
+	file, fileHeader, err := r.FormFile("file")
+	if err == nil {
+		return file, fileHeader, nil
+	}
+	file, fileHeader, err = r.FormFile("upload")
+	if err == nil {
+		return file, fileHeader, nil
+	}
+	if err != nil {
+		l.Log.Info("Unable to find `file` or `upload` parts", zap.Error(err))
+	}
+	return nil, nil, err
+}
+
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userAgent := r.Header.Get("User-Agent")
 
 		incRequests(userAgent)
-
-		file, fileHeader, err := r.FormFile("file")
+		file, fileHeader, err := GetFile(r)
 		if err != nil {
-			l.Log.Info("Did not find `file` part", zap.Error(err))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
-
 		observeSize(userAgent, fileHeader.Size)
 
 		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
