@@ -20,18 +20,25 @@ type Request struct {
 	Timestamp   time.Time `json:"timestamp"`
 }
 
+// Extras is stuff bundled into the response that is not mandatory
+type Extras struct {
+	SatelliteManaged bool   `json:"satellite_managed,omitempty"`
+	ID               string `json:"id,omitempty"`
+}
+
 // Response is returned by validators and sent via the announcement
 type Response struct {
-	Account     string            `json:"account"`
-	Validation  string            `json:"validation"`
-	RequestID   string            `json:"request_id"`
-	Principal   string            `json:"principal"`
-	Service     string            `json:"service"`
-	URL         string            `json:"url"`
-	B64Identity string            `json:"b64_identity"`
-	ID          string            `json:"id,omitempty"`
-	Extras      map[string]string `json:"extras"`
-	Timestamp   time.Time         `json:"timestamp"`
+	Account          string    `json:"account"`
+	Validation       string    `json:"validation"`
+	RequestID        string    `json:"request_id"`
+	Principal        string    `json:"principal"`
+	Service          string    `json:"service"`
+	URL              string    `json:"url"`
+	B64Identity      string    `json:"b64_identity"`
+	ID               string    `json:"id,omitempty"`
+	SatelliteManaged bool      `json:"satellite_managed,omitemtpy"`
+	Extras           Extras    `json:"extras"`
+	Timestamp        time.Time `json:"timestamp"`
 }
 
 // ServiceDescriptor is used to select a message topic
