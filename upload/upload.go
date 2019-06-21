@@ -26,7 +26,7 @@ func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 		return file, fileHeader, nil
 	}
 	if err != nil {
-		l.Log.Info("Unable to find `file` or `upload` parts", zap.Error(err))
+		l.Log.Error("Unable to find `file` or `upload` parts", zap.Error(err))
 	}
 	return nil, nil, err
 }
@@ -35,31 +35,31 @@ func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userAgent := r.Header.Get("User-Agent")
+		reqID := request_id.GetReqID(r.Context())
 
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r)
 		if err != nil {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
+			l.Log.Error("Unable to find `file` or `upload` parts", zap.Error(err), zap.String("request_id", reqID))
 			return
 		}
 		observeSize(userAgent, fileHeader.Size)
 
 		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
 		if validationErr != nil {
-			l.Log.Info("Did not validate", zap.Error(validationErr))
+			l.Log.Info("Did not validate", zap.Error(validationErr), zap.String("request_id", reqID))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
 
 		if err := p.Validator.ValidateService(serviceDescriptor); err != nil {
-			l.Log.Info("Unrecognized service", zap.Error(err))
+			l.Log.Info("Unrecognized service", zap.Error(err), zap.String("request_id", reqID))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
 
 		b64Identity := r.Header.Get("x-rh-identity")
-
-		reqID := request_id.GetReqID(r.Context())
 
 		stageInput := &stage.Input{
 			Payload: file,
@@ -68,7 +68,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 
 		metadata, _, err := r.FormFile("metadata")
 		if err != nil {
-			l.Log.Info("Did not find `metadata` part", zap.Error(err))
+			l.Log.Info("Did not find `metadata` part", zap.Error(err), zap.String("request_id", reqID))
 		}
 
 		vr := &validators.Request{

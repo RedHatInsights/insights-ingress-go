@@ -27,7 +27,7 @@ func NewKafkaAnnouncer(cfg *queue.ProducerConfig) *Kafka {
 func (k *Kafka) Announce(vr *validators.Response) {
 	data, err := json.Marshal(vr)
 	if err != nil {
-		l.Log.Error("failed to marshal json", zap.Error(err))
+		l.Log.Error("failed to marshal json", zap.Error(err), zap.String("request_id", vr.RequestID))
 		return
 	}
 	k.In <- data
