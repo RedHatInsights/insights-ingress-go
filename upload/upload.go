@@ -25,9 +25,6 @@ func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 	if err == nil {
 		return file, fileHeader, nil
 	}
-	if err != nil {
-		l.Log.Error("Unable to find `file` or `upload` parts", zap.Error(err))
-	}
 	return nil, nil, err
 }
 
