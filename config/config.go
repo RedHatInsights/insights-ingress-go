@@ -50,6 +50,9 @@ func Get() *IngressConfig {
 	options.SetDefault("InventoryURL", "http://inventory:8080/api/inventory/v1/hosts")
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
+	commit := viper.New()
+	commit.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
+	commit.AutomaticEnv()
 
 	return &IngressConfig{
 		MaxSize:                     options.GetInt("MaxSize"),
@@ -62,7 +65,7 @@ func Get() *IngressConfig {
 		KafkaValidationTopic:        options.GetString("KafkaValidationTopic"),
 		ValidTopics:                 strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                        options.GetInt("Port"),
-		OpenshiftBuildCommit:        options.GetString("OpenshiftBuildCommit"),
+		OpenshiftBuildCommit:        commit.GetString("Openshift_Build_Commit"),
 		Version:                     "1.0.0",
 		Simulate:                    options.GetBool("Simulate"),
 		SimulationStageDelay:        options.GetDuration("SimulationStageDelay"),
