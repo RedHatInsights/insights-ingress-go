@@ -33,6 +33,17 @@ func (k *Kafka) Announce(vr *validators.Response) {
 	k.In <- data
 }
 
+// Status sends messages to the payload-tracker topic
+func (k *Kafka) Status(vs *validators.Status) {
+	data, err := json.Marshal(vs)
+	if err != nil {
+		l.Log.Error("failed to marshal status message", zap.Error(err), zap.String("request_id", vs.RequestID))
+		return
+	}
+	k.In <- data
+}
+
+// Stop the kafka input channel
 func (k *Kafka) Stop() {
 	close(k.In)
 }
