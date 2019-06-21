@@ -22,7 +22,9 @@ paths:
                   type: string
                   format: binary
                 metadata:
-                  type: string
+                  type: object
+                  additionalProperties:
+                    type: string
       responses:
         "202":
           description: Payload was accepted for processing.
@@ -34,3 +36,66 @@ paths:
       responses:
         "200":
           description: Version information
+
+components:
+  schemas:
+    ValidationRequest:
+      type: object
+      properties:
+        account:
+          type: string
+        category:
+          type: string
+        service:
+          type: string
+        request_id:
+          type: string
+        principal:
+          type: string
+        size:
+          type: integer
+        url:
+          type: string
+          format: uri
+        id:
+          type: string
+        b64_identity:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    ValidationResponse:
+      type: object
+      properties:
+        account:
+          type: string
+        request_id:
+          type: string
+        service:
+          type: string
+        url:
+          type: string
+          format: uri
+        principal:
+          type: string
+        b64_identity:
+          type: string
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        validation:
+          type: string
+          enum:
+            - "success"
+            - "failure"
+        extras:
+          type: object
+          properties:
+            id:
+              type: string
+            satellite_managed:
+              type: boolean
+          additionalProperties:
+            type: string
