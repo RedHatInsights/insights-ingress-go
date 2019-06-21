@@ -18,6 +18,7 @@ type IngressConfig struct {
 	KafkaGroupID                string
 	KafkaAvailableTopic         string
 	KafkaValidationTopic        string
+	KafkaTrackerTopic           string
 	ValidTopics                 []string
 	Port                        int
 	OpenshiftBuildCommit        string
@@ -41,6 +42,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("KafkaAvailableTopic", "platform.upload.available")
 	options.SetDefault("KafkaValidationTopic", "platform.upload.validation")
+	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("ValidTopics", "platform.upload.unit")
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("Simulate", false)
@@ -63,6 +65,7 @@ func Get() *IngressConfig {
 		KafkaGroupID:                options.GetString("KafkaGroupID"),
 		KafkaAvailableTopic:         options.GetString("KafkaAvailableTopic"),
 		KafkaValidationTopic:        options.GetString("KafkaValidationTopic"),
+		KafkaTrackerTopic:           options.GetString("KafkaTrackerTopic"),
 		ValidTopics:                 strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                        options.GetInt("Port"),
 		OpenshiftBuildCommit:        commit.GetString("Openshift_Build_Commit"),

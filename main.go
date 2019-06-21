@@ -68,6 +68,7 @@ func main() {
 			ValidChan:   valCh,
 			InvalidChan: invCh,
 			Inventory:   &inventory.Fake{},
+			Tracker:     &announcers.Fake{},
 		}
 	} else {
 		p = &pipeline.Pipeline{
@@ -92,6 +93,10 @@ func main() {
 			Inventory: &inventory.HTTP{
 				Endpoint: cfg.InventoryURL,
 			},
+			Tracker: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
+				Brokers: cfg.KafkaBrokers,
+				Topic:   cfg.KafkaTrackerTopic,
+			}),
 		}
 	}
 

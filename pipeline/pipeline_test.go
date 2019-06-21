@@ -21,6 +21,7 @@ var _ = Describe("Pipeline", func() {
 		validator *validators.Fake
 		stager    *stage.Fake
 		announcer *announcers.Fake
+		tracker   *announcers.Fake
 	)
 
 	BeforeEach(func() {
@@ -34,6 +35,7 @@ var _ = Describe("Pipeline", func() {
 			DesiredResponse: "success",
 		}
 		announcer = &announcers.Fake{}
+		tracker = &announcers.Fake{}
 
 		p = &Pipeline{
 			Stager:      stager,
@@ -41,6 +43,7 @@ var _ = Describe("Pipeline", func() {
 			Announcer:   announcer,
 			ValidChan:   vCh,
 			InvalidChan: iCh,
+			Tracker:     tracker,
 		}
 	})
 
