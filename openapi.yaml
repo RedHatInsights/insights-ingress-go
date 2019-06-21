@@ -26,6 +26,8 @@ paths:
                   additionalProperties:
                     type: string
       responses:
+        "401":
+          description: Authentication missing from request
         "202":
           description: Payload was accepted for processing.
         "415":
@@ -34,6 +36,8 @@ paths:
     get:
       summary: Returns version information
       responses:
+        "401":
+          description: Authentication missing from request
         "200":
           description: Version information
 
