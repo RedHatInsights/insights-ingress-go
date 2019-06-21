@@ -8,13 +8,20 @@ import (
 
 // Fake is a fake announcer
 type Fake struct {
-	Event *validators.Response
+	Event       *validators.Response
+	StatusEvent *validators.Status
 }
 
 // Announce does nothing
 func (f *Fake) Announce(e *validators.Response) {
 	f.Event = e
 	l.Log.Info("Announce called", zap.String("request_id", e.RequestID))
+}
+
+// Status does nothing
+func (f *Fake) Status(e *validators.Status) {
+	f.StatusEvent = e
+	l.Log.Info("Announce called for Status", zap.String("request_id", e.RequestID))
 }
 
 // Stop does nothing

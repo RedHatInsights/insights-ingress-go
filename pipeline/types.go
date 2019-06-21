@@ -15,4 +15,5 @@ type Pipeline struct {
 	ValidChan   chan *validators.Response
 	InvalidChan chan *validators.Response
 	Inventory   inventory.Inventory
+	Tracker     announcers.Announcer
 }

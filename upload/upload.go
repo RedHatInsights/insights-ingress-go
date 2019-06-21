@@ -90,6 +90,15 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			}
 		}
 
+		ps := &validators.Status{
+			Account:   vr.Account,
+			Service:   "ingress",
+			RequestID: reqID,
+			Status:    "recieved",
+			StatusMsg: "Payload recived by ingress",
+		}
+		p.Tracker.Status(ps)
+
 		go p.Submit(stageInput, vr)
 
 		w.WriteHeader(http.StatusAccepted)

@@ -113,6 +113,7 @@ var _ = Describe("Upload", func() {
 			ValidChan:   vCh,
 			InvalidChan: iCh,
 			Inventory:   &inventory.Fake{},
+			Tracker:     &announcers.Fake{},
 		}
 		rr = httptest.NewRecorder()
 		handler = NewHandler(pl)
