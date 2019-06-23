@@ -86,7 +86,9 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 
 		if metadata != nil {
 			id, err := p.Inventory.GetID(vr)
-			if err == nil {
+			if err != nil {
+				l.Log.Error("Inventory post failure", zap.Error(err), zap.String("request_id", reqID))
+			} else {
 				vr.ID = id
 			}
 		}
