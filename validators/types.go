@@ -37,15 +37,15 @@ type Response struct {
 
 // Status is the message sent to the payload tracker
 type Status struct {
-	Service     string `json:"service"`
-	Source      string `json:"source,omitempty"`
-	Account     string `json:"account"`
-	RequestID   string `json:"request_id"`
-	InventoryID string `json:"inventory_id"`
-	SystemID    string `json:"system_id"`
-	Status      string `json:"status"`
-	StatusMsg   string `json:"status_msg"`
-	Date        string `json:"date"`
+	Service     string    `json:"service"`
+	Source      string    `json:"source,omitempty"`
+	Account     string    `json:"account"`
+	RequestID   string    `json:"request_id"`
+	InventoryID string    `json:"inventory_id"`
+	SystemID    string    `json:"system_id"`
+	Status      string    `json:"status"`
+	StatusMsg   string    `json:"status_msg"`
+	Date        time.Time `json:"date"`
 }
 
 // ServiceDescriptor is used to select a message topic
