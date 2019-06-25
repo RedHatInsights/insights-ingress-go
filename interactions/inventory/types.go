@@ -12,6 +12,11 @@ type Response struct {
 	} `json:"data"`
 }
 
+type facts struct {
+	Namespace string                 `json:"namespace"`
+	Facts     map[string]interface{} `json:"facts"`
+}
+
 // Metadata is the expected data from a client
 type Metadata struct {
 	IPAddresses  []string `json:"ip_addresses,omitempty"`
@@ -21,6 +26,7 @@ type Metadata struct {
 	SubManID     string   `json:"subscription_manager_id,omitempty"`
 	MacAddresses []string `json:"mac_addresses,omitempty"`
 	FQDN         string   `json:"fqdn,omitempty"`
+	Facts        []facts  `json:"facts,omitempty"`
 }
 
 // Inventory can return an inventory ID
