@@ -16,8 +16,8 @@ var tdMapping map[string]string
 
 func init() {
 	tdMapping = make(map[string]string)
-	tdMapping["unit2"] = "platform.upload.unit"
-	tdMapping["openshift"] = "platform.upload.buckit"
+	tdMapping["unit2"] = "unit"
+	tdMapping["openshift"] = "buckit"
 }
 
 // New constructs and initializes a new Kafka Validator
@@ -130,5 +130,5 @@ func serviceToTopic(service string) string {
 	if topic != "" {
 		return topic
 	}
-	return fmt.Sprintf("platform.upload.%s", service)
+	return fmt.Sprintf("%s", service)
 }

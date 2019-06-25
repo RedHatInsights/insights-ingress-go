@@ -43,7 +43,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaAvailableTopic", "platform.upload.available")
 	options.SetDefault("KafkaValidationTopic", "platform.upload.validation")
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
-	options.SetDefault("ValidTopics", "platform.upload.unit")
+	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("Simulate", false)
 	options.SetDefault("SimulationStageDelay", 100)
