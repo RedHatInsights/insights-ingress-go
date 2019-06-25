@@ -42,7 +42,6 @@ func main() {
 	r.Use(
 		request_id.ConfiguredRequestID("x-rh-insights-request-id"),
 		middleware.RealIP,
-		middleware.Logger,
 		middleware.Recoverer,
 	)
 
@@ -106,12 +105,12 @@ func main() {
 	r.Route("/api/ingress/v1", func(r chi.Router) {
 		if cfg.Auth {
 			r.With(identity.EnforceIdentity).Get("/", lubDub)
-			r.With(identity.EnforceIdentity).Post("/upload", upload.NewHandler(p))
+			r.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
 		} else {
 			r.Get("/", lubDub)
-			r.Post("/upload", upload.NewHandler(p))
+			r.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
 		}
-		r.Get("/version", version.GetVersion)
+		r.With(middleware.Logger).Get("/version", version.GetVersion)
 	})
 	r.Get("/", lubDub)
 	r.Handle("/metrics", promhttp.Handler())
