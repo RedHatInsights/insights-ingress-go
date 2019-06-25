@@ -59,6 +59,7 @@ func CreatePost(vr *validators.Request) ([]byte, error) {
 	return post, nil
 }
 
+// HTTP enables configuration of connection settings
 type HTTP struct {
 	Endpoint string
 }
