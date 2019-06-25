@@ -53,7 +53,9 @@ func CreatePost(vr *validators.Request) ([]byte, error) {
 	}
 
 	postBody.Account = vr.Account
-	postBody.Facts[0].Namespace = vr.UserAgent
+	if len(postBody.Facts) > 0 {
+		postBody.Facts[0].Namespace = vr.UserAgent
+	}
 
 	post, _ := json.Marshal([]Metadata{postBody})
 
