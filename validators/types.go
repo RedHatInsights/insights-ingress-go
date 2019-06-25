@@ -17,6 +17,7 @@ type Request struct {
 	URL         string    `json:"url"`
 	ID          string    `json:"id,omitempty"`
 	B64Identity string    `json:"b64_identity"`
+	UserAgent   string
 	Timestamp   time.Time `json:"timestamp"`
 }
 

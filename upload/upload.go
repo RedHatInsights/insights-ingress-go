@@ -76,6 +76,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Category:    serviceDescriptor.Category,
 			B64Identity: b64Identity,
 			Metadata:    metadata,
+			UserAgent:   userAgent,
 		}
 
 		if config.Get().Auth == true {
