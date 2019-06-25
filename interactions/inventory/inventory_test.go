@@ -33,6 +33,11 @@ var _ = Describe("Inventory", func() {
 		"subscription_manager_id": "boopboop",
 		"account": "000001"}`
 
+		withFacts string = `{"ip_addresses": ["127.0.0.1"],
+		"account": "000001",
+		"facts": [{"namespace": "insights-client",
+		"facts": {"foo": "bar"}}]}`
+
 		badJSON string = `notatallajsondoc`
 
 		invResponse string = `{"data": [{"status": 200,
@@ -44,10 +49,12 @@ var _ = Describe("Inventory", func() {
 	var r io.Reader
 	var b io.Reader
 	var bj io.Reader
+	var f io.Reader
 
 	r = strings.NewReader(validJSON)
 	b = strings.NewReader(emptyFields)
 	bj = strings.NewReader(badJSON)
+	f = strings.NewReader(withFacts)
 
 	Describe("Submitting JSON data to inventory", func() {
 		It("should return a valid metadata object", func() {
@@ -67,6 +74,13 @@ var _ = Describe("Inventory", func() {
 			Expect(response.FQDN).To(BeEmpty())
 			Expect(response.MachineID).To(BeEmpty())
 			Expect(response.IPAddresses).To(ContainElement("127.0.0.1"))
+			Expect(err).To(BeNil())
+		})
+
+		It("should populate facts properly", func() {
+			response, err := i.GetJSON(f)
+			Expect(response.Facts[0].Namespace).To(Equal("insights-client"))
+			Expect(response.Facts[0].Facts["foo"]).To(Equal("bar"))
 			Expect(err).To(BeNil())
 		})
 
@@ -113,8 +127,9 @@ var _ = Describe("Inventory", func() {
 		It("should return valid data", func() {
 
 			vr := &validators.Request{
-				Metadata: strings.NewReader(validJSON),
-				Account:  "000001",
+				Metadata:  strings.NewReader(withFacts),
+				Account:   "000001",
+				UserAgent: "insights-client",
 			}
 
 			var m []i.Metadata
@@ -125,6 +140,8 @@ var _ = Describe("Inventory", func() {
 			Expect(err).To(BeNil())
 			Expect(m[0].Account).To(Equal("000001"))
 			Expect(m[0].IPAddresses).To(ContainElement("127.0.0.1"))
+			Expect(m[0].Facts[0].Namespace).To(Equal("insights-client"))
+			Expect(m[0].Facts[0].Facts["foo"]).To(Equal("bar"))
 
 		})
 	})
