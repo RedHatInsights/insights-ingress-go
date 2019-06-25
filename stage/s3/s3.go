@@ -17,13 +17,13 @@ func getSession() *session.Session {
 }
 
 // WithSession returns a stager with a s3 session attached
-func WithSession(stager *StageS3) stage.Stager {
+func WithSession(stager *Stager) stage.Stager {
 	stager.Sess = getSession()
 	return stager
 }
 
 // Stage stores the file in s3 and returns a presigned url
-func (s *StageS3) Stage(in *stage.Input) (string, error) {
+func (s *Stager) Stage(in *stage.Input) (string, error) {
 	uploader := s3manager.NewUploader(s.Sess)
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.Bucket),
@@ -38,7 +38,7 @@ func (s *StageS3) Stage(in *stage.Input) (string, error) {
 }
 
 // GetURL gets a Presigned URL from S3
-func (s *StageS3) GetURL(requestID string) (string, error) {
+func (s *Stager) GetURL(requestID string) (string, error) {
 	client := s3.New(s.Sess)
 	req, _ := client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(s.Bucket),
@@ -53,7 +53,7 @@ func (s *StageS3) GetURL(requestID string) (string, error) {
 }
 
 // Reject moves a payload to the rejected bucket
-func (s *StageS3) Reject(requestID string) error {
+func (s *Stager) Reject(requestID string) error {
 	return s.copy(&bucketKey{
 		Bucket: s.Bucket,
 		Key:    requestID,
@@ -65,7 +65,7 @@ type bucketKey struct {
 	Key    string
 }
 
-func (s *StageS3) copy(from *bucketKey, toBucket string) error {
+func (s *Stager) copy(from *bucketKey, toBucket string) error {
 	src := from.Bucket + "/" + from.Key
 	client := s3.New(s.Sess)
 	input := &s3.CopyObjectInput{

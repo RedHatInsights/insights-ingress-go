@@ -72,7 +72,7 @@ func main() {
 		}
 	} else {
 		p = &pipeline.Pipeline{
-			Stager: s3.WithSession(&s3.StageS3{
+			Stager: s3.WithSession(&s3.Stager{
 				Bucket:   cfg.StageBucket,
 				Rejected: cfg.RejectBucket,
 			}),
