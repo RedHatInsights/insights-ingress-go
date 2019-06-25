@@ -8,6 +8,7 @@ import (
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 )
 
+// Fake allows for creation of testing objects
 type Fake struct {
 	In              *Request
 	Out             *Response
@@ -17,6 +18,7 @@ type Fake struct {
 	DesiredResponse string
 }
 
+// Validate creates a fake validation response
 func (v *Fake) Validate(in *Request) {
 	v.Called = true
 	v.In = in
@@ -37,6 +39,7 @@ func (v *Fake) Validate(in *Request) {
 	}
 }
 
+// ValidateService allows for testing service validations
 func (v *Fake) ValidateService(service *ServiceDescriptor) error {
 	if service.Service == "failed" {
 		return errors.New("failed is an invalid service")
@@ -44,6 +47,7 @@ func (v *Fake) ValidateService(service *ServiceDescriptor) error {
 	return nil
 }
 
+// WaitFor waits for a response in the channel
 func (v *Fake) WaitFor(ch chan *Response) *Response {
 	select {
 	case o := <-ch:
@@ -53,6 +57,7 @@ func (v *Fake) WaitFor(ch chan *Response) *Response {
 	}
 }
 
+// Simulation allows for simulation of validation
 type Simulation struct {
 	CallDelay   time.Duration
 	Delay       time.Duration
@@ -61,6 +66,7 @@ type Simulation struct {
 	Context     context.Context
 }
 
+// Validate simulated requests
 func (s *Simulation) Validate(request *Request) {
 	go func() {
 		time.Sleep(s.Delay)
@@ -84,10 +90,12 @@ func (s *Simulation) Validate(request *Request) {
 	time.Sleep(s.CallDelay)
 }
 
+// ValidateService returns nil
 func (s *Simulation) ValidateService(service *ServiceDescriptor) error {
 	return nil
 }
 
+// NewSimulation creates a new validation simulation
 func NewSimulation(s *Simulation) *Simulation {
 	go func() {
 		for {
