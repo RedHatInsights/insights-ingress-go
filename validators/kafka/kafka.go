@@ -31,6 +31,7 @@ func New(cfg *Config, topics ...string) *Validator {
 		InvalidChan:               cfg.InvalidChan,
 	}
 	for _, topic := range topics {
+		topic = fmt.Sprintf("platform.upload.%s", topic)
 		kv.addProducer(topic)
 	}
 	go queue.Consumer(cfg.Context, kv.ValidationConsumerChannel, &queue.ConsumerConfig{
@@ -101,6 +102,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		return
 	}
 	topic := serviceToTopic(vr.Service)
+	topic = fmt.Sprintf("platform.upload.%s", topic)
 	l.Log.Debug("Posting data to topic", zap.ByteString("data", data), zap.String("topic", topic))
 	kv.ValidationProducerMapping[topic] <- data
 }
