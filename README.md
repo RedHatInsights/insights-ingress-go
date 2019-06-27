@@ -97,6 +97,13 @@ Any apps that will perform the validation should send back all of the data they
 recieved in addition to a `validation` key that contains `success` or `failure`
 depending on whether the payload passed validation.
 
+Expected Validation Message:
+    
+    {
+        ...all data received by validating app
+        "validation": <"success"/"failure">
+    }
+
 ## Errors
 
 Ingress will report HTTP errors back to the client if something goes wrong with the
