@@ -60,6 +60,15 @@ var _ = Describe("Kafka", func() {
 				Expect(wait(kv.ValidChan)).To(BeFalse())
 			})
 		})
+		Context("with validation set to 'handoff'", func() {
+			It("should not forward to any channel", func() {
+				go kv.RouteResponse(&validators.Response{
+					Validation: "handoff",
+				})
+				Expect(wait(kv.InvalidChan)).To(BeFalse())
+				Expect(wait(kv.ValidChan)).To(BeFalse())
+			})
+		})
 	})
 
 	Describe("Validating a service", func() {
