@@ -88,6 +88,8 @@ func (kv *Validator) RouteResponse(response *validators.Response) {
 		kv.ValidChan <- response
 	case "failure":
 		kv.InvalidChan <- response
+	case "handoff":
+		l.Log.Info("Validation handed off", zap.String("request_id", response.RequestID), zap.String("account", response.Account))
 	default:
 		l.Log.Error("Invalid validation in response", zap.String("response.validation", response.Validation))
 		return
