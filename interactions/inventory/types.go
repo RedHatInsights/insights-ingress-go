@@ -12,17 +12,6 @@ type Response struct {
 	} `json:"data"`
 }
 
-// Metadata is the expected data from a client
-type Metadata struct {
-	IPAddresses  []string `json:"ip_addresses,omitempty"`
-	Account      string   `json:"account,omitempty"`
-	InsightsID   string   `json:"insights_id,omitempty"`
-	MachineID    string   `json:"machine_id,omitempty"`
-	SubManID     string   `json:"subscription_manager_id,omitempty"`
-	MacAddresses []string `json:"mac_addresses,omitempty"`
-	FQDN         string   `json:"fqdn,omitempty"`
-}
-
 // Inventory can return an inventory ID
 type Inventory interface {
 	GetID(vr *validators.Request) (string, error)

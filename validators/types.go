@@ -8,7 +8,7 @@ import (
 type Request struct {
 	Account     string    `json:"account"`
 	Category    string    `json:"category"`
-	Metadata    []byte    `json:"metadata"`
+	Metadata    Metadata  `json:"metadata"`
 	RequestID   string    `json:"request_id"`
 	Principal   string    `json:"principal"`
 	Service     string    `json:"service"`
@@ -45,6 +45,17 @@ type Status struct {
 	Status      string    `json:"status"`
 	StatusMsg   string    `json:"status_msg"`
 	Date        time.Time `json:"date"`
+}
+
+// Metadata is the expected data from a client
+type Metadata struct {
+	IPAddresses  []string `json:"ip_addresses,omitempty"`
+	Account      string   `json:"account,omitempty"`
+	InsightsID   string   `json:"insights_id,omitempty"`
+	MachineID    string   `json:"machine_id,omitempty"`
+	SubManID     string   `json:"subscription_manager_id,omitempty"`
+	MacAddresses []string `json:"mac_addresses,omitempty"`
+	FQDN         string   `json:"fqdn,omitempty"`
 }
 
 // ServiceDescriptor is used to select a message topic

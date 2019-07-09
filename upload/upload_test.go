@@ -139,7 +139,7 @@ var _ = Describe("Upload", func() {
 					},
 					&FilePart{
 						Name:        "metadata",
-						Content:     "md",
+						Content:     `{"account": "012345"}`,
 						ContentType: "text/plain",
 					},
 				)
@@ -147,7 +147,7 @@ var _ = Describe("Upload", func() {
 				Expect(in).To(Not(BeNil()))
 				vin := validator.In
 				Expect(vin).To(Not(BeNil()))
-				Expect(string(vin.Metadata)).To(Equal("md"))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345"}))
 			})
 		})
 
