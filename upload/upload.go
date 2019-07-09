@@ -1,6 +1,8 @@
 package upload
 
 import (
+	"errors"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"time"
@@ -27,6 +29,20 @@ func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 		return file, fileHeader, nil
 	}
 	return nil, nil, err
+}
+
+// GetMetadata returns metadata content from a file or value part
+func GetMetadata(r *http.Request) ([]byte, error) {
+	mdf, _, err := r.FormFile("metadata")
+	if err == nil {
+		defer mdf.Close()
+		return ioutil.ReadAll(mdf)
+	}
+	metadata := r.FormValue("metadata")
+	if metadata != "" {
+		return []byte(metadata), nil
+	}
+	return nil, errors.New("Failed to find metadata as a file or value")
 }
 
 // NewHandler returns a http handler configured with a Pipeline
@@ -64,9 +80,9 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Key:     reqID,
 		}
 
-		metadata, _, err := r.FormFile("metadata")
+		metadata, err := GetMetadata(r)
 		if err != nil {
-			l.Log.Debug("Did not find `metadata` part", zap.Error(err), zap.String("request_id", reqID))
+			l.Log.Debug("Empty metadata", zap.Error(err), zap.String("request_id", reqID))
 		}
 
 		vr := &validators.Request{
