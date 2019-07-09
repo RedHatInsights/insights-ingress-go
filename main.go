@@ -112,6 +112,16 @@ func main() {
 		}
 		r.With(middleware.Logger).Get("/version", version.GetVersion)
 	})
+	r.Route("/r/insights/platform/ingress/v1", func(r chi.Router) {
+		if cfg.Auth {
+			r.With(identity.EnforceIdentity).Get("/", lubDub)
+			r.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
+		} else {
+			r.Get("/", lubDub)
+			r.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
+		}
+		r.With(middleware.Logger).Get("/version", version.GetVersion)
+	})
 	r.Get("/", lubDub)
 	r.Handle("/metrics", promhttp.Handler())
 	l.Log.Info("Starting service", zap.Int("port", cfg.Port))
