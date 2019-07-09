@@ -149,6 +149,7 @@ var _ = Describe("Upload", func() {
 				Expect(vin).To(Not(BeNil()))
 				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345"}))
 				Expect(vin.ID).To(Equal("1234-abcd-5678-efgh"))
+
 			})
 		})
 

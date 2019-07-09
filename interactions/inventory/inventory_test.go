@@ -76,6 +76,7 @@ var _ = Describe("Inventory", func() {
 
 			vr := &validators.Request{
 				Metadata: b,
+
 				Account:  "000001",
 			}
 

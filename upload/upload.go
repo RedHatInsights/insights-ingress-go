@@ -2,6 +2,7 @@ package upload
 
 import (
 	"encoding/json"
+
 	"errors"
 	"io/ioutil"
 	"mime/multipart"
@@ -43,7 +44,6 @@ func GetMetadata(r *http.Request) ([]byte, error) {
 	if metadata != "" {
 		return []byte(metadata), nil
 	}
-
 	return nil, errors.New("Failed to find metadata as a file or value")
 }
 
@@ -89,6 +89,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		var md validators.Metadata
 		if err = json.Unmarshal(metadata, &md); err != nil {
 			l.Log.Error("Failed to unmarshal metadata", zap.Error(err), zap.String("request_id", reqID))
+le
 		}
 
 		vr := &validators.Request{
