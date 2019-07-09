@@ -63,8 +63,12 @@ func (h *HTTP) GetID(vr *validators.Request) (string, error) {
 
 	r := &Response{}
 	if resp.StatusCode == 207 {
-		l.Log.Info("Successfully post to Inventory", zap.String("request_id", vr.RequestID))
-		json.NewDecoder(resp.Body).Decode(&r)
+		err = json.NewDecoder(resp.Body).Decode(&r)
+		if err != nil {
+			l.Log.Error("Failed to unmarshal inventory response", zap.Error(err), zap.String("request_id", vr.RequestID))
+			return "", err
+		}
+		l.Log.Info("Successfully post to Inventory", zap.String("request_id", vr.RequestID), zap.String("inventory_id", r.Data[0].Host.ID))
 		return r.Data[0].Host.ID, nil
 	}
 
