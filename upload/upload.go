@@ -121,7 +121,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			RequestID: reqID,
 			Status:    "recieved",
 			StatusMsg: "Payload recived by ingress",
-			Date:      time.Now(),
+			Date:      time.Now().UTC(),
 		}
 		p.Tracker.Status(ps)
 
