@@ -1,7 +1,6 @@
 package inventory_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -25,12 +24,6 @@ var _ = Describe("Inventory", func() {
 		"machine_id": "1awekljf234b24bn",
 		"account": "000001"}`
 
-		emptyFields string = `{"ip_addresses": ["127.0.0.1"],
-		"mac_addresses": ["1234-5678-abcd-efgh"],
-		"insights_id": "1awekljf234b24bn",
-		"subscription_manager_id": "boopboop",
-		"account": "000001"}`
-
 		badJSON string = `notatallajsondoc`
 
 		invResponse string = `{"data": [{"status": 200,
@@ -40,35 +33,6 @@ var _ = Describe("Inventory", func() {
 	)
 
 	r := []byte(validJSON)
-	b := []byte(emptyFields)
-	bj := []byte(badJSON)
-
-	Describe("Submitting JSON data to inventory", func() {
-		It("should return a valid metadata object", func() {
-			response, err := i.GetJSON(r)
-			Expect(response.Account).To(Equal("000001"))
-			Expect(response.IPAddresses).To(ContainElement("127.0.0.1"))
-			Expect(response.FQDN).To(Equal("localhost.localdomain"))
-			Expect(response.InsightsID).To(Equal("1awekljf234b24bn"))
-			Expect(response.MachineID).To(Equal("1awekljf234b24bn"))
-			Expect(response.SubManID).To(Equal("boopboop"))
-			Expect(response.MacAddresses).To(ContainElement("1234-5678-abcd-efgh"))
-			Expect(err).To(BeNil())
-		})
-
-		It("should handle empty elements", func() {
-			response, err := i.GetJSON(b)
-			Expect(response.FQDN).To(BeEmpty())
-			Expect(response.MachineID).To(BeEmpty())
-			Expect(response.IPAddresses).To(ContainElement("127.0.0.1"))
-			Expect(err).To(BeNil())
-		})
-
-		It("should error on bad JSON", func() {
-			_, err := i.GetJSON(bj)
-			Expect(err).NotTo(BeNil())
-		})
-	})
 
 	Describe("Posting to Inventory", func() {
 		It("should return a valid JSON response", func() {
@@ -106,15 +70,24 @@ var _ = Describe("Inventory", func() {
 	Describe("Creating a post", func() {
 		It("should return valid data", func() {
 
+			var b validators.Metadata
+			err := json.Unmarshal(r, &b)
+			Expect(err).To(BeNil())
+
 			vr := &validators.Request{
-				Metadata: r,
+				Metadata: b,
 				Account:  "000001",
 			}
 
-			var m []i.Metadata
+			var m []validators.Metadata
+			var x interface{}
 
 			data, _ := i.CreatePost(vr)
-			err := json.NewDecoder(bytes.NewReader(data)).Decode(&m)
+
+			err = json.Unmarshal(data, &x)
+			fmt.Printf("%s\n", x)
+
+			err = json.Unmarshal(data, &m)
 
 			Expect(err).To(BeNil())
 			Expect(m[0].Account).To(Equal("000001"))

@@ -13,18 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// GetJSON decodes the incoming metadata from an upload
-func GetJSON(metadata []byte) (Metadata, error) {
-
-	var dj Metadata
-	err := json.Unmarshal(metadata, &dj)
-	if err != nil {
-		return Metadata{}, err
-	}
-
-	return dj, nil
-}
-
 // Post JSON data to given URL
 func Post(identity string, data []byte, url string) (*http.Response, error) {
 
@@ -46,14 +34,11 @@ func Post(identity string, data []byte, url string) (*http.Response, error) {
 // CreatePost puts together the post to be sent to inventory
 func CreatePost(vr *validators.Request) ([]byte, error) {
 
-	postBody, err := GetJSON(vr.Metadata)
+	vr.Metadata.Account = vr.Account
+	post, err := json.Marshal([]validators.Metadata{vr.Metadata})
 	if err != nil {
-		return nil, err
+		l.Log.Error("Unable to create inventory post JSON", zap.Error(err), zap.String("request_id", vr.RequestID))
 	}
-
-	postBody.Account = vr.Account
-
-	post, _ := json.Marshal([]Metadata{postBody})
 
 	return post, nil
 }
