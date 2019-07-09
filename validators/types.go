@@ -1,7 +1,6 @@
 package validators
 
 import (
-	"io"
 	"time"
 )
 
@@ -9,7 +8,7 @@ import (
 type Request struct {
 	Account     string    `json:"account"`
 	Category    string    `json:"category"`
-	Metadata    io.Reader `json:"metadata"`
+	Metadata    []byte    `json:"metadata"`
 	RequestID   string    `json:"request_id"`
 	Principal   string    `json:"principal"`
 	Service     string    `json:"service"`

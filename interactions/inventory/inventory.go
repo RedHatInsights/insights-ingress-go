@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -15,10 +14,10 @@ import (
 )
 
 // GetJSON decodes the incoming metadata from an upload
-func GetJSON(metadata io.Reader) (Metadata, error) {
+func GetJSON(metadata []byte) (Metadata, error) {
 
 	var dj Metadata
-	err := json.NewDecoder(metadata).Decode(&dj)
+	err := json.Unmarshal(metadata, &dj)
 	if err != nil {
 		return Metadata{}, err
 	}
