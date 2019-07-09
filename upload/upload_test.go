@@ -147,11 +147,7 @@ var _ = Describe("Upload", func() {
 				Expect(in).To(Not(BeNil()))
 				vin := validator.In
 				Expect(vin).To(Not(BeNil()))
-				buf := make([]byte, 2)
-				bytesRead, err := vin.Metadata.Read(buf)
-				Expect(err).To(BeNil())
-				Expect(bytesRead).To(Equal(2))
-				Expect(string(buf)).To(Equal("md"))
+				Expect(string(vin.Metadata)).To(Equal("md"))
 			})
 		})
 
