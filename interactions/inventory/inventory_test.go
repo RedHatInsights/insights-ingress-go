@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 
 	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -41,13 +39,9 @@ var _ = Describe("Inventory", func() {
 		invBadResponse string = `{"error": "must include account number"}`
 	)
 
-	var r io.Reader
-	var b io.Reader
-	var bj io.Reader
-
-	r = strings.NewReader(validJSON)
-	b = strings.NewReader(emptyFields)
-	bj = strings.NewReader(badJSON)
+	r := []byte(validJSON)
+	b := []byte(emptyFields)
+	bj := []byte(badJSON)
 
 	Describe("Submitting JSON data to inventory", func() {
 		It("should return a valid metadata object", func() {
@@ -113,7 +107,7 @@ var _ = Describe("Inventory", func() {
 		It("should return valid data", func() {
 
 			vr := &validators.Request{
-				Metadata: strings.NewReader(validJSON),
+				Metadata: r,
 				Account:  "000001",
 			}
 
