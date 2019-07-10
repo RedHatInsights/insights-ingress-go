@@ -229,3 +229,17 @@ var _ = Describe("Upload", func() {
 		})
 	})
 })
+
+var _ = Describe("NormalizeUserAgent", func() {
+	Describe("when passed a support-operator agent", func() {
+		It("should trim off the cluster id", func() {
+			Expect(NormalizeUserAgent("support-operator/abc cluster/123")).To(Equal("support-operator/abc"))
+		})
+	})
+
+	Describe("when passed a non support-operator agent", func() {
+		It("should return the agent unchanged", func() {
+			Expect(NormalizeUserAgent("curl/7.3.1")).To(Equal("curl/7.3.1"))
+		})
+	})
+})

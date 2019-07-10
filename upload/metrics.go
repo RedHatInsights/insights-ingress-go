@@ -1,6 +1,8 @@
 package upload
 
 import (
+	"strings"
+
 	p "github.com/prometheus/client_golang/prometheus"
 	pa "github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -24,9 +26,17 @@ var (
 )
 
 func incRequests(userAgent string) {
-	requests.With(p.Labels{"useragent": userAgent}).Inc()
+	requests.With(p.Labels{"useragent": NormalizeUserAgent(userAgent)}).Inc()
 }
 
 func observeSize(userAgent string, size int64) {
-	payloadSize.With(p.Labels{"useragent": userAgent}).Observe(float64(size))
+	payloadSize.With(p.Labels{"useragent": NormalizeUserAgent(userAgent)}).Observe(float64(size))
+}
+
+// NormalizeUserAgent removes high-cardinality information from user agent strings
+func NormalizeUserAgent(userAgent string) string {
+	if strings.Contains(userAgent, "support-operator") {
+		return strings.Fields(userAgent)[0]
+	}
+	return userAgent
 }
