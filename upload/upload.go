@@ -10,7 +10,7 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/middleware"
+	identity "github.com/redhatinsights/insights-ingress-go/middleware"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -102,7 +102,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		}
 
 		if config.Get().Auth == true {
-			id := middleware.Get(r.Context())
+			id := identity.Get(r.Context())
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.Internal.OrgID
 		}
