@@ -27,7 +27,8 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			},
 		)
 		if err != nil {
-			l.Log.Error("error while writing", zap.Error(err))
+			l.Log.Error("error while writing, putting message back into the channel", zap.Error(err))
+			go func() { in <- v }()
 		}
 	}
 }
