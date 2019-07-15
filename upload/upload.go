@@ -82,13 +82,14 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Key:     reqID,
 		}
 
+		var md validators.Metadata
 		metadata, err := GetMetadata(r)
 		if err != nil {
 			l.Log.Debug("Empty metadata", zap.Error(err), zap.String("request_id", reqID))
-		}
-		var md validators.Metadata
-		if err = json.Unmarshal(metadata, &md); err != nil {
-			l.Log.Error("Failed to unmarshal metadata", zap.Error(err), zap.String("request_id", reqID))
+		} else {
+			if err = json.Unmarshal(metadata, &md); err != nil {
+				l.Log.Error("Failed to unmarshal metadata", zap.Error(err), zap.String("request_id", reqID))
+			}
 		}
 
 		vr := &validators.Request{
