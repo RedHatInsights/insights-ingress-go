@@ -23,10 +23,12 @@ func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 	var err error
 	file, fileHeader, err := r.FormFile("file")
 	if err == nil {
+		defer file.Close()
 		return file, fileHeader, nil
 	}
 	file, fileHeader, err = r.FormFile("upload")
 	if err == nil {
+		defer file.Close()
 		return file, fileHeader, nil
 	}
 	return nil, nil, err
