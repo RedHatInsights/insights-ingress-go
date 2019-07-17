@@ -26,7 +26,7 @@ var _ = Describe("Version", func() {
 			handler := http.HandlerFunc(version.GetVersion)
 			handler.ServeHTTP(rr, req)
 			Expect(rr.Code).To(Equal(http.StatusOK))
-			Expect(rr.Body.String()).To(Equal(`{"version":"1.0.0","commit":"notrunninginopenshift"}`))
+			Expect(rr.Body.String()).To(Equal(`{"version":"1.0.1","commit":"notrunninginopenshift"}`))
 		})
 	})
 })

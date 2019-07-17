@@ -60,6 +60,7 @@ func (h *HTTP) GetID(vr *validators.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	r := &Response{}
 	if resp.StatusCode == 207 {
