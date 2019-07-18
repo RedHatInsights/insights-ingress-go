@@ -95,6 +95,7 @@ func main() {
 			Tracker: announcers.NewStatusAnnouncer(&queue.ProducerConfig{
 				Brokers: cfg.KafkaBrokers,
 				Topic:   cfg.KafkaTrackerTopic,
+				Async:   true,
 			}),
 		}
 	}
