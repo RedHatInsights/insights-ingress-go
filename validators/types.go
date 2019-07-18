@@ -29,7 +29,7 @@ type Response struct {
 	URL              string                 `json:"url"`
 	B64Identity      string                 `json:"b64_identity"`
 	ID               string                 `json:"id,omitempty"`
-	SatelliteManaged *bool                  `json:"satellite_managed,omitemtpy"`
+	SatelliteManaged *bool                  `json:"satellite_managed,omitempty"`
 	Extras           map[string]interface{} `json:"extras"`
 	Timestamp        time.Time              `json:"timestamp"`
 }
