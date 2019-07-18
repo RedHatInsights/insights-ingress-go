@@ -2,6 +2,7 @@ package announcers
 
 import (
 	"encoding/json"
+	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
@@ -39,6 +40,10 @@ func (k *Kafka) Announce(vr *validators.Response) {
 		l.Log.Error("failed to marshal json", zap.Error(err), zap.String("request_id", vr.RequestID))
 		return
 	}
+	n := time.Now()
+	defer func() {
+		l.Log.Info("announce", zap.Duration("duration", time.Since(n)))
+	}()
 	k.In <- data
 }
 
@@ -49,6 +54,10 @@ func (k *Kafka) Status(vs *validators.Status) {
 		l.Log.Error("failed to marshal status message", zap.Error(err), zap.String("request_id", vs.RequestID))
 		return
 	}
+	n := time.Now()
+	defer func() {
+		l.Log.Info("status announce", zap.Duration("duration", time.Since(n)))
+	}()
 	k.In <- data
 }
 
