@@ -42,7 +42,7 @@ func (k *Kafka) Announce(vr *validators.Response) {
 	}
 	n := time.Now()
 	defer func() {
-		l.Log.Info("announce", zap.Duration("duration", time.Since(n)))
+		l.Log.Debug("announce", zap.Duration("duration", time.Since(n)))
 	}()
 	k.In <- data
 }
@@ -56,7 +56,7 @@ func (k *Kafka) Status(vs *validators.Status) {
 	}
 	n := time.Now()
 	defer func() {
-		l.Log.Info("status announce", zap.Duration("duration", time.Since(n)))
+		l.Log.Debug("status announce", zap.Duration("duration", time.Since(n)))
 	}()
 	k.In <- data
 }
