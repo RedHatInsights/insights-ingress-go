@@ -4,6 +4,7 @@ package queue
 type ProducerConfig struct {
 	Topic   string
 	Brokers []string
+	Async   bool
 }
 
 // ConsumerConfig configures a consumer
