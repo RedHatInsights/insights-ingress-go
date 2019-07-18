@@ -23,6 +23,15 @@ func NewKafkaAnnouncer(cfg *queue.ProducerConfig) *Kafka {
 	return k
 }
 
+// NewStatusAnnouncer creates a new announcer and starts the producer
+func NewStatusAnnouncer(cfg *queue.ProducerConfig) *Kafka {
+	k := &Kafka{
+		In: make(chan []byte, 1000),
+	}
+	go queue.Producer(k.In, cfg)
+	return k
+}
+
 // Announce broadcasts the response
 func (k *Kafka) Announce(vr *validators.Response) {
 	data, err := json.Marshal(vr)
