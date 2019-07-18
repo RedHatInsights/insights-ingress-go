@@ -2,17 +2,29 @@ package logger
 
 import (
 	"flag"
+
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 // Log is an instance of the global zap.Logger
 var Log *zap.Logger
+var logLevel zapcore.Level
 
 // InitLogger initializes the Entitlements API logger
 func InitLogger() *zap.Logger {
 	if Log == nil {
-		logLevel := zapcore.InfoLevel
+		viper.SetDefault("INGRESS_LOG_LEVEL", "INFO")
+		viper.AutomaticEnv()
+		switch viper.GetString("INGRESS_LOG_LEVEL") {
+		case "DEBUG":
+			logLevel = zapcore.DebugLevel
+		case "ERROR":
+			logLevel = zapcore.ErrorLevel
+		default:
+			logLevel = zapcore.InfoLevel
+		}
 		if flag.Lookup("test.v") != nil {
 			logLevel = zapcore.FatalLevel
 		}
