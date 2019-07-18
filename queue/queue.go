@@ -15,6 +15,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 		Brokers:  config.Brokers,
 		Topic:    config.Topic,
 		Balancer: &kafka.Hash{},
+		Async:    config.Async,
 	})
 
 	defer w.Close()
