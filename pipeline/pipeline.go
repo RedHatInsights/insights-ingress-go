@@ -30,6 +30,7 @@ func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
 		StatusMsg: "Sent to validation service",
 		Date:      time.Now().UTC(),
 	}
+	l.Log.Info("Payload sent to validation service", zap.String("request_id", vr.RequestID))
 	p.Tracker.Status(ps)
 	p.Validator.Validate(vr)
 }
@@ -56,6 +57,7 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 			InventoryID: ev.ID,
 			Date:        time.Now().UTC(),
 		}
+		l.Log.Info("Validation status received for payload", zap.String("request_id", ev.RequestID))
 		p.Tracker.Status(ps)
 		p.Announcer.Announce(ev)
 		ps.Status = "announced"
@@ -74,6 +76,7 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 			StatusMsg: "Payload not valid. rejecting",
 			Date:      time.Now().UTC(),
 		}
+		l.Log.Info("Rejecting invalid payload", zap.String("request_id", iev.RequestID))
 		p.Tracker.Status(ps)
 		p.Stager.Reject(iev.RequestID)
 	case <-ctx.Done():
