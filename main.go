@@ -12,7 +12,6 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/config"
 	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	localMW "github.com/redhatinsights/insights-ingress-go/middleware"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage"
@@ -25,6 +24,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"go.uber.org/zap"
 )
@@ -105,8 +105,8 @@ func main() {
 
 	r.Route("/api/ingress/v1", func(r chi.Router) {
 		if cfg.Auth {
-			r.With(localMW.EnforceIdentity).Get("/", lubDub)
-			r.With(localMW.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
+			r.With(identity.EnforceIdentity).Get("/", lubDub)
+			r.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
 		} else {
 			r.Get("/", lubDub)
 			r.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
@@ -115,8 +115,8 @@ func main() {
 	})
 	r.Route("/r/insights/platform/ingress/v1", func(r chi.Router) {
 		if cfg.Auth {
-			r.With(localMW.EnforceIdentity).Get("/", lubDub)
-			r.With(localMW.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
+			r.With(identity.EnforceIdentity).Get("/", lubDub)
+			r.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
 		} else {
 			r.Get("/", lubDub)
 			r.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
