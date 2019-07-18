@@ -70,7 +70,7 @@ Validation Messages:
            "url": <URL to download the file>,
            "id": <host based inventory id if available>,
            "b64_identity": <the base64 encoded identity of the sender>,
-           "timestamp": <the time the upload was recieved>,
+           "timestamp": <the time the upload was received>,
            "metadata": <will contain additional json related to the uploading host>
        }
 
@@ -94,7 +94,7 @@ Available Messages:
       }
 
 Any apps that will perform the validation should send back all of the data they
-recieved in addition to a `validation` key that contains `success` or `failure`
+received in addition to a `validation` key that contains `success` or `failure`
 depending on whether the payload passed validation.
 
 Expected Validation Message:

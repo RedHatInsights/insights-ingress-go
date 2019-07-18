@@ -92,7 +92,7 @@ func main() {
 			Inventory: &inventory.HTTP{
 				Endpoint: cfg.InventoryURL,
 			},
-			Tracker: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
+			Tracker: announcers.NewStatusAnnouncer(&queue.ProducerConfig{
 				Brokers: cfg.KafkaBrokers,
 				Topic:   cfg.KafkaTrackerTopic,
 			}),

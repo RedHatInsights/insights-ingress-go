@@ -120,10 +120,11 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Account:   vr.Account,
 			Service:   "ingress",
 			RequestID: reqID,
-			Status:    "recieved",
+			Status:    "received",
 			StatusMsg: "Payload recived by ingress",
 			Date:      time.Now().UTC(),
 		}
+		l.Log.Info("Payload received", zap.String("request_id", reqID))
 		p.Tracker.Status(ps)
 
 		go p.Submit(stageInput, vr)
