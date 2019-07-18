@@ -10,10 +10,10 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	identity "github.com/redhatinsights/insights-ingress-go/middleware"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"go.uber.org/zap"
 )
