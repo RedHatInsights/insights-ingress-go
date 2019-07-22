@@ -22,22 +22,22 @@ The Ingress workflow is as follows:
   - The source client sends a payload of a specific content type to cloud.redhat.com
   - Ingress discovers a validating service from the content type, uploads the file to
   cloud storage, and puts a message on a kafka topic for that service.
-  - The valdating service, if there is one, checks the payload is safe and properly
+  - The validating service, if there is one, checks the payload is safe and properly
   formatted.
   - The validating service then returns a message via the validation topic to 
-  ingres with a failure or success message
+  ingress with a failure or success message
   - If validation success, the upload is advertised to the rest of the platform.
   If it fails, the upload is put in rejected storage. This upload is retained for a
   period in the event that more diagnostics are necessary to discover why it failed.
 
 ### Kafka Topics
 
-Ingress produces to topcis to alert services of a new upload. The first topic an
+Ingress produces to topics to alert services of a new upload. The first topic an
 upload is advertised to is the one gathered from the content type.
 
     - Produce to topic derived from content type: `platform.upload.service-name`
     - Consume from validation topic: `platform.upload.validation`
-    - Produce to avilable topic: `platform.upload.available`
+    - Produce to available topic: `platform.upload.available`
 
 ### Content Type
 
