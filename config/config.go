@@ -21,6 +21,7 @@ type IngressConfig struct {
 	KafkaTrackerTopic           string
 	ValidTopics                 []string
 	Port                        int
+	Profile                     bool
 	OpenshiftBuildCommit        string
 	Version                     string
 	Simulate                    bool
@@ -50,6 +51,7 @@ func Get() *IngressConfig {
 	options.SetDefault("SimulationValidateDelay", 5000)
 	options.SetDefault("SimulationValidateCallDelay", 100)
 	options.SetDefault("InventoryURL", "http://inventory:8080/api/inventory/v1/hosts")
+	options.SetDefault("Profile", false)
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 	commit := viper.New()
@@ -68,6 +70,7 @@ func Get() *IngressConfig {
 		KafkaTrackerTopic:           options.GetString("KafkaTrackerTopic"),
 		ValidTopics:                 strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                        options.GetInt("Port"),
+		Profile:                     options.GetBool("Profile"),
 		OpenshiftBuildCommit:        commit.GetString("Openshift_Build_Commit"),
 		Version:                     "1.0.2",
 		Simulate:                    options.GetBool("Simulate"),

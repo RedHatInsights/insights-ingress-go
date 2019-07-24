@@ -125,6 +125,11 @@ func main() {
 	})
 	r.Get("/", lubDub)
 	r.Handle("/metrics", promhttp.Handler())
+
+	if cfg.Profile {
+		r.Mount("/debug", middleware.Profiler())
+	}
+
 	l.Log.Info("Starting service", zap.Int("port", cfg.Port))
 
 	srv := http.Server{
