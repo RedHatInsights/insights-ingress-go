@@ -72,7 +72,7 @@ func Get() *IngressConfig {
 		Port:                        options.GetInt("Port"),
 		Profile:                     options.GetBool("Profile"),
 		OpenshiftBuildCommit:        commit.GetString("Openshift_Build_Commit"),
-		Version:                     "1.0.2",
+		Version:                     "1.0.3",
 		Simulate:                    options.GetBool("Simulate"),
 		SimulationStageDelay:        options.GetDuration("SimulationStageDelay"),
 		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
