@@ -12,9 +12,9 @@ import (
 
 // Submit accepts a stage request and a validation request
 func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
-	defer in.Close()
 	start := time.Now()
 	url, err := p.Stager.Stage(in)
+	in.Close()
 	observeStageElapsed(time.Since(start))
 	if err != nil {
 		l.Log.Error("Error staging", zap.String("key", in.Key), zap.Error(err))
