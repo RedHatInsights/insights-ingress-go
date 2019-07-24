@@ -15,6 +15,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/stage/minio"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -98,6 +99,12 @@ func main() {
 				Async:   true,
 			}),
 		}
+	}
+	if cfg.MinioDev {
+		p.Stager = minio.GetClient(&minio.Stager{
+			Bucket:   cfg.StageBucket,
+			Rejected: cfg.RejectBucket,
+		})
 	}
 
 	pipelineClosed := make(chan struct{})
