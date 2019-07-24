@@ -29,6 +29,10 @@ type IngressConfig struct {
 	SimulationValidateCallDelay time.Duration
 	SimulationValidateDelay     time.Duration
 	InventoryURL                string
+	MinioDev                    bool
+	MinioEndpoint               string
+	MinioAccessKey              string
+	MinioSecretKey              string
 }
 
 // Get returns an initialized IngressConfig
@@ -78,5 +82,9 @@ func Get() *IngressConfig {
 		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
 		SimulationValidateDelay:     options.GetDuration("SimulationValidateDelay"),
 		InventoryURL:                options.GetString("InventoryURL"),
+		MinioDev:                    options.GetBool("MinioDev"),
+		MinioEndpoint:               options.GetString("MinioEndpoint"),
+		MinioAccessKey:              options.GetString("MinioAccessKey"),
+		MinioSecretKey:              options.GetString("MinioSecretKey"),
 	}
 }
