@@ -21,16 +21,18 @@ func Producer(in chan []byte, config *ProducerConfig) {
 	defer w.Close()
 
 	for v := range in {
-		err := w.WriteMessages(context.Background(),
-			kafka.Message{
-				Key:   nil,
-				Value: v,
-			},
-		)
-		if err != nil {
-			l.Log.Error("error while writing, putting message back into the channel", zap.Error(err))
-			go func() { in <- v }()
-		}
+		go func(v []byte) {
+			err := w.WriteMessages(context.Background(),
+				kafka.Message{
+					Key:   nil,
+					Value: v,
+				},
+			)
+			if err != nil {
+				l.Log.Error("error while writing, putting message back into the channel", zap.Error(err))
+				in <- v
+			}
+		}(v)
 	}
 }
 
