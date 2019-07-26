@@ -2,8 +2,6 @@ package stage
 
 import (
 	"errors"
-	"fmt"
-	"time"
 )
 
 // Fake is used for tests
@@ -36,28 +34,4 @@ func (f *Fake) Reject(requestID string) error {
 // GetURL is used to test fake url returns
 func (f *Fake) GetURL(requestID string) (string, error) {
 	return f.URL, nil
-}
-
-// Simulation is for fake input in testing
-type Simulation struct {
-	Input *Input
-	Delay time.Duration
-}
-
-// Stage allows for simulated input
-func (s *Simulation) Stage(input *Input) (string, error) {
-	time.Sleep(s.Delay)
-	return fmt.Sprintf("https://example.com/%s", input.Key), nil
-}
-
-// Reject is used for simulated rejections
-func (s *Simulation) Reject(requestID string) error {
-	time.Sleep(s.Delay)
-	return nil
-}
-
-// GetURL is used for simulated url generation
-func (s *Simulation) GetURL(requestID string) (string, error) {
-	time.Sleep(s.Delay)
-	return fmt.Sprintf("https://example.com/%s", requestID), nil
 }

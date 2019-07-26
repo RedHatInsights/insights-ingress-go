@@ -3,36 +3,30 @@ package config
 import (
 	"strings"
 
-	"time"
-
 	"github.com/spf13/viper"
 )
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
-	MaxSize                     int
-	StageBucket                 string
-	RejectBucket                string
-	Auth                        bool
-	KafkaBrokers                []string
-	KafkaGroupID                string
-	KafkaAvailableTopic         string
-	KafkaValidationTopic        string
-	KafkaTrackerTopic           string
-	ValidTopics                 []string
-	Port                        int
-	Profile                     bool
-	OpenshiftBuildCommit        string
-	Version                     string
-	Simulate                    bool
-	SimulationStageDelay        time.Duration
-	SimulationValidateCallDelay time.Duration
-	SimulationValidateDelay     time.Duration
-	InventoryURL                string
-	MinioDev                    bool
-	MinioEndpoint               string
-	MinioAccessKey              string
-	MinioSecretKey              string
+	MaxSize              int
+	StageBucket          string
+	RejectBucket         string
+	Auth                 bool
+	KafkaBrokers         []string
+	KafkaGroupID         string
+	KafkaAvailableTopic  string
+	KafkaValidationTopic string
+	KafkaTrackerTopic    string
+	ValidTopics          []string
+	Port                 int
+	Profile              bool
+	OpenshiftBuildCommit string
+	Version              string
+	InventoryURL         string
+	MinioDev             bool
+	MinioEndpoint        string
+	MinioAccessKey       string
+	MinioSecretKey       string
 }
 
 // Get returns an initialized IngressConfig
@@ -50,10 +44,6 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
-	options.SetDefault("Simulate", false)
-	options.SetDefault("SimulationStageDelay", 100)
-	options.SetDefault("SimulationValidateDelay", 5000)
-	options.SetDefault("SimulationValidateCallDelay", 100)
 	options.SetDefault("InventoryURL", "http://inventory:8080/api/inventory/v1/hosts")
 	options.SetDefault("Profile", false)
 	options.SetEnvPrefix("INGRESS")
@@ -63,28 +53,24 @@ func Get() *IngressConfig {
 	commit.AutomaticEnv()
 
 	return &IngressConfig{
-		MaxSize:                     options.GetInt("MaxSize"),
-		StageBucket:                 options.GetString("StageBucket"),
-		RejectBucket:                options.GetString("RejectBucket"),
-		Auth:                        options.GetBool("Auth"),
-		KafkaBrokers:                options.GetStringSlice("KafkaBrokers"),
-		KafkaGroupID:                options.GetString("KafkaGroupID"),
-		KafkaAvailableTopic:         options.GetString("KafkaAvailableTopic"),
-		KafkaValidationTopic:        options.GetString("KafkaValidationTopic"),
-		KafkaTrackerTopic:           options.GetString("KafkaTrackerTopic"),
-		ValidTopics:                 strings.Split(options.GetString("ValidTopics"), ","),
-		Port:                        options.GetInt("Port"),
-		Profile:                     options.GetBool("Profile"),
-		OpenshiftBuildCommit:        commit.GetString("Openshift_Build_Commit"),
-		Version:                     "1.0.3",
-		Simulate:                    options.GetBool("Simulate"),
-		SimulationStageDelay:        options.GetDuration("SimulationStageDelay"),
-		SimulationValidateCallDelay: options.GetDuration("SimulationValidateCallDelay"),
-		SimulationValidateDelay:     options.GetDuration("SimulationValidateDelay"),
-		InventoryURL:                options.GetString("InventoryURL"),
-		MinioDev:                    options.GetBool("MinioDev"),
-		MinioEndpoint:               options.GetString("MinioEndpoint"),
-		MinioAccessKey:              options.GetString("MinioAccessKey"),
-		MinioSecretKey:              options.GetString("MinioSecretKey"),
+		MaxSize:              options.GetInt("MaxSize"),
+		StageBucket:          options.GetString("StageBucket"),
+		RejectBucket:         options.GetString("RejectBucket"),
+		Auth:                 options.GetBool("Auth"),
+		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
+		KafkaGroupID:         options.GetString("KafkaGroupID"),
+		KafkaAvailableTopic:  options.GetString("KafkaAvailableTopic"),
+		KafkaValidationTopic: options.GetString("KafkaValidationTopic"),
+		KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
+		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
+		Port:                 options.GetInt("Port"),
+		Profile:              options.GetBool("Profile"),
+		OpenshiftBuildCommit: commit.GetString("Openshift_Build_Commit"),
+		Version:              "1.0.3",
+		InventoryURL:         options.GetString("InventoryURL"),
+		MinioDev:             options.GetBool("MinioDev"),
+		MinioEndpoint:        options.GetString("MinioEndpoint"),
+		MinioAccessKey:       options.GetString("MinioAccessKey"),
+		MinioSecretKey:       options.GetString("MinioSecretKey"),
 	}
 }
