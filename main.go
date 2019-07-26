@@ -110,26 +110,18 @@ func main() {
 	pipelineClosed := make(chan struct{})
 	go p.Start(context.Background(), pipelineClosed)
 
-	r.Route("/api/ingress/v1", func(r chi.Router) {
-		if cfg.Auth {
-			r.With(identity.EnforceIdentity).Get("/", lubDub)
-			r.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
-		} else {
-			r.Get("/", lubDub)
-			r.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
-		}
-		r.With(middleware.Logger).Get("/version", version.GetVersion)
-	})
-	r.Route("/r/insights/platform/ingress/v1", func(r chi.Router) {
-		if cfg.Auth {
-			r.With(identity.EnforceIdentity).Get("/", lubDub)
-			r.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
-		} else {
-			r.Get("/", lubDub)
-			r.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
-		}
-		r.With(middleware.Logger).Get("/version", version.GetVersion)
-	})
+	var sub chi.Router
+	if cfg.Auth {
+		sub.With(identity.EnforceIdentity).Get("/", lubDub)
+		sub.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
+	} else {
+		sub.Get("/", lubDub)
+		sub.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
+	}
+	sub.With(middleware.Logger).Get("/version", version.GetVersion)
+
+	r.Mount("/api/ingress/v1", sub)
+	r.Mount("/r/insights/platform/ingress/v1", sub)
 	r.Get("/", lubDub)
 	r.Handle("/metrics", promhttp.Handler())
 
