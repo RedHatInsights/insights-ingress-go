@@ -1,11 +1,8 @@
 package validators
 
 import (
-	"context"
 	"errors"
 	"time"
-
-	l "github.com/redhatinsights/insights-ingress-go/logger"
 )
 
 // Fake allows for creation of testing objects
@@ -55,59 +52,4 @@ func (v *Fake) WaitFor(ch chan *Response) *Response {
 	case <-time.After(100 * time.Millisecond):
 		return nil
 	}
-}
-
-// Simulation allows for simulation of validation
-type Simulation struct {
-	CallDelay   time.Duration
-	Delay       time.Duration
-	ValidChan   chan *Response
-	InvalidChan chan *Response
-	Context     context.Context
-}
-
-// Validate simulated requests
-func (s *Simulation) Validate(request *Request) {
-	go func() {
-		time.Sleep(s.Delay)
-		select {
-		case <-s.Context.Done():
-			l.Log.Info("requested to stop, bailing")
-			return
-		default:
-		}
-		s.ValidChan <- &Response{
-			Account:     request.Account,
-			Validation:  "success",
-			RequestID:   request.RequestID,
-			Principal:   request.Principal,
-			Service:     request.Service,
-			URL:         request.URL,
-			B64Identity: request.B64Identity,
-			Timestamp:   request.Timestamp,
-		}
-	}()
-	time.Sleep(s.CallDelay)
-}
-
-// ValidateService returns nil
-func (s *Simulation) ValidateService(service *ServiceDescriptor) error {
-	return nil
-}
-
-// NewSimulation creates a new validation simulation
-func NewSimulation(s *Simulation) *Simulation {
-	go func() {
-		for {
-			select {
-			case <-s.Context.Done():
-				l.Log.Info("requested to stop")
-				close(s.ValidChan)
-				close(s.InvalidChan)
-				return
-			default:
-			}
-		}
-	}()
-	return s
 }

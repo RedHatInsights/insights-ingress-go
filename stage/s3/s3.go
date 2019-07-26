@@ -12,19 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func getSession() *session.Session {
-	return session.Must(session.NewSession())
-}
+var (
+	sess     *session.Session
+	uploader *s3manager.Uploader
+	client   *s3.S3
+)
 
-// WithSession returns a stager with a s3 session attached
-func WithSession(stager *Stager) stage.Stager {
-	stager.Sess = getSession()
-	return stager
+func init() {
+	sess = session.Must(session.NewSession())
+	uploader = s3manager.NewUploader(sess)
+	client = s3.New(sess)
 }
 
 // Stage stores the file in s3 and returns a presigned url
 func (s *Stager) Stage(in *stage.Input) (string, error) {
-	uploader := s3manager.NewUploader(s.Sess)
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.Bucket),
 		Key:    aws.String(in.Key),
@@ -39,7 +40,6 @@ func (s *Stager) Stage(in *stage.Input) (string, error) {
 
 // GetURL gets a Presigned URL from S3
 func (s *Stager) GetURL(requestID string) (string, error) {
-	client := s3.New(s.Sess)
 	req, _ := client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(s.Bucket),
 		Key:    aws.String(requestID),
@@ -67,7 +67,6 @@ type bucketKey struct {
 
 func (s *Stager) copy(from *bucketKey, toBucket string) error {
 	src := from.Bucket + "/" + from.Key
-	client := s3.New(s.Sess)
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(toBucket),
 		CopySource: aws.String(src),

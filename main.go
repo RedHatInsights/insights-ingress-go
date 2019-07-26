@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
@@ -14,7 +13,6 @@ import (
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
-	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/minio"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
@@ -52,54 +50,35 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var p *pipeline.Pipeline
-
-	if cfg.Simulate {
-		p = &pipeline.Pipeline{
-			Stager: &stage.Simulation{Delay: cfg.SimulationStageDelay * time.Millisecond},
-			Validator: validators.NewSimulation(&validators.Simulation{
-				CallDelay:   cfg.SimulationValidateCallDelay * time.Millisecond,
-				Delay:       cfg.SimulationValidateDelay * time.Millisecond,
-				ValidChan:   valCh,
-				InvalidChan: invCh,
-				Context:     ctx,
-			}),
-			Announcer:   &announcers.Fake{},
-			ValidChan:   valCh,
-			InvalidChan: invCh,
-			Inventory:   &inventory.Fake{},
-			Tracker:     &announcers.Fake{},
-		}
-	} else {
-		p = &pipeline.Pipeline{
-			Stager: s3.WithSession(&s3.Stager{
-				Bucket:   cfg.StageBucket,
-				Rejected: cfg.RejectBucket,
-			}),
-			Validator: kafka.New(&kafka.Config{
-				Brokers:         cfg.KafkaBrokers,
-				GroupID:         cfg.KafkaGroupID,
-				ValidationTopic: cfg.KafkaValidationTopic,
-				ValidChan:       valCh,
-				InvalidChan:     invCh,
-				Context:         ctx,
-			}, cfg.ValidTopics...),
-			Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
-				Brokers: cfg.KafkaBrokers,
-				Topic:   cfg.KafkaAvailableTopic,
-			}),
-			ValidChan:   valCh,
-			InvalidChan: invCh,
-			Inventory: &inventory.HTTP{
-				Endpoint: cfg.InventoryURL,
-			},
-			Tracker: announcers.NewStatusAnnouncer(&queue.ProducerConfig{
-				Brokers: cfg.KafkaBrokers,
-				Topic:   cfg.KafkaTrackerTopic,
-				Async:   true,
-			}),
-		}
+	p := &pipeline.Pipeline{
+		Stager: &s3.Stager{
+			Bucket:   cfg.StageBucket,
+			Rejected: cfg.RejectBucket,
+		},
+		Validator: kafka.New(&kafka.Config{
+			Brokers:         cfg.KafkaBrokers,
+			GroupID:         cfg.KafkaGroupID,
+			ValidationTopic: cfg.KafkaValidationTopic,
+			ValidChan:       valCh,
+			InvalidChan:     invCh,
+			Context:         ctx,
+		}, cfg.ValidTopics...),
+		Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
+			Brokers: cfg.KafkaBrokers,
+			Topic:   cfg.KafkaAvailableTopic,
+		}),
+		ValidChan:   valCh,
+		InvalidChan: invCh,
+		Inventory: &inventory.HTTP{
+			Endpoint: cfg.InventoryURL,
+		},
+		Tracker: announcers.NewStatusAnnouncer(&queue.ProducerConfig{
+			Brokers: cfg.KafkaBrokers,
+			Topic:   cfg.KafkaTrackerTopic,
+			Async:   true,
+		}),
 	}
+
 	if cfg.MinioDev {
 		p.Stager = minio.GetClient(&minio.Stager{
 			Bucket:   cfg.StageBucket,
