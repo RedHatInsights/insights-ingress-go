@@ -9,7 +9,9 @@ import (
 	"go.uber.org/zap"
 )
 
-//Producer consumes in and produces to the topic in config
+// Producer consumes in and produces to the topic in config
+// Each message is sent to the writer via a goroutine so that the internal batch
+// buffer has an opportunity to fill.
 func Producer(in chan []byte, config *ProducerConfig) {
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  config.Brokers,
@@ -48,14 +50,15 @@ func Consumer(ctx context.Context, out chan []byte, config *ConsumerConfig) {
 
 	for {
 		m, err := r.ReadMessage(ctx)
-		if err != nil {
-			if err == io.EOF {
-				l.Log.Info("Closing consumer")
-				close(out)
-				return
-			}
-		} else {
+		switch err {
+		case nil:
 			out <- m.Value
+		case io.EOF:
+			l.Log.Info("ReadMessage returned an EOF; Closing consumer.")
+			close(out)
+			return
+		default:
+			l.Log.Error("ReadMessage failed", zap.Error(err))
 		}
 	}
 }
