@@ -48,13 +48,15 @@ func (k *Kafka) Announce(vr *validators.Response) {
 }
 
 // Status sends messages to the payload-tracker topic
-func (k *Kafka) Status(vs *validators.Status) {
+func (k *Kafka) Status(vs *Status) {
+	n := time.Now()
+	vs.Service = "ingress"
+	vs.Date = n.UTC()
 	data, err := json.Marshal(vs)
 	if err != nil {
 		l.Log.Error("failed to marshal status message", zap.Error(err), zap.String("request_id", vs.RequestID))
 		return
 	}
-	n := time.Now()
 	defer func() {
 		l.Log.Debug("status announce", zap.Duration("duration", time.Since(n)))
 	}()
