@@ -9,10 +9,11 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
-	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
+	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
+	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/minio"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
@@ -50,52 +51,65 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	p := &pipeline.Pipeline{
-		Stager: &s3.Stager{
+	var stager stage.Stager
+
+	stager = &s3.Stager{
+		Bucket:   cfg.StageBucket,
+		Rejected: cfg.RejectBucket,
+	}
+
+	if cfg.MinioDev {
+		stager = minio.GetClient(&minio.Stager{
 			Bucket:   cfg.StageBucket,
 			Rejected: cfg.RejectBucket,
-		},
-		Validator: kafka.New(&kafka.Config{
-			Brokers:         cfg.KafkaBrokers,
-			GroupID:         cfg.KafkaGroupID,
-			ValidationTopic: cfg.KafkaValidationTopic,
-			ValidChan:       valCh,
-			InvalidChan:     invCh,
-			Context:         ctx,
-		}, cfg.ValidTopics...),
+		})
+	}
+
+	validator := kafka.New(&kafka.Config{
+		Brokers:         cfg.KafkaBrokers,
+		GroupID:         cfg.KafkaGroupID,
+		ValidationTopic: cfg.KafkaValidationTopic,
+		ValidChan:       valCh,
+		InvalidChan:     invCh,
+		Context:         ctx,
+	}, cfg.ValidTopics...)
+
+	inventory := &i.HTTP{
+		Endpoint: cfg.InventoryURL,
+	}
+
+	tracker := announcers.NewStatusAnnouncer(&queue.ProducerConfig{
+		Brokers: cfg.KafkaBrokers,
+		Topic:   cfg.KafkaTrackerTopic,
+		Async:   true,
+	})
+
+	p := &pipeline.Pipeline{
+		Stager:    stager,
+		Validator: validator,
 		Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
 			Brokers: cfg.KafkaBrokers,
 			Topic:   cfg.KafkaAvailableTopic,
 		}),
 		ValidChan:   valCh,
 		InvalidChan: invCh,
-		Inventory: &inventory.HTTP{
-			Endpoint: cfg.InventoryURL,
-		},
-		Tracker: announcers.NewStatusAnnouncer(&queue.ProducerConfig{
-			Brokers: cfg.KafkaBrokers,
-			Topic:   cfg.KafkaTrackerTopic,
-			Async:   true,
-		}),
-	}
-
-	if cfg.MinioDev {
-		p.Stager = minio.GetClient(&minio.Stager{
-			Bucket:   cfg.StageBucket,
-			Rejected: cfg.RejectBucket,
-		})
+		Tracker:     tracker,
 	}
 
 	pipelineClosed := make(chan struct{})
 	go p.Start(context.Background(), pipelineClosed)
 
+	handler := upload.NewHandler(
+		stager, inventory, validator, tracker, *cfg,
+	)
+
 	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
 		sub.With(identity.EnforceIdentity).Get("/", lubDub)
-		sub.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
+		sub.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", handler)
 	} else {
 		sub.Get("/", lubDub)
-		sub.With(middleware.Logger).Post("/upload", upload.NewHandler(p))
+		sub.With(middleware.Logger).Post("/upload", handler)
 	}
 	sub.With(middleware.Logger).Get("/version", version.GetVersion)
 
