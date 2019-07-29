@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/redhatinsights/insights-ingress-go/announcers"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/validators"
 	"go.uber.org/zap"
 )
 
@@ -22,14 +22,12 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 			return true
 		}
 		ev.URL = url
-		ps := &validators.Status{
+		ps := &announcers.Status{
 			Account:     ev.Account,
-			Service:     "ingress",
 			RequestID:   ev.RequestID,
 			Status:      "validated",
 			StatusMsg:   "Payload validated by service",
 			InventoryID: ev.ID,
-			Date:        time.Now().UTC(),
 		}
 		l.Log.Info("Validation status received for payload", zap.String("request_id", ev.RequestID))
 		p.Tracker.Status(ps)
@@ -42,13 +40,11 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 		if !ok {
 			return false
 		}
-		ps := &validators.Status{
+		ps := &announcers.Status{
 			Account:   iev.Account,
-			Service:   "ingress",
 			RequestID: iev.RequestID,
 			Status:    "Rejected",
 			StatusMsg: "Payload not valid. rejecting",
-			Date:      time.Now().UTC(),
 		}
 		l.Log.Info("Rejecting invalid payload", zap.String("request_id", iev.RequestID))
 		p.Tracker.Status(ps)

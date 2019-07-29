@@ -17,7 +17,8 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
-	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
+	"github.com/redhatinsights/insights-ingress-go/config"
+	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	. "github.com/redhatinsights/insights-ingress-go/upload"
@@ -81,6 +82,8 @@ var _ = Describe("Upload", func() {
 		vCh       chan *validators.Response
 		iCh       chan *validators.Response
 		stager    *stage.Fake
+		inventory *i.Fake
+		tracker   announcers.Announcer
 		validator *validators.Fake
 		handler   http.Handler
 		rr        *httptest.ResponseRecorder
@@ -106,17 +109,19 @@ var _ = Describe("Upload", func() {
 			Invalid:         iCh,
 			DesiredResponse: "success",
 		}
+		inventory = &i.Fake{}
+		tracker = &announcers.Fake{}
+
 		pl = &pipeline.Pipeline{
 			Stager:      stager,
 			Validator:   validator,
 			Announcer:   &announcers.Fake{},
 			ValidChan:   vCh,
 			InvalidChan: iCh,
-			Inventory:   &inventory.Fake{},
-			Tracker:     &announcers.Fake{},
+			Tracker:     tracker,
 		}
 		rr = httptest.NewRecorder()
-		handler = NewHandler(pl)
+		handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
 	})
 
 	Describe("Posting a file to /upload", func() {
@@ -149,6 +154,31 @@ var _ = Describe("Upload", func() {
 				Expect(vin).To(Not(BeNil()))
 				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345"}))
 				Expect(vin.ID).To(Equal("1234-abcd-5678-efgh"))
+			})
+		})
+
+		Context("with a metadata part, but inventory fails", func() {
+			It("should still return HTTP 202", func() {
+				inventory = &i.Fake{ShouldFail: true}
+				handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
+				boiler(http.StatusAccepted,
+					&FilePart{
+						Name:        "file",
+						Content:     "testing",
+						ContentType: "application/vnd.redhat.unit.test",
+					},
+					&FilePart{
+						Name:        "metadata",
+						Content:     `{"account": "012345"}`,
+						ContentType: "text/plain",
+					},
+				)
+				in := stager.Input
+				Expect(in).To(Not(BeNil()))
+				vin := validator.In
+				Expect(vin).To(Not(BeNil()))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345"}))
+				Expect(vin.ID).To(Equal(""))
 			})
 		})
 
@@ -258,6 +288,31 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.failed.test"})
+			})
+		})
+
+		Context("with content that is larger than the max allowed size", func() {
+			It("should return 413", func() {
+				cfg := config.Get()
+				cfg.MaxSize = 1
+				handler = NewHandler(stager, inventory, validator, tracker, *cfg)
+				boiler(http.StatusRequestEntityTooLarge, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test",
+				})
+			})
+		})
+
+		Context("when the payload fails to stage", func() {
+			It("should return 413", func() {
+				stager = &stage.Fake{ShouldError: true}
+				handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
+				boiler(http.StatusInternalServerError, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test",
+				})
 			})
 		})
 	})
