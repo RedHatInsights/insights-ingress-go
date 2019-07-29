@@ -5,35 +5,9 @@ import (
 	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"go.uber.org/zap"
 )
-
-// Submit accepts a stage request and a validation request
-func (p *Pipeline) Submit(in *stage.Input, vr *validators.Request) {
-	start := time.Now()
-	url, err := p.Stager.Stage(in)
-	in.Close()
-	observeStageElapsed(time.Since(start))
-	if err != nil {
-		l.Log.Error("Error staging", zap.String("key", in.Key), zap.Error(err))
-		return
-	}
-	vr.URL = url
-	vr.Timestamp = time.Now()
-	ps := &validators.Status{
-		Account:   vr.Account,
-		Service:   "ingress",
-		RequestID: vr.RequestID,
-		Status:    "processing",
-		StatusMsg: "Sent to validation service",
-		Date:      time.Now().UTC(),
-	}
-	l.Log.Info("Payload sent to validation service", zap.String("request_id", vr.RequestID))
-	p.Tracker.Status(ps)
-	p.Validator.Validate(vr)
-}
 
 // Tick is one loop iteration that handles post-validation activities
 func (p *Pipeline) Tick(ctx context.Context) bool {

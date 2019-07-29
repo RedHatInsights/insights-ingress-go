@@ -14,5 +14,5 @@ type Response struct {
 
 // Inventory can return an inventory ID
 type Inventory interface {
-	GetID(vr *validators.Request) (string, error)
+	GetID(metadata validators.Metadata, account string, ident string) (string, error)
 }
