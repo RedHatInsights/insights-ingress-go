@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"github.com/redhatinsights/insights-ingress-go/announcers"
-	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 )
@@ -14,6 +13,5 @@ type Pipeline struct {
 	Announcer   announcers.Announcer
 	ValidChan   chan *validators.Response
 	InvalidChan chan *validators.Response
-	Inventory   inventory.Inventory
 	Tracker     announcers.Announcer
 }

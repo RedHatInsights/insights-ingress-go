@@ -8,9 +8,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
+	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -60,7 +61,12 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 }
 
 // NewHandler returns a http handler configured with a Pipeline
-func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
+func NewHandler(
+	stager stage.Stager,
+	inventory inventory.Inventory,
+	validator validators.Validator,
+	tracker announcers.Announcer,
+	cfg config.IngressConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
@@ -86,13 +92,13 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			return
 		}
 
-		if fileHeader.Size > config.Get().MaxSize {
+		if fileHeader.Size > cfg.MaxSize {
 			l.Log.Info("File exceeds maximum file size for upload", zap.Int64("size", fileHeader.Size), zap.String("request_id", reqID))
 			w.WriteHeader(413)
 			return
 		}
 
-		if err := p.Validator.ValidateService(serviceDescriptor); err != nil {
+		if err := validator.ValidateService(serviceDescriptor); err != nil {
 			logerr("Unrecognized service", err)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
@@ -119,7 +125,7 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			l.Log.Debug("Failed to read metadata", zap.Error(err), logReqID)
 		} else {
 			vr.Metadata = *md
-			vr.ID, err = p.Inventory.GetID(*md, vr.Account, b64Identity)
+			vr.ID, err = inventory.GetID(*md, vr.Account, b64Identity)
 			if err != nil {
 				logerr("Failed to post to inventory", err)
 			} else {
@@ -127,16 +133,14 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			}
 		}
 
-		ps := &validators.Status{
+		ps := &announcers.Status{
 			Account:   vr.Account,
-			Service:   "ingress",
 			RequestID: reqID,
 			Status:    "received",
 			StatusMsg: "Payload recived by ingress",
-			Date:      time.Now().UTC(),
 		}
 		l.Log.Info("Payload received", logReqID)
-		p.Tracker.Status(ps)
+		tracker.Status(ps)
 
 		stageInput := &stage.Input{
 			Payload: file,
@@ -144,29 +148,28 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		}
 
 		start := time.Now()
-		url, err := p.Stager.Stage(stageInput)
+		url, err := stager.Stage(stageInput)
 		stageInput.Close()
 		observeStageElapsed(time.Since(start))
 		if err != nil {
 			logerr("Error staging", err)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		vr.URL = url
 		vr.Timestamp = time.Now()
 
-		ps = &validators.Status{
+		ps = &announcers.Status{
 			Account:   vr.Account,
-			Service:   "ingress",
 			RequestID: vr.RequestID,
 			Status:    "processing",
 			StatusMsg: "Sent to validation service",
-			Date:      time.Now().UTC(),
 		}
 		l.Log.Info("Payload sent to validation service", logReqID)
-		p.Tracker.Status(ps)
+		tracker.Status(ps)
 
-		p.Validator.Validate(vr)
+		validator.Validate(vr)
 
 		w.WriteHeader(http.StatusAccepted)
 	}

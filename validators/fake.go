@@ -2,7 +2,6 @@ package validators
 
 import (
 	"errors"
-	"time"
 )
 
 // Fake allows for creation of testing objects
@@ -27,11 +26,12 @@ func (v *Fake) Validate(in *Request) {
 		Principal:  in.Principal,
 		Service:    in.Service,
 	}
-	if v.DesiredResponse == "success" {
+	switch v.DesiredResponse {
+	case "success":
 		v.Valid <- v.Out
-	} else if v.DesiredResponse == "failure" {
+	case "failure":
 		v.Invalid <- v.Out
-	} else {
+	default:
 		return
 	}
 }
@@ -42,14 +42,4 @@ func (v *Fake) ValidateService(service *ServiceDescriptor) error {
 		return errors.New("failed is an invalid service")
 	}
 	return nil
-}
-
-// WaitFor waits for a response in the channel
-func (v *Fake) WaitFor(ch chan *Response) *Response {
-	select {
-	case o := <-ch:
-		return o
-	case <-time.After(100 * time.Millisecond):
-		return nil
-	}
 }
