@@ -8,7 +8,7 @@ import (
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
-	MaxSize              int
+	MaxSize              int64
 	StageBucket          string
 	RejectBucket         string
 	Auth                 bool
@@ -53,7 +53,7 @@ func Get() *IngressConfig {
 	commit.AutomaticEnv()
 
 	return &IngressConfig{
-		MaxSize:              options.GetInt("MaxSize"),
+		MaxSize:              options.GetInt64("MaxSize"),
 		StageBucket:          options.GetString("StageBucket"),
 		RejectBucket:         options.GetString("RejectBucket"),
 		Auth:                 options.GetBool("Auth"),
