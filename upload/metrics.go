@@ -2,6 +2,7 @@ package upload
 
 import (
 	"strings"
+	"time"
 
 	p "github.com/prometheus/client_golang/prometheus"
 	pa "github.com/prometheus/client_golang/prometheus/promauto"
@@ -23,6 +24,11 @@ var (
 			1024 * 10000,
 		},
 	}, []string{"useragent"})
+
+	stageElapsed = pa.NewHistogramVec(p.HistogramOpts{
+		Name: "ingress_stage_seconds",
+		Help: "Number of seconds spent waiting on stage",
+	}, []string{})
 )
 
 func incRequests(userAgent string) {
@@ -31,6 +37,10 @@ func incRequests(userAgent string) {
 
 func observeSize(userAgent string, size int64) {
 	payloadSize.With(p.Labels{"useragent": NormalizeUserAgent(userAgent)}).Observe(float64(size))
+}
+
+func observeStageElapsed(elapsed time.Duration) {
+	stageElapsed.With(p.Labels{}).Observe(elapsed.Seconds())
 }
 
 // NormalizeUserAgent removes high-cardinality information from user agent strings

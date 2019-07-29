@@ -88,13 +88,13 @@ var _ = Describe("Upload", func() {
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+		go pl.Tick(ctx)
 		req, err := makeMultipartRequest("/api/ingress/v1/upload", parts...)
 		Expect(err).To(BeNil())
 		handler.ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(code))
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		defer cancel()
-		pl.Tick(ctx)
 	}
 
 	BeforeEach(func() {
@@ -149,6 +149,29 @@ var _ = Describe("Upload", func() {
 				Expect(vin).To(Not(BeNil()))
 				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345"}))
 				Expect(vin.ID).To(Equal("1234-abcd-5678-efgh"))
+			})
+		})
+
+		Context("with an invalid metadata part", func() {
+			It("will still return HTTP 202", func() {
+				boiler(http.StatusAccepted,
+					&FilePart{
+						Name:        "file",
+						Content:     "testing",
+						ContentType: "application/vnd.redhat.unit.test",
+					},
+					&FilePart{
+						Name:        "metadata",
+						Content:     `{"account": 42}`,
+						ContentType: "application/json",
+					},
+				)
+				in := stager.Input
+				Expect(in).To(Not(BeNil()))
+				vin := validator.In
+				Expect(vin).To(Not(BeNil()))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{}))
+				Expect(vin.ID).To(Equal(""))
 			})
 		})
 
