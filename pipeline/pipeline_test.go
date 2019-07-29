@@ -2,8 +2,6 @@ package pipeline_test
 
 import (
 	"context"
-	"io/ioutil"
-	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -45,77 +43,6 @@ var _ = Describe("Pipeline", func() {
 			InvalidChan: iCh,
 			Tracker:     tracker,
 		}
-	})
-
-	Describe("Submitting a valid stage.Input", func() {
-		It("should return a URL", func() {
-			stageIn := &stage.Input{
-				Payload: ioutil.NopCloser(strings.NewReader("test")),
-			}
-			r := &validators.Request{
-				Account:   "123",
-				RequestID: "foo",
-			}
-			go p.Submit(stageIn, r)
-
-			vout := validator.WaitFor(p.ValidChan)
-
-			Expect(r.URL).To(Not(BeNil()))
-			Expect(vout).To(Not(BeNil()))
-			Expect(vout.URL).To(Equal(r.URL))
-		})
-	})
-
-	Describe("Submitting a valid stage.Input", func() {
-		It("should validate", func() {
-			stageIn := &stage.Input{
-				Payload: ioutil.NopCloser(strings.NewReader("test")),
-			}
-			r := &validators.Request{
-				Account:   "123",
-				RequestID: "foo",
-			}
-			go p.Submit(stageIn, r)
-
-			p.Tick(context.Background())
-
-			aout := announcer.Event
-
-			Expect(aout).To(Not(BeNil()))
-			Expect(aout.URL).To(Equal(r.URL))
-		})
-	})
-
-	Describe("Submitting a payload that fails to validate", func() {
-		It("should call stager.Reject", func() {
-			stageIn := &stage.Input{
-				Payload: ioutil.NopCloser(strings.NewReader("invalid")),
-			}
-			r := &validators.Request{
-				Account:   "123",
-				RequestID: "invalid",
-			}
-			validator.DesiredResponse = "failure"
-			go p.Submit(stageIn, r)
-
-			p.Tick(context.Background())
-
-			Expect(stager.RejectCalled).To(BeTrue())
-		})
-	})
-
-	Describe("An error during stage", func() {
-		It("should not return a URL", func() {
-			stager.ShouldError = true
-			p.Stager = stager
-			stageIn := &stage.Input{}
-			r := &validators.Request{
-				Account:   "123",
-				RequestID: "test",
-			}
-			p.Submit(stageIn, r)
-			Expect(validator.Called).To(BeFalse())
-		})
 	})
 
 	Describe("Canceling the context", func() {
