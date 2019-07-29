@@ -89,7 +89,7 @@ func main() {
 	pipelineClosed := make(chan struct{})
 	go p.Start(context.Background(), pipelineClosed)
 
-	var sub chi.Router
+	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
 		sub.With(identity.EnforceIdentity).Get("/", lubDub)
 		sub.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", upload.NewHandler(p))
