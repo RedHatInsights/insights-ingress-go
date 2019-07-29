@@ -57,6 +57,10 @@ func Consumer(ctx context.Context, out chan []byte, config *ConsumerConfig) {
 			l.Log.Info("ReadMessage returned an EOF; Closing consumer.")
 			close(out)
 			return
+		case ctx.Err():
+			l.Log.Info("Shutting down Consumer.")
+			close(out)
+			return
 		default:
 			l.Log.Error("ReadMessage failed", zap.Error(err))
 		}
