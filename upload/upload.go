@@ -32,8 +32,7 @@ func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 	return nil, nil, err
 }
 
-// GetMetadata returns metadata content from a file or value part
-func GetMetadata(r *http.Request) ([]byte, error) {
+func readMetadataPart(r *http.Request) ([]byte, error) {
 	mdf, _, err := r.FormFile("metadata")
 	if err == nil {
 		defer mdf.Close()
@@ -47,24 +46,42 @@ func GetMetadata(r *http.Request) ([]byte, error) {
 	return nil, errors.New("Failed to find metadata as a file or value")
 }
 
+// GetMetadata returns metadata content from a file or value part
+func GetMetadata(r *http.Request) (*validators.Metadata, error) {
+	part, err := readMetadataPart(r)
+	if err != nil {
+		return nil, err
+	}
+	var md validators.Metadata
+	if err = json.Unmarshal(part, &md); err != nil {
+		return nil, err
+	}
+	return &md, nil
+}
+
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
+		logReqID := zap.String("request_id", reqID)
+
+		logerr := func(msg string, err error) {
+			l.Log.Error(msg, zap.Error(err), logReqID)
+		}
 
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r)
 		if err != nil {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
-			l.Log.Error("Unable to find `file` or `upload` parts", zap.Error(err), zap.String("request_id", reqID))
+			logerr("Unable to find `file` or `upload` parts", err)
 			return
 		}
 		observeSize(userAgent, fileHeader.Size)
 
 		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
 		if validationErr != nil {
-			l.Log.Info("Did not validate", zap.Error(validationErr), zap.String("request_id", reqID))
+			logerr("Unable to validate", validationErr)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
@@ -76,27 +93,12 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 		}
 
 		if err := p.Validator.ValidateService(serviceDescriptor); err != nil {
-			l.Log.Info("Unrecognized service", zap.Error(err), zap.String("request_id", reqID))
+			logerr("Unrecognized service", err)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
 
 		b64Identity := r.Header.Get("x-rh-identity")
-
-		stageInput := &stage.Input{
-			Payload: file,
-			Key:     reqID,
-		}
-
-		var md validators.Metadata
-		metadata, err := GetMetadata(r)
-		if err != nil {
-			l.Log.Debug("Empty metadata", zap.Error(err), zap.String("request_id", reqID))
-		} else {
-			if err = json.Unmarshal(metadata, &md); err != nil {
-				l.Log.Error("Failed to unmarshal metadata", zap.Error(err), zap.String("request_id", reqID))
-			}
-		}
 
 		vr := &validators.Request{
 			RequestID:   reqID,
@@ -104,7 +106,6 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			Service:     serviceDescriptor.Service,
 			Category:    serviceDescriptor.Category,
 			B64Identity: b64Identity,
-			Metadata:    md,
 		}
 
 		if config.Get().Auth == true {
@@ -113,12 +114,16 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			vr.Principal = id.Identity.Internal.OrgID
 		}
 
-		if metadata != nil {
-			id, err := p.Inventory.GetID(vr)
+		md, err := GetMetadata(r)
+		if err != nil {
+			l.Log.Debug("Failed to read metadata", zap.Error(err), logReqID)
+		} else {
+			vr.Metadata = *md
+			vr.ID, err = p.Inventory.GetID(*md, vr.Account, b64Identity)
 			if err != nil {
-				l.Log.Error("Inventory post failure", zap.Error(err), zap.String("request_id", reqID))
+				logerr("Failed to post to inventory", err)
 			} else {
-				vr.ID = id
+				l.Log.Info("Successfully posted to inventory", logReqID, zap.String("inventory_id", vr.ID))
 			}
 		}
 
@@ -130,10 +135,38 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			StatusMsg: "Payload recived by ingress",
 			Date:      time.Now().UTC(),
 		}
-		l.Log.Info("Payload received", zap.String("request_id", reqID))
+		l.Log.Info("Payload received", logReqID)
 		p.Tracker.Status(ps)
 
-		go p.Submit(stageInput, vr)
+		stageInput := &stage.Input{
+			Payload: file,
+			Key:     reqID,
+		}
+
+		start := time.Now()
+		url, err := p.Stager.Stage(stageInput)
+		stageInput.Close()
+		observeStageElapsed(time.Since(start))
+		if err != nil {
+			logerr("Error staging", err)
+			return
+		}
+
+		vr.URL = url
+		vr.Timestamp = time.Now()
+
+		ps = &validators.Status{
+			Account:   vr.Account,
+			Service:   "ingress",
+			RequestID: vr.RequestID,
+			Status:    "processing",
+			StatusMsg: "Sent to validation service",
+			Date:      time.Now().UTC(),
+		}
+		l.Log.Info("Payload sent to validation service", logReqID)
+		p.Tracker.Status(ps)
+
+		p.Validator.Validate(vr)
 
 		w.WriteHeader(http.StatusAccepted)
 	}

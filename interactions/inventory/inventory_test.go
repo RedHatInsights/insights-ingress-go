@@ -34,6 +34,35 @@ var _ = Describe("Inventory", func() {
 
 	r := []byte(validJSON)
 
+	Describe("Calling GetID", func() {
+		It("should return a valid JSON response", func() {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(207)
+				fmt.Fprintln(w, invResponse)
+			}))
+
+			defer ts.Close()
+			h := &i.HTTP{Endpoint: ts.URL}
+			id, err := h.GetID(validators.Metadata{}, "", "")
+			Expect(err).To(BeNil())
+			Expect(id).To(Equal("123456"))
+		})
+
+		It("should fail on invalid json", func() {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(415)
+				fmt.Fprintln(w, invBadResponse)
+			}))
+			defer ts.Close()
+			h := &i.HTTP{Endpoint: ts.URL}
+			id, err := h.GetID(validators.Metadata{}, "", "")
+			Expect(id).To(Equal(""))
+			Expect(err.Error()).To(Equal(invBadResponse + "\n"))
+		})
+	})
+
 	Describe("Posting to Inventory", func() {
 		It("should return a valid JSON response", func() {
 
@@ -49,6 +78,10 @@ var _ = Describe("Inventory", func() {
 
 			Expect(res.StatusCode).To(Equal(207))
 			Expect(res.Header.Get("Content-Type")).To(Equal("application/json"))
+
+			id, err := i.ParseResponse(res)
+			Expect(err).To(BeNil())
+			Expect(id).To(Equal("123456"))
 		})
 
 		It("should fail on bad JSON", func() {
@@ -64,6 +97,10 @@ var _ = Describe("Inventory", func() {
 
 			Expect(res.StatusCode).To(Equal(415))
 			Expect(res.Header.Get("Content-Type")).To(Equal(("application/json")))
+
+			id, err := i.ParseResponse(res)
+			Expect(id).To(Equal(""))
+			Expect(err).ToNot(BeNil())
 		})
 	})
 
@@ -74,15 +111,10 @@ var _ = Describe("Inventory", func() {
 			err := json.Unmarshal(r, &b)
 			Expect(err).To(BeNil())
 
-			vr := &validators.Request{
-				Metadata: b,
-				Account:  "000001",
-			}
-
 			var m []validators.Metadata
 			var x interface{}
 
-			data, _ := i.CreatePost(vr)
+			data, _ := i.FormatPost(b, "000001")
 
 			err = json.Unmarshal(data, &x)
 			fmt.Printf("%s\n", x)

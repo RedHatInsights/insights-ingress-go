@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/validators"
-	"go.uber.org/zap"
 )
 
 // Post JSON data to given URL
@@ -31,49 +29,46 @@ func Post(identity string, data []byte, url string) (*http.Response, error) {
 	return resp, nil
 }
 
-// CreatePost puts together the post to be sent to inventory
-func CreatePost(vr *validators.Request) ([]byte, error) {
-
-	vr.Metadata.Account = vr.Account
-	post, err := json.Marshal([]validators.Metadata{vr.Metadata})
-	if err != nil {
-		l.Log.Error("Unable to create inventory post JSON", zap.Error(err), zap.String("request_id", vr.RequestID))
-	}
-
-	return post, nil
-}
-
 // HTTP enables configuration of connection settings
 type HTTP struct {
 	Endpoint string
 }
 
-// GetID does an HTTP Request with the metadata provided
-func (h *HTTP) GetID(vr *validators.Request) (string, error) {
+// FormatPost returns data in the format that Inventory accepts
+func FormatPost(metadata validators.Metadata, account string) ([]byte, error) {
+	metadata.Account = account
+	return json.Marshal([]validators.Metadata{metadata})
+}
 
-	data, err := CreatePost(vr)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := Post(vr.B64Identity, data, h.Endpoint)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
+// ParseResponse parses the inventory_id from an Inventory response or returns the error
+func ParseResponse(resp *http.Response) (string, error) {
 	r := &Response{}
 	if resp.StatusCode == 207 {
-		err = json.NewDecoder(resp.Body).Decode(&r)
+		err := json.NewDecoder(resp.Body).Decode(&r)
 		if err != nil {
-			l.Log.Error("Failed to unmarshal inventory response", zap.Error(err), zap.String("request_id", vr.RequestID))
-			return "", err
+			return "", errors.New("Failed to unmarshal inventory response")
 		}
-		l.Log.Info("Successfully post to Inventory", zap.String("request_id", vr.RequestID), zap.String("inventory_id", r.Data[0].Host.ID))
 		return r.Data[0].Host.ID, nil
 	}
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	bodyString := string(bodyBytes)
 	return "", errors.New(bodyString)
+}
+
+// GetID does an HTTP Request with the metadata provided
+func (h *HTTP) GetID(metadata validators.Metadata, account string, ident string) (string, error) {
+
+	data, err := FormatPost(metadata, account)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := Post(ident, data, h.Endpoint)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	return ParseResponse(resp)
 }
