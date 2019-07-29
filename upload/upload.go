@@ -69,6 +69,12 @@ func NewHandler(p *pipeline.Pipeline) http.HandlerFunc {
 			return
 		}
 
+		if fileHeader.Size > config.Get().MaxSize {
+			l.Log.Info("File exceeds maximum file size for upload", zap.Int64("size", fileHeader.Size), zap.String("request_id", reqID))
+			w.WriteHeader(413)
+			return
+		}
+
 		if err := p.Validator.ValidateService(serviceDescriptor); err != nil {
 			l.Log.Info("Unrecognized service", zap.Error(err), zap.String("request_id", reqID))
 			w.WriteHeader(http.StatusUnsupportedMediaType)
