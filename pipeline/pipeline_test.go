@@ -2,6 +2,7 @@ package pipeline_test
 
 import (
 	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -43,6 +44,51 @@ var _ = Describe("Pipeline", func() {
 			InvalidChan: iCh,
 			Tracker:     tracker,
 		}
+	})
+
+	Describe("A response on ValidChan", func() {
+		It("should announce", func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+			go p.Tick(ctx)
+			r := &validators.Response{
+				Account:   "000001",
+				RequestID: "testing",
+			}
+			p.ValidChan <- r
+			Expect(stager.GetURLCalled).To(BeTrue())
+			Expect(announcer.AnnounceCalled).To(BeTrue())
+		})
+
+		It("should fail early if a URL cannot be retrieved", func() {
+			failStager := &stage.Fake{ShouldError: true}
+			p.Stager = failStager
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+			go p.Tick(ctx)
+			r := &validators.Response{
+				Account:   "000001",
+				RequestID: "testing",
+			}
+			p.ValidChan <- r
+			Expect(failStager.GetURLCalled).To(BeTrue())
+			Expect(announcer.AnnounceCalled).To(BeFalse())
+		})
+	})
+
+	Describe("A response on InvalidChan", func() {
+		It("Should reject the payload", func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+			go p.Tick(ctx)
+			r := &validators.Response{
+				Account:   "000001",
+				RequestID: "testing",
+			}
+			p.InvalidChan <- r
+			Expect(announcer.AnnounceCalled).To(BeFalse())
+			Expect(stager.RejectCalled).To(BeTrue())
+		})
 	})
 
 	Describe("Canceling the context", func() {
