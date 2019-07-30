@@ -241,7 +241,7 @@ var _ = Describe("Upload", func() {
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
-				Expect(stager.StageCalled).To(BeTrue())
+				Expect(stager.StageCalled()).To(BeTrue())
 			})
 		})
 
