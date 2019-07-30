@@ -22,6 +22,8 @@ var _ = Describe("Pipeline", func() {
 		announcer *announcers.Fake
 		tracker   *announcers.Fake
 		r         *validators.Response
+		tick      func(chan struct{})
+		stopped   chan struct{}
 	)
 
 	BeforeEach(func() {
@@ -49,38 +51,42 @@ var _ = Describe("Pipeline", func() {
 			InvalidChan: iCh,
 			Tracker:     tracker,
 		}
+
+		stopped = make(chan struct{})
+
+		tick = func(stopped chan struct{}) {
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+			p.Start(ctx, stopped)
+		}
 	})
 
 	Describe("A response on ValidChan", func() {
 		It("should announce", func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			defer cancel()
-			go p.Tick(ctx)
+			go tick(stopped)
 			p.ValidChan <- r
-			Expect(stager.GetURLCalled).To(BeTrue())
-			Expect(announcer.AnnounceCalled).To(BeTrue())
+			Expect(stager.GetURLCalled()).To(BeTrue())
+			Expect(announcer.AnnounceCalled()).To(BeTrue())
 		})
+	})
 
-		It("should fail early if a URL cannot be retrieved", func() {
+	Describe("A failure to get a url", func() {
+		It("should fail early", func() {
 			failStager := &stage.Fake{ShouldError: true}
 			p.Stager = failStager
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			defer cancel()
-			go p.Tick(ctx)
+			go tick(stopped)
 			p.ValidChan <- r
-			Expect(failStager.GetURLCalled).To(BeTrue())
-			Expect(announcer.AnnounceCalled).To(BeFalse())
+			Expect(failStager.GetURLCalled()).To(BeTrue())
+			Expect(announcer.AnnounceCalled()).To(BeFalse())
 		})
 	})
 
 	Describe("A response on InvalidChan", func() {
 		It("Should reject the payload", func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			defer cancel()
-			go p.Tick(ctx)
+			go tick(stopped)
 			p.InvalidChan <- r
-			Expect(announcer.AnnounceCalled).To(BeFalse())
-			Expect(stager.RejectCalled).To(BeTrue())
+			Expect(announcer.AnnounceCalled()).To(BeFalse())
+			Expect(stager.RejectCalled()).To(BeTrue())
 		})
 	})
 
