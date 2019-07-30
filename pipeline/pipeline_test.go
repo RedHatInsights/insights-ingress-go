@@ -21,6 +21,7 @@ var _ = Describe("Pipeline", func() {
 		stager    *stage.Fake
 		announcer *announcers.Fake
 		tracker   *announcers.Fake
+		r         *validators.Response
 	)
 
 	BeforeEach(func() {
@@ -35,6 +36,10 @@ var _ = Describe("Pipeline", func() {
 		}
 		announcer = &announcers.Fake{}
 		tracker = &announcers.Fake{}
+		r = &validators.Response{
+			Account:   "000001",
+			RequestID: "testing",
+		}
 
 		p = &Pipeline{
 			Stager:      stager,
@@ -51,10 +56,6 @@ var _ = Describe("Pipeline", func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
 			go p.Tick(ctx)
-			r := &validators.Response{
-				Account:   "000001",
-				RequestID: "testing",
-			}
 			p.ValidChan <- r
 			Expect(stager.GetURLCalled).To(BeTrue())
 			Expect(announcer.AnnounceCalled).To(BeTrue())
@@ -66,10 +67,6 @@ var _ = Describe("Pipeline", func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
 			go p.Tick(ctx)
-			r := &validators.Response{
-				Account:   "000001",
-				RequestID: "testing",
-			}
 			p.ValidChan <- r
 			Expect(failStager.GetURLCalled).To(BeTrue())
 			Expect(announcer.AnnounceCalled).To(BeFalse())
@@ -81,10 +78,6 @@ var _ = Describe("Pipeline", func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
 			go p.Tick(ctx)
-			r := &validators.Response{
-				Account:   "000001",
-				RequestID: "testing",
-			}
 			p.InvalidChan <- r
 			Expect(announcer.AnnounceCalled).To(BeFalse())
 			Expect(stager.RejectCalled).To(BeTrue())
