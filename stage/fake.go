@@ -9,6 +9,7 @@ type Fake struct {
 	Input        *Input
 	StageCalled  bool
 	RejectCalled bool
+	GetURLCalled bool
 	RequestID    string
 	ShouldError  bool
 	URL          string
@@ -33,5 +34,9 @@ func (f *Fake) Reject(requestID string) error {
 
 // GetURL is used to test fake url returns
 func (f *Fake) GetURL(requestID string) (string, error) {
+	f.GetURLCalled = true
+	if f.ShouldError {
+		return "", errors.New("Fake Stager Error")
+	}
 	return f.URL, nil
 }
