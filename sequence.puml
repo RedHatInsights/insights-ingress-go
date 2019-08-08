@@ -1,5 +1,6 @@
 @startuml
 participant client
+participant 3scale
 participant ingress
 participant hbi
 entity platform.upload.servicename
@@ -7,7 +8,15 @@ entity platform.upload.validation
 entity platform.upload.available
 database s3permanent
 database s3rejected
-client->ingress: insights-client payload
+client->3scale: insights-client payload
+3scale->ingress: insights-client payload
+ingress->ingress: check file size, service name, media type
+alt check failure
+    ingress->3scale: HTTP status code (413/415)
+else check success
+    ingress->3scale: HTTP status code (202)
+end
+3scale->client: HTTP response
 ingress-[#blue]>s3permanent: upload payload to s3
 alt if metadata included
     ingress-[#purple]>hbi: POST data: [{"facts": {"facts": {some_facts}}}]
