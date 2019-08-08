@@ -1,0 +1,26 @@
+@startuml
+participant client
+participant ingress
+participant hbi
+entity platform.upload.servicename
+entity platform.upload.validation
+entity platform.upload.available
+database s3permanent
+database s3rejected
+client->ingress: insights-client payload
+ingress-[#blue]>s3permanent: upload payload to s3
+alt if metadata included
+    ingress-[#purple]>hbi: POST data: [{"facts": {"facts": {some_facts}}}]
+    hbi-[#purple]>ingress: response includes inventory ID
+end
+ingress->platform.upload.servicename: msg to validating service
+Note right of ingress: {"request_id": "abcd1234",\n"account": "00001",\n"principal": "123456",\n"b64_identity": "base64_identity_string",\n"service": "validating service",\n"category": "file category",\n"url": "s3_url",\n"size": "1234",\n"timestamp": "ISO Time",\n"id": "inv id if available",\n"metadata": {}}
+platform.upload.validation->ingress: response from validating service
+Note left of platform.upload.validation: {"request_id": "abcd1234",\n"validation": "success"/"failure"}
+alt success
+    ingress->platform.upload.available: advertise to platform
+    Note right of ingress: *same message as validation\n*includes any additional data from validating service
+else failure
+    ingress<-[#blue]-s3permanent: Copy payload to rejected bucket
+    ingress-[#blue]>s3rejected
+end
