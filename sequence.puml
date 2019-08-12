@@ -21,7 +21,9 @@ end
 ingress-[#blue]>s3permanent: upload payload to s3
 alt if metadata included
     ingress-[#purple]>hbi: POST data: [{"facts": {"facts": {some_facts}}}]
-    hbi-[#purple]>ingress: response includes inventory ID
+    hbi-[#purple]>ingress: Response from HBI
+    Note left of hbi: Response: {"total": 1,\n"errors": 0,\n"data": [{"status": 0,\n"host": <host_json with facts, insights_id, id, etc.>}]}
+    Note left of hbi: See HBI api.spec for more details
 end
 ingress->platform.upload.servicename: msg to validating service
 Note right of ingress: {"request_id": "abcd1234",\n"account": "00001",\n"principal": "123456",\n"b64_identity": "base64_identity_string",\n"service": "validating service",\n"category": "file category",\n"url": "s3_url",\n"size": "1234",\n"timestamp": "ISO Time",\n"id": "inv id if available",\n"metadata": {}}
