@@ -45,7 +45,7 @@ func observeStageElapsed(elapsed time.Duration) {
 
 // NormalizeUserAgent removes high-cardinality information from user agent strings
 func NormalizeUserAgent(userAgent string) string {
-	if strings.Contains(userAgent, "support-operator") {
+	if strings.Contains(userAgent, "-operator") {
 		return strings.Fields(userAgent)[0]
 	}
 	return userAgent
