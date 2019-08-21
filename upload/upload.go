@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
@@ -30,7 +31,12 @@ func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 	if uploadErr == nil {
 		return file, fileHeader, nil
 	}
-	return nil, nil, fmt.Errorf("file: %v, upload: %v", fileErr, uploadErr)
+	keys := make([]string, 0, len(r.PostForm))
+	for name := range r.PostForm {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
+	return nil, nil, fmt.Errorf("Unable to find file (%v) or upload (%v) parts in %v", fileErr, uploadErr, keys)
 }
 
 func readMetadataPart(r *http.Request) ([]byte, error) {
@@ -80,7 +86,7 @@ func NewHandler(
 		file, fileHeader, err := GetFile(r)
 		if err != nil {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
-			logerr("Unable to find `file` or `upload` parts", err)
+			logerr("Invalid upload payload", err)
 			return
 		}
 		observeSize(userAgent, fileHeader.Size)
