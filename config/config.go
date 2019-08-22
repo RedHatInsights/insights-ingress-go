@@ -76,7 +76,7 @@ func Get() *IngressConfig {
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: commit.GetString("Openshift_Build_Commit"),
-		Version:              "1.0.4",
+		Version:              "1.0.5",
 		InventoryURL:         options.GetString("InventoryURL"),
 		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
