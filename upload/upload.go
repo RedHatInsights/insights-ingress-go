@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/http/httputil"
 	"sort"
 	"time"
 
@@ -80,6 +81,15 @@ func NewHandler(
 
 		logerr := func(msg string, err error) {
 			l.Log.Error(msg, zap.Error(err), logReqID)
+		}
+
+		if cfg.Debug && cfg.DebugUserAgent.MatchString(userAgent) {
+			dumpBytes, err := httputil.DumpRequest(r, true)
+			if err != nil {
+				logerr("debug: failed to dump request", err)
+			} else {
+				l.Log.Info("dumping request", zap.ByteString("raw_request", dumpBytes), logReqID)
+			}
 		}
 
 		incRequests(userAgent)
