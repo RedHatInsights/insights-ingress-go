@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -27,6 +29,8 @@ type IngressConfig struct {
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
+	Debug                bool
+	DebugUserAgent       *regexp.Regexp
 }
 
 // Get returns an initialized IngressConfig
@@ -46,11 +50,15 @@ func Get() *IngressConfig {
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("InventoryURL", "http://inventory:8080/api/inventory/v1/hosts")
 	options.SetDefault("Profile", false)
+	options.SetDefault("Debug", false)
+	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 	commit := viper.New()
 	commit.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
 	commit.AutomaticEnv()
+
+	fmt.Printf("debug user agent is %s\n", options.GetString("DebugUserAgent"))
 
 	return &IngressConfig{
 		MaxSize:              options.GetInt64("MaxSize"),
@@ -65,6 +73,8 @@ func Get() *IngressConfig {
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		Port:                 options.GetInt("Port"),
 		Profile:              options.GetBool("Profile"),
+		Debug:                options.GetBool("Debug"),
+		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: commit.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.4",
 		InventoryURL:         options.GetString("InventoryURL"),
