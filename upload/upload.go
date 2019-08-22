@@ -3,6 +3,7 @@ package upload
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -21,16 +22,15 @@ import (
 
 // GetFile verifies that the proper upload field is in place and returns the file
 func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
-	var err error
-	file, fileHeader, err := r.FormFile("file")
-	if err == nil {
+	file, fileHeader, fileErr := r.FormFile("file")
+	if fileErr == nil {
 		return file, fileHeader, nil
 	}
-	file, fileHeader, err = r.FormFile("upload")
-	if err == nil {
+	file, fileHeader, uploadErr := r.FormFile("upload")
+	if uploadErr == nil {
 		return file, fileHeader, nil
 	}
-	return nil, nil, err
+	return nil, nil, fmt.Errorf("file: %v, upload: %v", fileErr, uploadErr)
 }
 
 func readMetadataPart(r *http.Request) ([]byte, error) {
