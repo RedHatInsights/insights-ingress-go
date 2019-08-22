@@ -66,7 +66,7 @@ func Get() *IngressConfig {
 		Port:                 options.GetInt("Port"),
 		Profile:              options.GetBool("Profile"),
 		OpenshiftBuildCommit: commit.GetString("Openshift_Build_Commit"),
-		Version:              "1.0.3",
+		Version:              "1.0.4",
 		InventoryURL:         options.GetString("InventoryURL"),
 		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
