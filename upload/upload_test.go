@@ -226,8 +226,8 @@ var _ = Describe("Upload", func() {
 		})
 
 		Context("with an incorrect part name", func() {
-			It("should return HTTP 415", func() {
-				boiler(http.StatusUnsupportedMediaType, &FilePart{
+			It("should return HTTP 400", func() {
+				boiler(http.StatusBadRequest, &FilePart{
 					Name:        "invalid",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
