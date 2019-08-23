@@ -95,7 +95,8 @@ func NewHandler(
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r)
 		if err != nil {
-			w.WriteHeader(http.StatusUnsupportedMediaType)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("File or Upload field not found"))
 			logerr("Invalid upload payload", err)
 			return
 		}
