@@ -106,10 +106,10 @@ func main() {
 	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
 		sub.With(identity.EnforceIdentity).Get("/", lubDub)
-		sub.With(identity.EnforceIdentity, middleware.Logger).Post("/upload", handler)
+		sub.With(upload.ResponseMetricsMiddleware, identity.EnforceIdentity, middleware.Logger).Post("/upload", handler)
 	} else {
 		sub.Get("/", lubDub)
-		sub.With(middleware.Logger).Post("/upload", handler)
+		sub.With(upload.ResponseMetricsMiddleware, middleware.Logger).Post("/upload", handler)
 	}
 	sub.With(middleware.Logger).Get("/version", version.GetVersion)
 
