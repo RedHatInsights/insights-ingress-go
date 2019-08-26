@@ -111,7 +111,7 @@ func NewHandler(
 
 		if fileHeader.Size > cfg.MaxSize {
 			l.Log.Info("File exceeds maximum file size for upload", zap.Int64("size", fileHeader.Size), zap.String("request_id", reqID))
-			w.WriteHeader(413)
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			return
 		}
 

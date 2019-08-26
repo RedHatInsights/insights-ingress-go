@@ -1,11 +1,15 @@
 package upload
 
 import (
+	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
 	p "github.com/prometheus/client_golang/prometheus"
 	pa "github.com/prometheus/client_golang/prometheus/promauto"
+	l "github.com/redhatinsights/insights-ingress-go/logger"
+	"go.uber.org/zap"
 )
 
 var (
@@ -29,7 +33,34 @@ var (
 		Name: "ingress_stage_seconds",
 		Help: "Number of seconds spent waiting on stage",
 	}, []string{})
+
+	responseCodes = make(map[int]*p.CounterVec)
 )
+
+func init() {
+	codes := []int{
+		http.StatusAccepted,
+		http.StatusBadRequest,
+		http.StatusInternalServerError,
+		http.StatusRequestEntityTooLarge,
+		http.StatusUnsupportedMediaType,
+	}
+	for code := range codes {
+		responseCodes[code] = pa.NewCounterVec(p.CounterOpts{
+			Name: fmt.Sprintf("ingress_response_%d", code),
+			Help: fmt.Sprintf("Total Number of %d response codes by user-agent", code),
+		}, []string{"useragent"})
+	}
+}
+
+func incResponse(userAgent string, code int) {
+	m, ok := responseCodes[code]
+	if !ok {
+		l.Log.Error("tried to inc a metric that does not exist.  Be sure to define it in upload/metrics.go.", zap.Int("code", code))
+		return
+	}
+	m.With(p.Labels{"useragent": NormalizeUserAgent(userAgent)}).Inc()
+}
 
 func incRequests(userAgent string) {
 	requests.With(p.Labels{"useragent": NormalizeUserAgent(userAgent)}).Inc()
