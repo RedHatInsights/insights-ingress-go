@@ -1,15 +1,13 @@
 package upload
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	p "github.com/prometheus/client_golang/prometheus"
 	pa "github.com/prometheus/client_golang/prometheus/promauto"
-	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"go.uber.org/zap"
 )
 
 var (
@@ -34,33 +32,11 @@ var (
 		Help: "Number of seconds spent waiting on stage",
 	}, []string{})
 
-	responseCodes = make(map[int]*p.CounterVec)
+	responseCodes = pa.NewCounterVec(p.CounterOpts{
+		Name: "ingress_responses",
+		Help: "Count of response codes by code and user-agent",
+	}, []string{"useragent", "code"})
 )
-
-func init() {
-	codes := []int{
-		http.StatusAccepted,
-		http.StatusBadRequest,
-		http.StatusInternalServerError,
-		http.StatusRequestEntityTooLarge,
-		http.StatusUnsupportedMediaType,
-	}
-	for code := range codes {
-		responseCodes[code] = pa.NewCounterVec(p.CounterOpts{
-			Name: fmt.Sprintf("ingress_response_%d", code),
-			Help: fmt.Sprintf("Total Number of %d response codes by user-agent", code),
-		}, []string{"useragent"})
-	}
-}
-
-func incResponse(userAgent string, code int) {
-	m, ok := responseCodes[code]
-	if !ok {
-		l.Log.Error("tried to inc a metric that does not exist.  Be sure to define it in upload/metrics.go.", zap.Int("code", code))
-		return
-	}
-	m.With(p.Labels{"useragent": NormalizeUserAgent(userAgent)}).Inc()
-}
 
 func incRequests(userAgent string) {
 	requests.With(p.Labels{"useragent": NormalizeUserAgent(userAgent)}).Inc()
@@ -80,4 +56,34 @@ func NormalizeUserAgent(userAgent string) string {
 		return strings.Fields(userAgent)[0]
 	}
 	return userAgent
+}
+
+type metricTrackingResponseWriter struct {
+	Wrapped   http.ResponseWriter
+	UserAgent string
+}
+
+func (m *metricTrackingResponseWriter) Header() http.Header {
+	return m.Wrapped.Header()
+}
+
+func (m *metricTrackingResponseWriter) Write(b []byte) (int, error) {
+	return m.Wrapped.Write(b)
+}
+
+func (m *metricTrackingResponseWriter) WriteHeader(statusCode int) {
+	responseCodes.With(p.Labels{"useragent": NormalizeUserAgent(m.UserAgent), "code": strconv.Itoa(statusCode)}).Inc()
+	m.Wrapped.WriteHeader(statusCode)
+}
+
+// ResponseMetricsMiddleware wraps the ResponseWriter such that metrics for each
+// response type get tracked
+func ResponseMetricsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ww := &metricTrackingResponseWriter{
+			UserAgent: r.Header.Get("user-agent"),
+			Wrapped:   w,
+		}
+		next.ServeHTTP(ww, r)
+	})
 }
