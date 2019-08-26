@@ -4,27 +4,16 @@ import (
 	"sync"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/validators"
 	"go.uber.org/zap"
 )
 
 // Fake is a fake announcer
 type Fake struct {
-	Event           *validators.Response
 	StatusEvent     *Status
 	AnnounceCalledV bool
 	StatusCalledV   bool
 	StopCalledV     bool
 	lock            sync.Mutex
-}
-
-// Announce does nothing
-func (f *Fake) Announce(e *validators.Response) {
-	f.lock.Lock()
-	f.AnnounceCalledV = true
-	f.lock.Unlock()
-	f.Event = e
-	l.Log.Info("Announce called", zap.String("request_id", e.RequestID))
 }
 
 // Status does nothing

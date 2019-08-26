@@ -24,74 +24,15 @@ func init() {
 func New(cfg *Config, topics ...string) *Validator {
 	kv := &Validator{
 		ValidationProducerMapping: make(map[string]chan []byte),
-		ValidationConsumerChannel: make(chan []byte),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
-		ValidChan:                 cfg.ValidChan,
-		InvalidChan:               cfg.InvalidChan,
 	}
 	for _, topic := range topics {
 		topic = fmt.Sprintf("platform.upload.%s", topic)
 		kv.addProducer(topic)
 	}
-	go queue.Consumer(cfg.Context, kv.ValidationConsumerChannel, &queue.ConsumerConfig{
-		Brokers: kv.KafkaBrokers,
-		GroupID: kv.KafkaGroupID,
-		Topic:   cfg.ValidationTopic,
-	})
-
-	go func() {
-		for data := range kv.ValidationConsumerChannel {
-			ev := &validators.Response{}
-			err := json.Unmarshal(data, ev)
-			if err != nil {
-				l.Log.Error("failed to unmarshal data", zap.Error(err))
-				continue
-			}
-			UpdateExtras(ev)
-			kv.RouteResponse(ev)
-		}
-		l.Log.Info("consumer channel closed, shutting down")
-		close(kv.ValidChan)
-		close(kv.InvalidChan)
-	}()
 
 	return kv
-}
-
-// UpdateExtras copies legacy values from the top layer of a Response to the extras mapping
-func UpdateExtras(vr *validators.Response) {
-	if vr.Extras == nil {
-		vr.Extras = make(map[string]interface{})
-	}
-
-	if _, ok := vr.Extras["id"]; !ok {
-		vr.Extras["id"] = vr.ID
-	}
-
-	if _, ok := vr.Extras["satellite_managed"]; !ok {
-		vr.Extras["satellite_managed"] = vr.SatelliteManaged
-	}
-}
-
-// RouteResponse passes along responses based on their validation status
-func (kv *Validator) RouteResponse(response *validators.Response) {
-	// Since we only want to track the elapsed times of responses with
-	// Timestamps, we need a second counter to make we at least count the
-	// number of responses accurately
-	if !response.Timestamp.IsZero() {
-		observeValidationElapsed(response.Timestamp, response.Validation)
-	}
-	inc(response.Validation)
-	switch response.Validation {
-	case "success":
-		kv.ValidChan <- response
-	case "failure":
-		kv.InvalidChan <- response
-	default:
-		l.Log.Error("Invalid validation in response", zap.String("response.validation", response.Validation))
-		return
-	}
 }
 
 // Validate validates a ValidationRequest

@@ -19,5 +19,4 @@ func (i *Input) Close() {
 type Stager interface {
 	Stage(*Input) (string, error)
 	GetURL(requestID string) (string, error)
-	Reject(requestID string) error
 }

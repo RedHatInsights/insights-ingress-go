@@ -9,7 +9,6 @@ import (
 type Fake struct {
 	Input         *Input
 	StageCalledV  bool
-	RejectCalledV bool
 	GetURLCalledV bool
 	RequestID     string
 	ShouldError   bool
@@ -27,15 +26,6 @@ func (f *Fake) Stage(input *Input) (string, error) {
 		return "", errors.New("Fake Stager Error")
 	}
 	return f.URL, nil
-}
-
-// Reject is used for testing fake rejections
-func (f *Fake) Reject(requestID string) error {
-	f.lock.Lock()
-	f.RejectCalledV = true
-	f.lock.Unlock()
-	f.RequestID = requestID
-	return nil
 }
 
 // GetURL is used to test fake url returns
@@ -59,10 +49,4 @@ func (f *Fake) StageCalled() bool {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	return f.StageCalledV
-}
-
-func (f *Fake) RejectCalled() bool {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-	return f.RejectCalledV
 }

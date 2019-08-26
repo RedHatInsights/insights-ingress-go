@@ -9,7 +9,6 @@ import (
 // Stager provides the mechanism to stage a payload via aws S3
 type Stager struct {
 	Bucket   string
-	Rejected string
 	Sess     *session.Session
 	Uploader *s3manager.Uploader
 	Client   *s3.S3
