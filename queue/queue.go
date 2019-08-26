@@ -2,7 +2,6 @@ package queue
 
 import (
 	"context"
-	"io"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/segmentio/kafka-go"
@@ -35,34 +34,5 @@ func Producer(in chan []byte, config *ProducerConfig) {
 				in <- v
 			}
 		}(v)
-	}
-}
-
-// Consumer consumes a topic and puts the messages into out
-func Consumer(ctx context.Context, out chan []byte, config *ConsumerConfig) {
-	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: config.Brokers,
-		GroupID: config.GroupID,
-		Topic:   config.Topic,
-	})
-
-	defer r.Close()
-
-	for {
-		m, err := r.ReadMessage(ctx)
-		switch err {
-		case nil:
-			out <- m.Value
-		case io.EOF:
-			l.Log.Info("ReadMessage returned an EOF; Closing consumer.")
-			close(out)
-			return
-		case ctx.Err():
-			l.Log.Info("Shutting down Consumer.")
-			close(out)
-			return
-		default:
-			l.Log.Error("ReadMessage failed", zap.Error(err))
-		}
 	}
 }

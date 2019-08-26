@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"net/textproto"
 	"strings"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,7 +18,6 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
 	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
-	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	. "github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -79,21 +77,15 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 
 var _ = Describe("Upload", func() {
 	var (
-		vCh       chan *validators.Response
-		iCh       chan *validators.Response
 		stager    *stage.Fake
 		inventory *i.Fake
 		tracker   announcers.Announcer
 		validator *validators.Fake
 		handler   http.Handler
 		rr        *httptest.ResponseRecorder
-		pl        *pipeline.Pipeline
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		defer cancel()
-		go pl.Tick(ctx)
 		req, err := makeMultipartRequest("/api/ingress/v1/upload", parts...)
 		Expect(err).To(BeNil())
 		handler.ServeHTTP(rr, req)
@@ -101,25 +93,11 @@ var _ = Describe("Upload", func() {
 	}
 
 	BeforeEach(func() {
-		vCh = make(chan *validators.Response)
-		iCh = make(chan *validators.Response)
+
 		stager = &stage.Fake{ShouldError: false}
-		validator = &validators.Fake{
-			Valid:           vCh,
-			Invalid:         iCh,
-			DesiredResponse: "success",
-		}
 		inventory = &i.Fake{}
 		tracker = &announcers.Fake{}
 
-		pl = &pipeline.Pipeline{
-			Stager:      stager,
-			Validator:   validator,
-			Announcer:   &announcers.Fake{},
-			ValidChan:   vCh,
-			InvalidChan: iCh,
-			Tracker:     tracker,
-		}
 		rr = httptest.NewRecorder()
 		handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
 	})
@@ -253,12 +231,10 @@ var _ = Describe("Upload", func() {
 					ContentType: "application/vnd.redhat.unit.test"})
 				in := stager.Input
 				req := validator.In
-				res := validator.Out
 				Expect(in).To(Not(BeNil()))
 				Expect(req).To(Not(BeNil()))
 				Expect(req.Service).To(Equal("unit"))
 				Expect(req.Category).To(Equal("test"))
-				Expect(res.Validation).To(Equal("success"))
 			})
 		})
 
