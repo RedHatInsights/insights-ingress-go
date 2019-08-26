@@ -51,30 +51,3 @@ func (s *Stager) GetURL(requestID string) (string, error) {
 
 	return url, nil
 }
-
-// Reject moves a payload to the rejected bucket
-func (s *Stager) Reject(requestID string) error {
-	return s.copy(&bucketKey{
-		Bucket: s.Bucket,
-		Key:    requestID,
-	}, s.Rejected)
-}
-
-type bucketKey struct {
-	Bucket string
-	Key    string
-}
-
-func (s *Stager) copy(from *bucketKey, toBucket string) error {
-	src := from.Bucket + "/" + from.Key
-	input := &s3.CopyObjectInput{
-		Bucket:     aws.String(toBucket),
-		CopySource: aws.String(src),
-		Key:        aws.String(from.Key),
-	}
-	_, err := client.CopyObject(input)
-	if err != nil {
-		return errors.New("Failed to copy from " + src + " to " + toBucket)
-	}
-	return nil
-}

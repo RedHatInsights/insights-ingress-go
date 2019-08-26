@@ -43,17 +43,3 @@ func (s *Stager) GetURL(requestID string) (string, error) {
 	}
 	return url.String(), nil
 }
-
-// Reject moves a payload to the rejected bucket
-func (s *Stager) Reject(requestID string) error {
-	source := minio.NewSourceInfo(s.Bucket, requestID, nil)
-	dest, err := minio.NewDestinationInfo(s.Rejected, requestID, nil, nil)
-	if err != nil {
-		return errors.New("something went wrong")
-	}
-	err = s.Client.CopyObject(dest, source)
-	if err != nil {
-		return errors.New("Failed to copy object")
-	}
-	return nil
-}
