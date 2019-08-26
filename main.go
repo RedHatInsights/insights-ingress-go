@@ -11,13 +11,11 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/config"
 	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/pipeline"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/minio"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
-	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
 	"github.com/redhatinsights/insights-ingress-go/version"
 
@@ -45,33 +43,21 @@ func main() {
 		middleware.Recoverer,
 	)
 
-	valCh := make(chan *validators.Response)
-	invCh := make(chan *validators.Response)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	var stager stage.Stager
 
 	stager = &s3.Stager{
-		Bucket:   cfg.StageBucket,
-		Rejected: cfg.RejectBucket,
+		Bucket: cfg.StageBucket,
 	}
 
 	if cfg.MinioDev {
 		stager = minio.GetClient(&minio.Stager{
-			Bucket:   cfg.StageBucket,
-			Rejected: cfg.RejectBucket,
+			Bucket: cfg.StageBucket,
 		})
 	}
 
 	validator := kafka.New(&kafka.Config{
-		Brokers:         cfg.KafkaBrokers,
-		GroupID:         cfg.KafkaGroupID,
-		ValidationTopic: cfg.KafkaValidationTopic,
-		ValidChan:       valCh,
-		InvalidChan:     invCh,
-		Context:         ctx,
+		Brokers: cfg.KafkaBrokers,
+		GroupID: cfg.KafkaGroupID,
 	}, cfg.ValidTopics...)
 
 	inventory := &i.HTTP{
@@ -83,21 +69,6 @@ func main() {
 		Topic:   cfg.KafkaTrackerTopic,
 		Async:   true,
 	})
-
-	p := &pipeline.Pipeline{
-		Stager:    stager,
-		Validator: validator,
-		Announcer: announcers.NewKafkaAnnouncer(&queue.ProducerConfig{
-			Brokers: cfg.KafkaBrokers,
-			Topic:   cfg.KafkaAvailableTopic,
-		}),
-		ValidChan:   valCh,
-		InvalidChan: invCh,
-		Tracker:     tracker,
-	}
-
-	pipelineClosed := make(chan struct{})
-	go p.Start(context.Background(), pipelineClosed)
 
 	handler := upload.NewHandler(
 		stager, inventory, validator, tracker, *cfg,
@@ -137,13 +108,6 @@ func main() {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			l.Log.Fatal("HTTP Server Shutdown failed", zap.Error(err))
 		}
-		l.Log.Info("Canceling validation consumer")
-		cancel()
-		l.Log.Info("Waiting for validation pipeline to close")
-		<-pipelineClosed
-		l.Log.Info("Pipeline finished, canceling announcer")
-		p.Announcer.Stop()
-		l.Log.Info("Announcer finished, shutting down")
 		close(idleConnsClosed)
 	}()
 

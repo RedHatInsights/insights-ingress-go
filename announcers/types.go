@@ -2,13 +2,10 @@ package announcers
 
 import (
 	"time"
-
-	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
 // Announcer for messages
 type Announcer interface {
-	Announce(e *validators.Response)
 	Status(e *Status)
 	Stop()
 }
