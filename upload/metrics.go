@@ -29,8 +29,6 @@ var (
 		Name: "ingress_stage_seconds",
 		Help: "Number of seconds spent waiting on stage",
 	}, []string{})
-
-	responseCodes = map[int64]p.CounterVec
 )
 
 func incRequests(userAgent string) {
