@@ -58,8 +58,6 @@ func Get() *IngressConfig {
 	commit.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
 	commit.AutomaticEnv()
 
-	fmt.Printf("debug user agent is %s\n", options.GetString("DebugUserAgent"))
-
 	return &IngressConfig{
 		MaxSize:              options.GetInt64("MaxSize"),
 		StageBucket:          options.GetString("StageBucket"),
