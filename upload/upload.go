@@ -102,6 +102,7 @@ func NewHandler(
 		}
 		observeSize(userAgent, fileHeader.Size)
 
+		l.Log.Debug("ContentType recieved from client", zap.String("ContentType", fileHeader.Header.Get("Content-Type")), logReqID)
 		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
 		if validationErr != nil {
 			logerr("Unable to validate", validationErr)
