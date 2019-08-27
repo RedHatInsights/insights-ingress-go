@@ -181,7 +181,7 @@ func NewHandler(
 			Account:   vr.Account,
 			RequestID: vr.RequestID,
 			Status:    "processing",
-			StatusMsg: "Sent to validation service",
+			StatusMsg: fmt.Sprintf("Sent to validation service: %s", vr.Service),
 		}
 		l.Log.Info("Payload sent to validation service", logReqID)
 		tracker.Status(ps)
