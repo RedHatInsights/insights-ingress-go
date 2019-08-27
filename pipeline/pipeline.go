@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
@@ -26,7 +27,7 @@ func (p *Pipeline) Tick(ctx context.Context) bool {
 			Account:     ev.Account,
 			RequestID:   ev.RequestID,
 			Status:      "validated",
-			StatusMsg:   "Payload validated by service",
+			StatusMsg:   fmt.Sprintf("Payload validated by service: %s", ev.Service),
 			InventoryID: ev.ID,
 		}
 		l.Log.Info("Validation status received for payload", zap.String("request_id", ev.RequestID))
