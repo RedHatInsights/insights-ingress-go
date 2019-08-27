@@ -1,6 +1,8 @@
 package upload
 
 import (
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,6 +31,11 @@ var (
 		Name: "ingress_stage_seconds",
 		Help: "Number of seconds spent waiting on stage",
 	}, []string{})
+
+	responseCodes = pa.NewCounterVec(p.CounterOpts{
+		Name: "ingress_responses",
+		Help: "Count of response codes by code and user-agent",
+	}, []string{"useragent", "code"})
 )
 
 func incRequests(userAgent string) {
@@ -49,4 +56,34 @@ func NormalizeUserAgent(userAgent string) string {
 		return strings.Fields(userAgent)[0]
 	}
 	return userAgent
+}
+
+type metricTrackingResponseWriter struct {
+	Wrapped   http.ResponseWriter
+	UserAgent string
+}
+
+func (m *metricTrackingResponseWriter) Header() http.Header {
+	return m.Wrapped.Header()
+}
+
+func (m *metricTrackingResponseWriter) Write(b []byte) (int, error) {
+	return m.Wrapped.Write(b)
+}
+
+func (m *metricTrackingResponseWriter) WriteHeader(statusCode int) {
+	responseCodes.With(p.Labels{"useragent": NormalizeUserAgent(m.UserAgent), "code": strconv.Itoa(statusCode)}).Inc()
+	m.Wrapped.WriteHeader(statusCode)
+}
+
+// ResponseMetricsMiddleware wraps the ResponseWriter such that metrics for each
+// response type get tracked
+func ResponseMetricsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ww := &metricTrackingResponseWriter{
+			UserAgent: r.Header.Get("user-agent"),
+			Wrapped:   w,
+		}
+		next.ServeHTTP(ww, r)
+	})
 }
