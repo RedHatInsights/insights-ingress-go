@@ -6,14 +6,8 @@ import (
 
 // Fake allows for creation of testing objects
 type Fake struct {
-<<<<<<< HEAD
 	In     *Request
 	Called bool
-=======
-	In              *Request
-	Called          bool
-	DesiredResponse string
->>>>>>> Remove valdation response and available produce [WIP]
 }
 
 func (v *Fake) Validate(in *Request) {
