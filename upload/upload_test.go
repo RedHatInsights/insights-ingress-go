@@ -95,6 +95,7 @@ var _ = Describe("Upload", func() {
 	BeforeEach(func() {
 
 		stager = &stage.Fake{ShouldError: false}
+		validator = &validators.Fake{}
 		inventory = &i.Fake{}
 		tracker = &announcers.Fake{}
 
