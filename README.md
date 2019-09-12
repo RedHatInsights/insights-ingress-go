@@ -17,20 +17,13 @@ The service runs inside Openshift Dedicated.
 
 ## How It Works
 
-![UML](http://www.plantuml.com/plantuml/png/ZLLDRnmt3BtFho2cbpRmXzVhvB08ZA2z99V6gDrJOYou6kwk4esaIfnjjyNyzr8QpNgCPjmCO5iYdvuUAP9-5na3Twq1RNU1OgoyxBNI7Ys3CfeiFpCjeq93KzFff40r7y4RvAqBxKNdZSFc8b8uQ4KMMvg37D3e1bax-upOT_xPVh_HSmnuG6rm8yg41pSO2UBIKsZHoecfCT0NKanDDGHtVZj4j98mejxjEPuF3l1uJDJLu3-_BM7E0mjWWbHxKbzXgmr1r7_J6PHSW2H3TYqr6e6FdYeqFA8ba2vG1VAT64UDxnyUxY0oSXT1kORWnvl5yl9cyVgdYaoaGX4xfUJOzr9SNrtBSViKwH1NWSffxsoaKtYVVjYOZXvl9_bTmV0COog0dMGw1wMt4YPZUW3HeapNK3CAAtI-2zu8eJpl2ku-tZz0Gg_Wqp_r5XN7UWMJLNGjhVEkx_l7J2K79pIdxFzMbCCsk1RU__mXWtzrJ61eo-2swUGJBbt3Zj78DOkppxQc45n8brwbNH9LPrKvUoVxtaMMzTlqT_qbEWj_Qjv3bdXsAfQrRcGZFyJguhP_x6V4t1CbgO1UNqHF2gJAeNM1e256RLARJKhjXMPRGHjtwIN6xh8xAEugtnj4MBwuiANu0_tHKMHHAo7Lk57DudfvKwSuKIdNMKxsA_aMsUY3jgaxJJ8dwEitsRvvSoCSGxCcLsg-YMaTESYj6Leq9TH_bMQ4GgQT2vaeDzDeoDukvClZSYshR4czDkh91jOjHSRM9-k7-u_m88Ri6UBKzW2wIRLwcYFPErPkghk-hrv8jhn4vwLwVxy3-aikCbI9eLXBM1I1zpJsIF7FJi9LwRo6OYweiQilou0eFLpDCqm6KPYsmcn1Z8KuJ_a_9V84JAuYkBwiY-IwJoFXs-DfTg2l09i31TQHKZ6Fk7nwfenVHMm9MbdZZW0ZFEdwR5-LAHG1xL6u6vtiQFBGcSrFcgxV6irlnt5u_cmS_kBySJeCntywiEdKL-8fmsIUZgZSuk_aLzUQVm40 "Ingress Processing Flow")
+![UML](http://www.plantuml.com/plantuml/png/ZLD1Rziy3BtxLn3vBj-0DckQj8TW28gTsijQhBbrHS38TA9DbZI9pf0D_kyJPSTrCNIOWI3Iu-FZeoJUHCR0JMr0srsW60kVzbffZvP16KsMNq7pgD3G61eo4rNp4Rn1hboefuqt3ijff73GYYpMhzFsMrsKoBZ5I13ddaADLifrLSzNNQbbqezwj-TutWN0ur64Yov-lkhhlqti2IEcsfFw1fKs157_f3FeJK9ocNOrbHg1ZvuAD7nYepPDe0BITr8SFDwkrmyG6Rc9e5n9yFzYDd-_c5szAyX4wYLYerHA-rU9oulBb6vVEktwwgafspiRQMZlwR-jQUXvDPobKBjBE1q5i8Cupqtf2cfYb1j8NfHfIYf7naJEDy6R99XkQWaFzuzh4FOIddvDAbGS9qiOhQAhQPDtRTi-PwcKE98PJlzpxnogu6gu_NYNoPyS4nYg65mbcIyyASEEqQGoixClTa8Xk215BsGdfYRPLJwz0T-xo6dzGVutNwEpy4Fp7hB5i-6nR7IPDkb7hAQhzhbzmymZaLW5z7eQFIceN83Q1OAI6BMHzpzwQd-PWYNKSIStSK2Za_cK0tsuo7M369F2lPhq7-XxGv6JszJI1BUgd5tE5nFf4vLoZMN1Bz8tow0FsigW6O65UdMTyUtr8cbqeoeXcRuHj8aSKjLCxJq9wq-dcQ6GQUT25ih3D00IRK8k7kSRMGaYioRGO9rrJP6nzeBUFTx3EW4vqlMfxG5qAMyL3wWDRaqNFRrSUNTjMzoGBPlQ_0O0 "Ingress Processing Flow")
 
 The Ingress workflow is as follows:
 
   - The source client sends a payload of a specific content type to cloud.redhat.com
   - Ingress discovers a validating service from the content type, uploads the file to
   cloud storage, and puts a message on a kafka topic for that service.
-  - The validating service, if there is one, checks the payload is safe and properly
-  formatted.
-  - The validating service then returns a message via the validation topic to 
-  ingress with a failure or success message
-  - If validation success, the upload is advertised to the rest of the platform.
-  If it fails, the upload is put in rejected storage. This upload is retained for a
-  period in the event that more diagnostics are necessary to discover why it failed.
 
 ### Kafka Topics
 
@@ -38,8 +31,6 @@ Ingress produces to topics to alert services of a new upload. The first topic an
 upload is advertised to is the one gathered from the content type.
 
     - Produce to topic derived from content type: `platform.upload.service-name`
-    - Consume from validation topic: `platform.upload.validation`
-    - Produce to available topic: `platform.upload.available`
 
 ### Content Type
 
@@ -76,28 +67,10 @@ Validation Messages:
            "metadata": <will contain additional json related to the uploading host>
        }
 
-Available Messages:
-
-      {
-          "account": <account number>,
-          "request_id": <uuid for the payload>,
-          "principal": <currently the org ID>,
-          "service": <the service that validated the payload>,
-          "url": <URL to download the file>,
-          "b64_identity": <the base64 encoded identity of the sender>,
-          "id": <host based inventory id if available>, **RELOCATING TO EXTRAS**
-          "satellite_managed": <boolean if the system is managed by satellite>, **RELOCATING TO EXTRAS**
-          "timestamp": <the time the available message was put on the topic>,
-          "extras": {
-              "satellite_managed": <same as above>
-              "id": <same as above>
-              ...
-          }
-      }
-
-Any apps that will perform the validation should send back all of the data they
+Any apps that will perform the validation should send **all** of the data they
 received in addition to a `validation` key that contains `success` or `failure`
-depending on whether the payload passed validation.
+depending on whether the payload passed validation. This data should be sent to 
+the `platform.upload.validation` topic.
 
 Expected Validation Message:
     
