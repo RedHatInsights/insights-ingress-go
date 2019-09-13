@@ -30,6 +30,8 @@ paths:
           description: Authentication missing from request
         "202":
           description: Payload was accepted for processing.
+        "413":
+          description: Payload too large
         "415":
           description: Content type of payload is unsupported.
   /version:
