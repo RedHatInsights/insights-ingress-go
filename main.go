@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +32,16 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("lubdub"))
+}
+
+func apiSpec(w http.ResponseWriter, r *http.Request) {
+	file, err := ioutil.ReadFile("/tmp/src/openapi.yaml")
+	if err != nil {
+		l.Log.Error("Unable to print API Spec", zap.Error(err))
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(file)
 }
 
 func main() {
@@ -83,6 +94,7 @@ func main() {
 		sub.With(upload.ResponseMetricsMiddleware, middleware.Logger).Post("/upload", handler)
 	}
 	sub.With(middleware.Logger).Get("/version", version.GetVersion)
+	sub.With(middleware.Logger).Get("/openapi.yaml", apiSpec)
 
 	r.Mount("/api/ingress/v1", sub)
 	r.Mount("/r/insights/platform/ingress/v1", sub)
