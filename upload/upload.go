@@ -163,6 +163,8 @@ func NewHandler(
 		stageInput := &stage.Input{
 			Payload: file,
 			Key:     reqID,
+			Account: vr.Account,
+			OrgId:   vr.Principal,
 		}
 
 		start := time.Now()
