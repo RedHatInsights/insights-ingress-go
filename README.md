@@ -110,6 +110,16 @@ The server should now be available on TCP port 3000.
 
     $> curl http://localhost:3000/version
 
+#### The Docker Option
+
+You can also build ingress using Docker/podman with the provided Dockerfile.
+
+    $> docker build . -t ingress:latest
+
+Or stand up the stack with required services using `docker-compose`.
+
+    $> docker-compose up --build
+
 #### Uploading a File
 
 Ingress expects to be behind a 3Scale gateway that provides some manadatory headers.
