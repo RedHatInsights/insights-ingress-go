@@ -26,7 +26,6 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 )
 
 func lubDub(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +37,7 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 func apiSpec(w http.ResponseWriter, r *http.Request) {
 	file, err := ioutil.ReadFile("/tmp/src/openapi.yaml")
 	if err != nil {
-		l.Log.Error("Unable to print API Spec", zap.Error(err))
+		l.Log.WithFields(logrus.Fields{"error": err}).Error("Unable to print API spec")
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
