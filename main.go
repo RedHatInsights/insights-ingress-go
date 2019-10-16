@@ -25,7 +25,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 func lubDub(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +37,7 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 func apiSpec(w http.ResponseWriter, r *http.Request) {
 	file, err := ioutil.ReadFile("/tmp/src/openapi.yaml")
 	if err != nil {
-		l.Log.Error("Unable to print API Spec", zap.Error(err))
+		l.Log.WithFields(logrus.Fields{"error": err}).Error("Unable to print API spec")
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -105,7 +105,7 @@ func main() {
 		r.Mount("/debug", middleware.Profiler())
 	}
 
-	l.Log.Info("Starting service", zap.Int("port", cfg.Port))
+	l.Log.WithFields(logrus.Fields{"port": cfg.Port}).Info("Starting Service")
 
 	srv := http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Port),
@@ -118,13 +118,13 @@ func main() {
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 		if err := srv.Shutdown(context.Background()); err != nil {
-			l.Log.Fatal("HTTP Server Shutdown failed", zap.Error(err))
+			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
 		close(idleConnsClosed)
 	}()
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		l.Log.Fatal("Service stopped", zap.Error(err))
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Service Stopped")
 	}
 
 	<-idleConnsClosed

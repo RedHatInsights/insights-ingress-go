@@ -9,7 +9,7 @@ import (
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/validators"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 var tdMapping map[string]string
@@ -39,12 +39,12 @@ func New(cfg *Config, topics ...string) *Validator {
 func (kv *Validator) Validate(vr *validators.Request) {
 	data, err := json.Marshal(vr)
 	if err != nil {
-		l.Log.Error("failed to marshal json", zap.Error(err))
+		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to marshal json")
 		return
 	}
 	topic := serviceToTopic(vr.Service)
 	topic = fmt.Sprintf("platform.upload.%s", topic)
-	l.Log.Debug("Posting data to topic", zap.ByteString("data", data), zap.String("topic", topic))
+	l.Log.WithFields(logrus.Fields{"data": data, "topic": topic}).Debug("Posting data to topic")
 	kv.ValidationProducerMapping[topic] <- data
 }
 
