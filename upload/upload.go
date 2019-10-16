@@ -19,7 +19,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/validators"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 // GetFile verifies that the proper upload field is in place and returns the file
@@ -77,10 +77,10 @@ func NewHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
-		logReqID := zap.String("request_id", reqID)
+		requestLogger := l.Log.WithFields(logrus.Fields{"request_id": reqID})
 
 		logerr := func(msg string, err error) {
-			l.Log.Error(msg, zap.Error(err), logReqID)
+			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
 		}
 
 		if cfg.Debug && cfg.DebugUserAgent.MatchString(userAgent) {
@@ -88,7 +88,7 @@ func NewHandler(
 			if err != nil {
 				logerr("debug: failed to dump request", err)
 			} else {
-				l.Log.Info("dumping request", zap.ByteString("raw_request", dumpBytes), logReqID)
+				requestLogger.WithFields(logrus.Fields{"raw_request": dumpBytes}).Info("dumping request")
 			}
 		}
 
@@ -102,7 +102,7 @@ func NewHandler(
 		}
 		observeSize(userAgent, fileHeader.Size)
 
-		l.Log.Debug("ContentType received from client", zap.String("ContentType", fileHeader.Header.Get("Content-Type")), logReqID)
+		requestLogger.WithFields(logrus.Fields{"ContentType": fileHeader.Header.Get("Content-Type")}).Debug("ContentType received from client")
 		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
 		if validationErr != nil {
 			logerr("Unable to validate", validationErr)
@@ -111,7 +111,7 @@ func NewHandler(
 		}
 
 		if fileHeader.Size > cfg.MaxSize {
-			l.Log.Info("File exceeds maximum file size for upload", zap.Int64("size", fileHeader.Size), zap.String("request_id", reqID))
+			requestLogger.WithFields(logrus.Fields{"size": fileHeader.Size}).Info("File exceeds maximum file size for upload")
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			return
 		}
@@ -140,14 +140,14 @@ func NewHandler(
 
 		md, err := GetMetadata(r)
 		if err != nil {
-			l.Log.Debug("Failed to read metadata", zap.Error(err), logReqID)
+			requestLogger.WithFields(logrus.Fields{"error": err}).Debug("Failed to read metadata")
 		} else {
 			vr.Metadata = *md
 			vr.ID, err = inventory.GetID(*md, vr.Account, b64Identity)
 			if err != nil {
 				logerr("Failed to post to inventory", err)
 			} else {
-				l.Log.Info("Successfully posted to inventory", logReqID, zap.String("inventory_id", vr.ID))
+				requestLogger.WithFields(logrus.Fields{"inventory_id": vr.ID}).Info("Successfully posted to inventory")
 			}
 		}
 
@@ -157,7 +157,7 @@ func NewHandler(
 			Status:    "received",
 			StatusMsg: "Payload recived by ingress",
 		}
-		l.Log.Info("Payload received", logReqID)
+		requestLogger.Info("Payload received")
 		tracker.Status(ps)
 
 		stageInput := &stage.Input{
@@ -186,7 +186,7 @@ func NewHandler(
 			Status:    "success",
 			StatusMsg: fmt.Sprintf("Sent to validation service: %s", vr.Service),
 		}
-		l.Log.Info("Payload sent to validation service", logReqID)
+		requestLogger.Info("Paylod sent to validation service")
 		tracker.Status(ps)
 
 		validator.Validate(vr)

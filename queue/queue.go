@@ -5,7 +5,7 @@ import (
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/segmentio/kafka-go"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 // Producer consumes in and produces to the topic in config
@@ -30,7 +30,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 				},
 			)
 			if err != nil {
-				l.Log.Error("error while writing, putting message back into the channel", zap.Error(err))
+				l.Log.WithFields(logrus.Fields{"error": err}).Error("error while writing, putting message back into the channel")
 				in <- v
 			}
 		}(v)
