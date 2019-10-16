@@ -6,7 +6,7 @@ import (
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 // Kafka is an announcer that broadcases on a kafka topic
@@ -30,11 +30,11 @@ func (k *Kafka) Status(vs *Status) {
 	vs.Date = n.UTC()
 	data, err := json.Marshal(vs)
 	if err != nil {
-		l.Log.Error("failed to marshal status message", zap.Error(err), zap.String("request_id", vs.RequestID))
+		l.Log.WithFields(logrus.Fields{"request_id": vs.RequestID, "error": err}).Error("Failed to marshal status message")
 		return
 	}
 	defer func() {
-		l.Log.Debug("status announce", zap.Duration("duration", time.Since(n)))
+		l.Log.WithFields(logrus.Fields{"duration": time.Since(n)}).Debug("status announce")
 	}()
 	k.In <- data
 }

@@ -2,56 +2,69 @@ package logger
 
 import (
 	"flag"
+	"os"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
-// Log is an instance of the global zap.Logger
-var Log *zap.Logger
-var logLevel zapcore.Level
+// Log is an instance of the global logrus.Logger
+var Log *logrus.Logger
+var logLevel logrus.Level
 
 // InitLogger initializes the Entitlements API logger
-func InitLogger() *zap.Logger {
-	if Log == nil {
-		viper.SetDefault("INGRESS_LOG_LEVEL", "INFO")
-		viper.AutomaticEnv()
-		switch viper.GetString("INGRESS_LOG_LEVEL") {
-		case "DEBUG":
-			logLevel = zapcore.DebugLevel
-		case "ERROR":
-			logLevel = zapcore.ErrorLevel
-		default:
-			logLevel = zapcore.InfoLevel
-		}
-		if flag.Lookup("test.v") != nil {
-			logLevel = zapcore.FatalLevel
-		}
+func InitLogger() *logrus.Logger {
 
-		cfg := zapcore.EncoderConfig{
-			TimeKey:        "ts",
-			LevelKey:       "level",
-			NameKey:        "logger",
-			CallerKey:      "caller",
-			MessageKey:     "msg",
-			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    zapcore.LowercaseLevelEncoder,
-			EncodeTime:     zapcore.EpochTimeEncoder,
-			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
+	viper.SetDefault("INGRESS_LOG_LEVEL", "INFO")
+	viper.SetDefault("INGRESS_LOG_GROUP", "platform-dev")
+	viper.SetDefault("INGRESS_LOG_STREAM", "platform")
+	viper.SetDefault("INGRESS_AWS_REGION", "us-east-1")
+	key := viper.GetString("INGRESS_CW_AWS_ACCESS_KEY_ID")
+	secret := viper.GetString("INGRESS_CW_AWS_SECRET_ACCESS_KEY")
+	region := viper.GetString("INGRESS_AWS_REGION")
+	group := viper.GetString("INGRESS_LOG_GROUP")
+	stream := viper.GetString("INGRESS_LOG_STREAM")
+	viper.AutomaticEnv()
+	switch viper.GetString("INGRESS_LOG_LEVEL") {
+	case "DEBUG":
+		logLevel = logrus.DebugLevel
+	case "ERROR":
+		logLevel = logrus.ErrorLevel
+	default:
+		logLevel = logrus.InfoLevel
+	}
+	if flag.Lookup("test.v") != nil {
+		logLevel = logrus.FatalLevel
+	}
+
+	Log = &logrus.Logger{
+		Out:   os.Stdout,
+		Level: logLevel,
+	}
+
+	formatter := &logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "time",
+			logrus.FieldKeyFunc:  "caller",
+			logrus.FieldKeyLevel: "level",
+			logrus.FieldKeyMsg:   "msg",
+		},
+	}
+
+	Log.SetFormatter(formatter)
+
+	cred := credentials.NewStaticCredentials(key, secret, "")
+	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
+
+	if key != "" {
+		hook, err := logrus_cloudwatchlogs.NewHook(group, stream, cfg)
+		if err != nil {
+			Log.Info(err)
 		}
-
-		logger, _ := zap.Config{
-			Encoding:         "json",
-			Level:            zap.NewAtomicLevelAt(logLevel),
-			OutputPaths:      []string{"stdout"},
-			ErrorOutputPaths: []string{"stderr"},
-			EncoderConfig:    cfg,
-		}.Build()
-
-		defer logger.Sync()
-		Log = logger
+		Log.AddHook(hook)
 	}
 
 	return Log
