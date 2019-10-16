@@ -21,8 +21,10 @@ func InitLogger() *logrus.Logger {
 	viper.SetDefault("INGRESS_LOG_LEVEL", "INFO")
 	viper.SetDefault("INGRESS_LOG_GROUP", "platform-dev")
 	viper.SetDefault("INGRESS_LOG_STREAM", "platform")
+	viper.SetDefault("INGRESS_AWS_REGION", "us-east-1")
 	key := viper.GetString("INGRESS_CW_AWS_ACCESS_KEY_ID")
 	secret := viper.GetString("INGRESS_CW_AWS_SECRET_ACCESS_KEY")
+	region := viper.GetString("INGRESS_AWS_REGION")
 	group := viper.GetString("INGRESS_LOG_GROUP")
 	stream := viper.GetString("INGRESS_LOG_STREAM")
 	viper.AutomaticEnv()
@@ -48,14 +50,14 @@ func InitLogger() *logrus.Logger {
 			logrus.FieldKeyTime:  "time",
 			logrus.FieldKeyFunc:  "caller",
 			logrus.FieldKeyLevel: "level",
-			logrus.FieldKeyMsg:   "message",
+			logrus.FieldKeyMsg:   "msg",
 		},
 	}
 
 	Log.SetFormatter(formatter)
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
-	cfg := aws.NewConfig().WithRegion("us-east-1").WithCredentials(cred)
+	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 
 	if key != "" {
 		hook, err := logrus_cloudwatchlogs.NewHook(group, stream, cfg)
