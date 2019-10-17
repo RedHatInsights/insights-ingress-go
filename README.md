@@ -108,7 +108,7 @@ Launch the application
 
 The server should now be available on TCP port 3000.
 
-    $> curl http://localhost:3000/version
+    $> curl http://localhost:3000/api/ingress/v1/version
 
 #### The Docker Option
 
@@ -119,13 +119,17 @@ You can also build ingress using Docker/podman with the provided Dockerfile.
 Or stand up the stack with required services using `docker-compose`.
 
     $> docker-compose up --build
+    
+The server will be available on TCP port 8080.
+
+    $> curl http://localhost:8080/api/ingress/v1/version
 
 #### Uploading a File
 
-Ingress expects to be behind a 3Scale gateway that provides some manadatory headers.
+Ingress expects to be behind a 3Scale gateway that provides some mandatory headers.
 You can provide these headers manually with a curl command
 
-    $> curl -F "file=@somefile.tar.gz" -H "x-rh-identity-header: <base64 string"> -H "x-rh-request_id: testtesttest" \
+    $> curl -F "file=@somefile.tar.gz" -H "x-rh-identity: <base64 string>" -H "x-rh-request_id: testtesttest" \
     http://localhost:3000/api/ingress/v1/upload
 
 For testing, the following base64 identity can be used:
