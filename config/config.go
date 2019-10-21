@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"regexp"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
+	Hostname             string
 	MaxSize              int64
 	StageBucket          string
 	Auth                 bool
@@ -31,6 +33,9 @@ type IngressConfig struct {
 
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
+
+	Hostname, _ := os.Hostname()
+
 	options := viper.New()
 	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("Port", 3000)
@@ -52,6 +57,7 @@ func Get() *IngressConfig {
 	commit.AutomaticEnv()
 
 	return &IngressConfig{
+		Hostname:             Hostname,
 		MaxSize:              options.GetInt64("MaxSize"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),

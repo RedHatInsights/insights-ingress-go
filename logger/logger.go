@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
+	lc "github.com/kdar/logrus-cloudwatchlogs"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -18,17 +18,20 @@ var logLevel logrus.Level
 // InitLogger initializes the Entitlements API logger
 func InitLogger() *logrus.Logger {
 
-	viper.SetDefault("INGRESS_LOG_LEVEL", "INFO")
-	viper.SetDefault("INGRESS_LOG_GROUP", "platform-dev")
-	viper.SetDefault("INGRESS_LOG_STREAM", "platform")
-	viper.SetDefault("INGRESS_AWS_REGION", "us-east-1")
-	key := viper.GetString("INGRESS_CW_AWS_ACCESS_KEY_ID")
-	secret := viper.GetString("INGRESS_CW_AWS_SECRET_ACCESS_KEY")
-	region := viper.GetString("INGRESS_AWS_REGION")
-	group := viper.GetString("INGRESS_LOG_GROUP")
-	stream := viper.GetString("INGRESS_LOG_STREAM")
-	viper.AutomaticEnv()
-	switch viper.GetString("INGRESS_LOG_LEVEL") {
+	logconfig := viper.New()
+	logconfig.SetDefault("LOG_LEVEL", "INFO")
+	logconfig.SetDefault("LOG_GROUP", "platform-dev")
+	logconfig.SetDefault("LOG_STREAM", "platform")
+	logconfig.SetDefault("AWS_REGION", "us-east-1")
+	logconfig.SetEnvPrefix("INGRESS")
+	logconfig.AutomaticEnv()
+	key := logconfig.GetString("CW_AWS_ACCESS_KEY_ID")
+	secret := logconfig.GetString("CW_AWS_SECRET_ACCESS_KEY")
+	region := logconfig.GetString("AWS_REGION")
+	group := logconfig.GetString("LOG_GROUP")
+	stream := logconfig.GetString("LOG_STREAM")
+
+	switch logconfig.GetString("LOG_LEVEL") {
 	case "DEBUG":
 		logLevel = logrus.DebugLevel
 	case "ERROR":
@@ -40,27 +43,26 @@ func InitLogger() *logrus.Logger {
 		logLevel = logrus.FatalLevel
 	}
 
-	Log = &logrus.Logger{
-		Out:   os.Stdout,
-		Level: logLevel,
-	}
-
 	formatter := &logrus.JSONFormatter{
 		FieldMap: logrus.FieldMap{
-			logrus.FieldKeyTime:  "time",
+			logrus.FieldKeyTime:  "@timestamp",
 			logrus.FieldKeyFunc:  "caller",
 			logrus.FieldKeyLevel: "level",
-			logrus.FieldKeyMsg:   "msg",
+			logrus.FieldKeyMsg:   "message",
 		},
 	}
 
-	Log.SetFormatter(formatter)
+	Log = &logrus.Logger{
+		Out:       os.Stdout,
+		Level:     logLevel,
+		Formatter: formatter,
+	}
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 
 	if key != "" {
-		hook, err := logrus_cloudwatchlogs.NewHook(group, stream, cfg)
+		hook, err := lc.NewHook(group, stream, cfg)
 		if err != nil {
 			Log.Info(err)
 		}
