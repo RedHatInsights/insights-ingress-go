@@ -66,7 +66,7 @@ func InitLogger() *logrus.Logger {
 		if err != nil {
 			Log.Info(err)
 		} else {
-			Log.AddHook(hook)
+			Log.Hooks.Add(hook)
 		}
 	}
 
