@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"regexp"
 	"strings"
 
@@ -34,8 +33,6 @@ type IngressConfig struct {
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
 
-	Hostname, _ := os.Hostname()
-
 	options := viper.New()
 	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("Port", 3000)
@@ -54,10 +51,11 @@ func Get() *IngressConfig {
 	options.AutomaticEnv()
 	commit := viper.New()
 	commit.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
+	commit.SetDefault("Hostname", "Hostname_Unavailable")
 	commit.AutomaticEnv()
 
 	return &IngressConfig{
-		Hostname:             Hostname,
+		Hostname:             commit.GetString("Hostname"),
 		MaxSize:              options.GetInt64("MaxSize"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),
