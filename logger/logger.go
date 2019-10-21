@@ -56,6 +56,7 @@ func InitLogger() *logrus.Logger {
 		Out:       os.Stdout,
 		Level:     logLevel,
 		Formatter: formatter,
+		Hooks:     make(logrus.LevelHooks),
 	}
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
@@ -66,7 +67,7 @@ func InitLogger() *logrus.Logger {
 		if err != nil {
 			Log.Info(err)
 		} else {
-			Log.Hooks.Add(hook)
+			Log.AddHook(hook)
 		}
 	}
 
