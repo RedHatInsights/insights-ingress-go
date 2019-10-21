@@ -49,13 +49,13 @@ func Get() *IngressConfig {
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
-	commit := viper.New()
-	commit.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
-	commit.SetDefault("Hostname", "Hostname_Unavailable")
-	commit.AutomaticEnv()
+	kubenv := viper.New()
+	kubenv.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
+	kubenv.SetDefault("Hostname", "Hostname_Unavailable")
+	kubenv.AutomaticEnv()
 
 	return &IngressConfig{
-		Hostname:             commit.GetString("Hostname"),
+		Hostname:             kubenv.GetString("Hostname"),
 		MaxSize:              options.GetInt64("MaxSize"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),
@@ -67,7 +67,7 @@ func Get() *IngressConfig {
 		Profile:              options.GetBool("Profile"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
-		OpenshiftBuildCommit: commit.GetString("Openshift_Build_Commit"),
+		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
 		InventoryURL:         options.GetString("InventoryURL"),
 		MinioDev:             options.GetBool("MinioDev"),
