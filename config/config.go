@@ -9,6 +9,7 @@ import (
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
+	Hostname             string
 	MaxSize              int64
 	StageBucket          string
 	Auth                 bool
@@ -31,6 +32,7 @@ type IngressConfig struct {
 
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
+
 	options := viper.New()
 	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("Port", 3000)
@@ -47,11 +49,13 @@ func Get() *IngressConfig {
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
-	commit := viper.New()
-	commit.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
-	commit.AutomaticEnv()
+	kubenv := viper.New()
+	kubenv.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
+	kubenv.SetDefault("Hostname", "Hostname_Unavailable")
+	kubenv.AutomaticEnv()
 
 	return &IngressConfig{
+		Hostname:             kubenv.GetString("Hostname"),
 		MaxSize:              options.GetInt64("MaxSize"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),
@@ -63,7 +67,7 @@ func Get() *IngressConfig {
 		Profile:              options.GetBool("Profile"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
-		OpenshiftBuildCommit: commit.GetString("Openshift_Build_Commit"),
+		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
 		InventoryURL:         options.GetString("InventoryURL"),
 		MinioDev:             options.GetBool("MinioDev"),
