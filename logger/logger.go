@@ -49,15 +49,6 @@ func InitLogger() *logrus.Logger {
 		Type: "ingress",
 	}
 
-	//formatter := &logrus.JSONFormatter{
-	//	FieldMap: logrus.FieldMap{
-	//		logrus.FieldKeyTime:  "@timestamp",
-	//		logrus.FieldKeyFunc:  "caller",
-	//		logrus.FieldKeyLevel: "level",
-	//		logrus.FieldKeyMsg:   "message",
-	//	},
-	//}
-
 	Log = &logrus.Logger{
 		Out:       os.Stdout,
 		Level:     logLevel,
