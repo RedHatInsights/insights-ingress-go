@@ -77,7 +77,7 @@ func NewHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
-		requestLogger := l.Log.WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname})
+		requestLogger := l.Log.WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
 
 		logerr := func(msg string, err error) {
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
