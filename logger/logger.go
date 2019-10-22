@@ -60,7 +60,7 @@ func InitLogger() *logrus.Logger {
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 
 	if key != "" {
-		hook, err := lc.NewBatchingHook(group, stream, cfg, 30*time.Second)
+		hook, err := lc.NewBatchingHook(group, stream, cfg, 200*time.Millisecond)
 		if err != nil {
 			Log.Info(err)
 		} else {
