@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	logrustash "github.com/bshuster-repo/logrus-logstash-hook"
 	lc "github.com/kdar/logrus-cloudwatchlogs"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -44,14 +45,18 @@ func InitLogger() *logrus.Logger {
 		logLevel = logrus.FatalLevel
 	}
 
-	formatter := &logrus.JSONFormatter{
-		FieldMap: logrus.FieldMap{
-			logrus.FieldKeyTime:  "@timestamp",
-			logrus.FieldKeyFunc:  "caller",
-			logrus.FieldKeyLevel: "level",
-			logrus.FieldKeyMsg:   "message",
-		},
+	formatter := &logrustash.LogstashFormatter{
+		Type: "ingress",
 	}
+
+	//formatter := &logrus.JSONFormatter{
+	//	FieldMap: logrus.FieldMap{
+	//		logrus.FieldKeyTime:  "@timestamp",
+	//		logrus.FieldKeyFunc:  "caller",
+	//		logrus.FieldKeyLevel: "level",
+	//		logrus.FieldKeyMsg:   "message",
+	//	},
+	//}
 
 	Log = &logrus.Logger{
 		Out:       os.Stdout,

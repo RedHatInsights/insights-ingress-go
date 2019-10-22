@@ -3,6 +3,7 @@ module github.com/redhatinsights/insights-ingress-go
 require (
 	github.com/RedHatInsights/platform-go-middlewares v0.3.0 // indirect
 	github.com/aws/aws-sdk-go v1.19.29
+	github.com/bshuster-repo/logrus-logstash-hook v0.4.1
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
