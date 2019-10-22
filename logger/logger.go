@@ -3,6 +3,7 @@ package logger
 import (
 	"flag"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -63,7 +64,7 @@ func InitLogger() *logrus.Logger {
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 
 	if key != "" {
-		hook, err := lc.NewHook(group, stream, cfg)
+		hook, err := lc.NewBatchingHook(group, stream, cfg, 30*time.Second)
 		if err != nil {
 			Log.Info(err)
 		} else {
