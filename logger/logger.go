@@ -45,15 +45,14 @@ func InitLogger() *logrus.Logger {
 		logLevel = logrus.FatalLevel
 	}
 
-	formatter := &logrustash.LogstashFormatter{
-		Type: "ingress",
-	}
+	Log = logrus.New()
 
 	Log = &logrus.Logger{
-		Out:       os.Stdout,
-		Level:     logLevel,
-		Formatter: formatter,
-		Hooks:     make(logrus.LevelHooks),
+		Out:          os.Stdout,
+		Level:        logLevel,
+		Formatter:    &logrustash.LogstashFormatter{},
+		Hooks:        make(logrus.LevelHooks),
+		ReportCaller: true,
 	}
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
