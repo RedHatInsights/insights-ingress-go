@@ -45,8 +45,6 @@ func InitLogger() *logrus.Logger {
 		logLevel = logrus.FatalLevel
 	}
 
-	Log = logrus.New()
-
 	Log = &logrus.Logger{
 		Out:          os.Stdout,
 		Level:        logLevel,
