@@ -44,10 +44,12 @@ func InitLogger() *logrus.Logger {
 		logLevel = logrus.FatalLevel
 	}
 
+	formatter := lc.NewProdFormatter(lc.AppName("ingress"))
+
 	Log = &logrus.Logger{
 		Out:          os.Stdout,
 		Level:        logLevel,
-		Formatter:    lc.NewProdFormatter(),
+		Formatter:    formatter,
 		Hooks:        make(logrus.LevelHooks),
 		ReportCaller: true,
 	}
