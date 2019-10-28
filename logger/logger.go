@@ -44,12 +44,13 @@ func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 	}
 
 	data := map[string]interface{}{
-		"@timestamp": now.Format("2006-01-02T15:04:05.999Z"),
-		"message":    entry.Message,
-		"level":      entry.Level.String(),
-		"host":       f.Hostname,
-		"app":        "ingress",
-		"caller":     entry.Caller.Func.Name(),
+		"@timestamp":  now.Format("2006-01-02T15:04:05.999Z"),
+		"@version":    1,
+		"message":     entry.Message,
+		"levelname":   entry.Level.String(),
+		"source_host": f.Hostname,
+		"app":         "ingress",
+		"caller":      entry.Caller.Func.Name(),
 	}
 
 	j, err := json.Marshal(data)
