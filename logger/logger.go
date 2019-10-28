@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"os"
 	"time"
@@ -15,6 +17,50 @@ import (
 // Log is an instance of the global logrus.Logger
 var Log *logrus.Logger
 var logLevel logrus.Level
+
+// NewCloudwatchFormatter creates a new log formatter
+func NewCloudwatchFormatter() *CustomCloudwatch {
+	f := &CustomCloudwatch{}
+
+	var err error
+	if f.Hostname == "" {
+		if f.Hostname, err = os.Hostname(); err != nil {
+			f.Hostname = "unknown"
+		}
+	}
+
+	return f
+}
+
+//Format is the log formatter for the entry
+func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	now := time.Now()
+
+	hostname, err := os.Hostname()
+	if err == nil {
+		f.Hostname = hostname
+	}
+
+	data := map[string]interface{}{
+		"@timestamp": now.Unix(),
+		"message":    entry.Message,
+		"level":      entry.Level.String(),
+		"host":       f.Hostname,
+		"app":        "ingress",
+		"caller":     entry.Caller.Func.Name(),
+	}
+
+	j, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	b.Write(j)
+
+	return b.Bytes(), nil
+}
 
 // InitLogger initializes the Entitlements API logger
 func InitLogger() *logrus.Logger {
@@ -44,7 +90,7 @@ func InitLogger() *logrus.Logger {
 		logLevel = logrus.FatalLevel
 	}
 
-	formatter := lc.NewProdFormatter(lc.AppName("ingress"))
+	formatter := NewCloudwatchFormatter()
 
 	Log = &logrus.Logger{
 		Out:          os.Stdout,
