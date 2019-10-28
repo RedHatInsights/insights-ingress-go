@@ -44,7 +44,7 @@ func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 	}
 
 	data := map[string]interface{}{
-		"@timestamp": now.Unix(),
+		"@timestamp": now.Format("2019-10-28T17:50:37.845421"),
 		"message":    entry.Message,
 		"level":      entry.Level.String(),
 		"host":       f.Hostname,
