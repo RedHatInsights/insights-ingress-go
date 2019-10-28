@@ -53,6 +53,17 @@ func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 		"caller":      entry.Caller.Func.Name(),
 	}
 
+	for k, v := range entry.Data {
+		switch v := v.(type) {
+		case error:
+			data[k] = v.Error()
+		case Marshaler:
+			data[k] = v.MarshalLog()
+		default:
+			data[k] = v
+		}
+	}
+
 	j, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
