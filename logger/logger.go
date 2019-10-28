@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -94,7 +95,7 @@ func InitLogger() *logrus.Logger {
 	formatter := NewCloudwatchFormatter()
 
 	Log = &logrus.Logger{
-		Out:          os.Stdout,
+		Out:          ioutil.Discard,
 		Level:        logLevel,
 		Formatter:    formatter,
 		Hooks:        make(logrus.LevelHooks),
@@ -105,7 +106,7 @@ func InitLogger() *logrus.Logger {
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 
 	if key != "" {
-		hook, err := lc.NewBatchingHook(group, stream, cfg, 200*time.Millisecond)
+		hook, err := lc.NewBatchingHook(group, stream, cfg, 10*time.Second)
 		if err != nil {
 			Log.Info(err)
 		} else {
