@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
+	github.com/kdar/gtest v0.0.0-20171003232747-b20da4453579 // indirect
 	github.com/kdar/logrus-cloudwatchlogs v0.0.0-20190402042352-9a67b2f09ba3
 	github.com/minio/minio-go/v6 v6.0.33
 	github.com/onsi/ginkgo v1.8.0
