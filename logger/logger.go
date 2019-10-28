@@ -104,13 +104,12 @@ func InitLogger() *logrus.Logger {
 
 	formatter := NewCloudwatchFormatter()
 
-	Log = &logrus.Logger{
-		Out:          os.Stdout,
-		Level:        logLevel,
-		Formatter:    formatter,
-		Hooks:        make(logrus.LevelHooks),
-		ReportCaller: true,
-	}
+	Log = logrus.New()
+
+	Log.Out = os.Stdout
+	Log.Level = logLevel
+	Log.Formatter = formatter
+	Log.ReportCaller = true
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
