@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -95,7 +94,7 @@ func InitLogger() *logrus.Logger {
 	formatter := NewCloudwatchFormatter()
 
 	Log = &logrus.Logger{
-		Out:          ioutil.Discard,
+		Out:          os.Stdout,
 		Level:        logLevel,
 		Formatter:    formatter,
 		Hooks:        make(logrus.LevelHooks),
@@ -110,7 +109,7 @@ func InitLogger() *logrus.Logger {
 		if err != nil {
 			Log.Info(err)
 		} else {
-			Log.AddHook(hook)
+			Log.Hooks.Add(hook)
 		}
 	}
 
