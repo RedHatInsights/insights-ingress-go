@@ -82,6 +82,8 @@ func InitLogger() *logrus.Logger {
 	logconfig.SetDefault("LOG_GROUP", "platform-dev")
 	logconfig.SetDefault("LOG_STREAM", "platform")
 	logconfig.SetDefault("AWS_REGION", "us-east-1")
+	logconfig.SetDefault("CW_AWS_ACCESS_KEY_ID", "somekey")
+	logconfig.SetDefault("CW_AWS_SECRET_ACCESS_KEY", "somesecret")
 	logconfig.SetEnvPrefix("INGRESS")
 	logconfig.AutomaticEnv()
 	key := logconfig.GetString("CW_AWS_ACCESS_KEY_ID")
@@ -114,14 +116,11 @@ func InitLogger() *logrus.Logger {
 	cred := credentials.NewStaticCredentials(key, secret, "")
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 
-	if key != "" {
-		hook, err := lc.NewBatchingHook(group, stream, cfg, 10*time.Second)
-		if err != nil {
-			Log.Info(err)
-		} else {
-			Log.Hooks.Add(hook)
-		}
+	hook, err := lc.NewBatchingHook(group, stream, cfg, 10*time.Second)
+	if err != nil {
+		Log.Info(err)
 	}
+	Log.Hooks.Add(hook)
 
 	return Log
 }
