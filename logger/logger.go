@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	lc "github.com/kdar/logrus-cloudwatchlogs"
+	lc "github.com/redhatinsights/insights-ingress-go/cloudwatch-logs"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
