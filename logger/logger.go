@@ -108,7 +108,7 @@ func InitLogger() *logrus.Logger {
 
 	Log = logrus.New()
 
-	Log.Out = os.Stderr
+	Log.Out = os.Stdout
 	Log.Level = logLevel
 	Log.Formatter = formatter
 	Log.ReportCaller = true
