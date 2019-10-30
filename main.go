@@ -35,7 +35,7 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiSpec(w http.ResponseWriter, r *http.Request) {
-	file, err := ioutil.ReadFile("/tmp/src/openapi.yaml")
+	file, err := ioutil.ReadFile("/tmp/src/openapi.json")
 	if err != nil {
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("Unable to print API spec")
 	}
@@ -94,7 +94,7 @@ func main() {
 		sub.With(upload.ResponseMetricsMiddleware, middleware.Logger).Post("/upload", handler)
 	}
 	sub.With(middleware.Logger).Get("/version", version.GetVersion)
-	sub.With(middleware.Logger).Get("/openapi.yaml", apiSpec)
+	sub.With(middleware.Logger).Get("/openapi.json", apiSpec)
 
 	r.Mount("/api/ingress/v1", sub)
 	r.Mount("/r/insights/platform/ingress/v1", sub)
