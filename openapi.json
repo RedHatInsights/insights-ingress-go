@@ -1,0 +1,162 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Ingress",
+    "description": "Payload Ingress Service",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://cloud.redhat.com/api/ingress/v1",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/upload": {
+      "post": {
+        "summary": "Accepts a payload",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Payload was accepted for processing."
+          },
+          "401": {
+            "description": "Authentication missing from request"
+          },
+          "413": {
+            "description": "Payload too large"
+          },
+          "415": {
+            "description": "Content type of payload is unsupported."
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "summary": "Returns version information",
+        "responses": {
+          "200": {
+            "description": "Version information"
+          },
+          "401": {
+            "description": "Authentication missing from request"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ValidationRequest": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "principal": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "id": {
+            "type": "string"
+          },
+          "b64_identity": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ValidationResponse": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "principal": {
+            "type": "string"
+          },
+          "b64_identity": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validation": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure"
+            ]
+          },
+          "extras": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "satellite_managed": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
