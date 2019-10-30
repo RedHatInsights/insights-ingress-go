@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	lc "github.com/redhatinsights/insights-ingress-go/cloudwatch-logs"
+	"github.com/redhatinsights/insights-ingress-go/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -77,10 +78,10 @@ func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 // InitLogger initializes the Entitlements API logger
 func InitLogger() *logrus.Logger {
 
+	cfg := config.Get()
 	logconfig := viper.New()
 	logconfig.SetDefault("LOG_LEVEL", "INFO")
 	logconfig.SetDefault("LOG_GROUP", "platform-dev")
-	logconfig.SetDefault("LOG_STREAM", "platform")
 	logconfig.SetDefault("AWS_REGION", "us-east-1")
 	logconfig.SetEnvPrefix("INGRESS")
 	logconfig.AutomaticEnv()
@@ -88,7 +89,7 @@ func InitLogger() *logrus.Logger {
 	secret := logconfig.GetString("CW_AWS_SECRET_ACCESS_KEY")
 	region := logconfig.GetString("AWS_REGION")
 	group := logconfig.GetString("LOG_GROUP")
-	stream := logconfig.GetString("LOG_STREAM")
+	stream := cfg.Hostname
 
 	switch logconfig.GetString("LOG_LEVEL") {
 	case "DEBUG":
@@ -104,18 +105,19 @@ func InitLogger() *logrus.Logger {
 
 	formatter := NewCloudwatchFormatter()
 
-	Log = logrus.New()
-
-	Log.Out = os.Stdout
-	Log.Level = logLevel
-	Log.Formatter = formatter
-	Log.ReportCaller = true
+	Log = &logrus.Logger{
+		Out:          os.Stdout,
+		Level:        logLevel,
+		Formatter:    formatter,
+		Hooks:        make(logrus.LevelHooks),
+		ReportCaller: true,
+	}
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
-	cfg := aws.NewConfig().WithRegion(region).WithCredentials(cred)
+	awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 
 	if key != "" {
-		hook, err := lc.NewBatchingHook(group, stream, cfg, 10*time.Second)
+		hook, err := lc.NewBatchingHook(group, stream, awsconf, 10*time.Second)
 		if err != nil {
 			Log.Info(err)
 		}
