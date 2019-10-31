@@ -87,6 +87,9 @@ github.com/redhatinsights/platform-go-middlewares v0.3.0/go.mod h1:rRCteJQClf/CP
 github.com/redhatinsights/platform-go-middlewares v0.4.0 h1:mKF14PPeLpaSGgz17SVOsqgI9TWAUyMR4LDspDmF8Tk=
 github.com/redhatinsights/platform-go-middlewares v0.4.0/go.mod h1:4CdH83sXYBKiIvtw5diluLRyHGTOEX15sEWyPj/qGBA=
 github.com/redhatinsights/platform-go-middlewares v0.5.0 h1:HduzvwQWTCC9oL3txZZ2VNqXZ/qKunVR2GoRQyL2MWg=
+github.com/redhatinsights/platform-go-middlewares v0.6.0 h1:/bcsCKR0cKi/M18QdgKz31Jp0hOPDqMFuqYZ34wl4Ko=
+github.com/redhatinsights/platform-go-middlewares v0.7.0 h1:1prVr6XxYHSKThfblJr3kaLecD/6s4xaQ9zZ+BKhHJM=
+github.com/redhatinsights/platform-go-middlewares v0.7.0/go.mod h1:g//UN9p5sxgIoZfRyyiRy+rAw1/GMqkZ4hWUFcEC71A=
 github.com/segmentio/kafka-go v0.2.4 h1:gib3gdWC+PnrR16gYQ+nf1H1ilXGw6IXLVESRXa9qes=
 github.com/segmentio/kafka-go v0.2.4/go.mod h1:MyX8oKJCSypBXY66FgANfFbqN8aFXAGoLlnR3eKCzoU=
 github.com/sirupsen/logrus v1.4.2 h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4=
