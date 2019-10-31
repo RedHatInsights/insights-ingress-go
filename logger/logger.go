@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	lc "github.com/redhatinsights/insights-ingress-go/cloudwatch-logs"
 	"github.com/redhatinsights/insights-ingress-go/config"
+	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -83,13 +83,14 @@ func InitLogger() *logrus.Logger {
 	logconfig.SetDefault("LOG_LEVEL", "INFO")
 	logconfig.SetDefault("LOG_GROUP", "platform-dev")
 	logconfig.SetDefault("AWS_REGION", "us-east-1")
+	logconfig.SetDefault("LOG_STREAM", cfg.Hostname)
 	logconfig.SetEnvPrefix("INGRESS")
 	logconfig.AutomaticEnv()
 	key := logconfig.GetString("CW_AWS_ACCESS_KEY_ID")
 	secret := logconfig.GetString("CW_AWS_SECRET_ACCESS_KEY")
 	region := logconfig.GetString("AWS_REGION")
 	group := logconfig.GetString("LOG_GROUP")
-	stream := cfg.Hostname
+	stream := logconfig.GetString("LOG_STREAM")
 
 	switch logconfig.GetString("LOG_LEVEL") {
 	case "DEBUG":
