@@ -114,10 +114,9 @@ func InitLogger() *logrus.Logger {
 		ReportCaller: true,
 	}
 
-	cred := credentials.NewStaticCredentials(key, secret, "")
-	awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
-
 	if key != "" {
+		cred := credentials.NewStaticCredentials(key, secret, "")
+		awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 		hook, err := lc.NewBatchingHook(group, stream, awsconf, 10*time.Second)
 		if err != nil {
 			Log.Info(err)
