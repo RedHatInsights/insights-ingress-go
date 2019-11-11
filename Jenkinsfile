@@ -10,9 +10,7 @@ pipeline {
       steps {
         sh 'export GO111MODULE="on"'
         sh 'export GOPATH=/var/gopath'
-        sh 'go test ./...'
         sh 'go version'
-        sh 'go get -t -v ./...'
         sh 'go test -v -race -covermode=atomic ./...'
       }
     }    
