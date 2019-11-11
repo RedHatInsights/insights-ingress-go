@@ -54,7 +54,7 @@ services:
       - INGRESS_STAGEBUCKET=insights-upload-perma
       - INGRESS_REJECTBUCKET=insights-upload-rejected
       - INGRESS_INVENTORYURL=http://inventory:8080/api/inventory/v1/hosts
-      - INGRESS_VALIDTOPICS=testareno,advisor #if you test a different topic, add it here
+      - INGRESS_VALIDTOPICS=$INGRESS_VALID_TOPICS
       - OPENSHIFT_BUILD_COMMIT=woopwoop
       - INGRESS_MINIODEV=true
       - INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY
