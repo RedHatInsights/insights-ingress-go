@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 // Fake is a fake announcer
@@ -20,7 +20,7 @@ type Fake struct {
 func (f *Fake) Status(e *Status) {
 	f.StatusCalledV = true
 	f.StatusEvent = e
-	l.Log.Info("Announce called for Status", zap.String("request_id", e.RequestID))
+	l.Log.WithFields(logrus.Fields{"request_id": e.RequestID}).Info("Announce called for Status")
 }
 
 // Stop does nothing

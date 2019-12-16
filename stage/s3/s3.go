@@ -30,6 +30,11 @@ func (s *Stager) Stage(in *stage.Input) (string, error) {
 		Bucket: aws.String(s.Bucket),
 		Key:    aws.String(in.Key),
 		Body:   in.Payload,
+		Metadata: map[string]*string{
+			"requestID": aws.String(in.Key),
+			"account":   aws.String(in.Account),
+			"org":       aws.String(in.OrgId),
+		},
 	})
 	if err != nil {
 		return "", errors.New("Failed to upload to s3: " + err.Error())

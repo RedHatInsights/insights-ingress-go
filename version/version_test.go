@@ -1,6 +1,9 @@
 package version_test
 
 import (
+	"fmt"
+
+	"github.com/redhatinsights/insights-ingress-go/config"
 	"github.com/redhatinsights/insights-ingress-go/version"
 
 	"net/http"
@@ -20,13 +23,19 @@ func GetServer() (*httptest.ResponseRecorder, *http.Request) {
 
 var _ = Describe("Version", func() {
 
+	cfg := config.Get()
+	ver := cfg.Version
+	commit := cfg.OpenshiftBuildCommit
+
+	bodyString := fmt.Sprintf(`{"version":"%s","commit":"%s"}`, ver, commit)
+
 	Describe("GET from the version endpoint", func() {
 		It("should return a json doc containg version", func() {
 			rr, req := GetServer()
 			handler := http.HandlerFunc(version.GetVersion)
 			handler.ServeHTTP(rr, req)
 			Expect(rr.Code).To(Equal(http.StatusOK))
-			Expect(rr.Body.String()).To(Equal(`{"version":"1.0.8","commit":"notrunninginopenshift"}`))
+			Expect(rr.Body.String()).To(Equal(bodyString))
 		})
 	})
 })

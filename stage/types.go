@@ -6,6 +6,8 @@ import "io"
 type Input struct {
 	Payload io.ReadCloser
 	Key     string
+	Account string
+	OrgId   string
 }
 
 // Close closes the underlying ReadCloser as long as it isn't nil
