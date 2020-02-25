@@ -37,6 +37,7 @@ type HTTP struct {
 // FormatPost returns data in the format that Inventory accepts
 func FormatPost(metadata validators.Metadata, account string) ([]byte, error) {
 	metadata.Account = account
+	metadata.Reporter = "ingress"
 	return json.Marshal([]validators.Metadata{metadata})
 }
 

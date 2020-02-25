@@ -29,6 +29,7 @@ type Metadata struct {
 	MacAddresses []string `json:"mac_addresses,omitempty"`
 	FQDN         string   `json:"fqdn,omitempty"`
 	BiosUUID     string   `json:"bios_uuid,omitempty"`
+	Reporter     string   `json:"reporter"`
 }
 
 // ServiceDescriptor is used to select a message topic
