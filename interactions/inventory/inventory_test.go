@@ -23,7 +23,8 @@ var _ = Describe("Inventory", func() {
 		"subscription_manager_id": "boopboop",
 		"machine_id": "1awekljf234b24bn",
 		"account": "000001",
-		"reporter": "ingress"}`
+		"reporter": "ingress",
+		"stale_timestamp": "2020-02-20T18:33:44.638757+00:00"}`
 
 		invalidJSON string = `{"ip_addresses": ["127.0.0.1"],
 		"fqdn": "localhost.localdomain",
@@ -166,7 +167,7 @@ var _ = Describe("Inventory", func() {
 			Expect(m[0].Account).To(Equal("000001"))
 			Expect(m[0].IPAddresses).To(ContainElement("127.0.0.1"))
 			Expect(m[0].Reporter).To(Equal("ingress"))
-
+			Expect(m[0].StaleTimestamp.IsZero()).To(Equal(false))
 		})
 	})
 })
