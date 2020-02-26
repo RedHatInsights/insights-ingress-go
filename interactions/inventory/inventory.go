@@ -38,9 +38,7 @@ type HTTP struct {
 func FormatPost(metadata validators.Metadata, account string) ([]byte, error) {
 	metadata.Account = account
 	metadata.Reporter = "ingress"
-	if metadata.StaleTimestamp.IsZero() {
-		metadata.StaleTimestamp = time.Now().AddDate(0, 0, 30)
-	}
+	metadata.StaleTimestamp = time.Now().AddDate(0, 0, 30)
 	return json.Marshal([]validators.Metadata{metadata})
 }
 
