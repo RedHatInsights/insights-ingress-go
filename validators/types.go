@@ -21,14 +21,16 @@ type Request struct {
 
 // Metadata is the expected data from a client
 type Metadata struct {
-	IPAddresses  []string `json:"ip_addresses,omitempty"`
-	Account      string   `json:"account,omitempty"`
-	InsightsID   string   `json:"insights_id,omitempty"`
-	MachineID    string   `json:"machine_id,omitempty"`
-	SubManID     string   `json:"subscription_manager_id,omitempty"`
-	MacAddresses []string `json:"mac_addresses,omitempty"`
-	FQDN         string   `json:"fqdn,omitempty"`
-	BiosUUID     string   `json:"bios_uuid,omitempty"`
+	IPAddresses    []string  `json:"ip_addresses,omitempty"`
+	Account        string    `json:"account,omitempty"`
+	InsightsID     string    `json:"insights_id,omitempty"`
+	MachineID      string    `json:"machine_id,omitempty"`
+	SubManID       string    `json:"subscription_manager_id,omitempty"`
+	MacAddresses   []string  `json:"mac_addresses,omitempty"`
+	FQDN           string    `json:"fqdn,omitempty"`
+	BiosUUID       string    `json:"bios_uuid,omitempty"`
+	Reporter       string    `json:"reporter"`
+	StaleTimestamp time.Time `json:"stale_timestamp"`
 }
 
 // ServiceDescriptor is used to select a message topic
