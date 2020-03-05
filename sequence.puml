@@ -3,7 +3,6 @@ participant client
 participant 3scale
 participant ingress
 entity platform.upload.servicename
-participant hbi
 database s3permanent
 client->3scale: insights-client payload
 3scale->ingress: insights-client payload
@@ -15,12 +14,6 @@ else check success
 end
 3scale->client: HTTP response
 ingress-[#blue]>s3permanent: upload payload to s3
-alt if metadata included
-    ingress-[#purple]>hbi: POST data: [{"facts": {"facts": {some_facts}}}]
-    hbi-[#purple]>ingress: Response from HBI
-    Note left of hbi: Response: {"total": 1,\n"errors": 0,\n"data": [{"status": 0,\n"host": <host_json with facts, insights_id, id, etc.>}]}
-    Note left of hbi: See HBI api.spec for more details
-end
 ingress->platform.upload.servicename: msg to validating service
-Note right of ingress: {"request_id": "abcd1234",\n"account": "00001",\n"principal": "123456",\n"b64_identity": "base64_identity_string",\n"service": "validating service",\n"category": "file category",\n"url": "s3_url",\n"size": "1234",\n"timestamp": "ISO Time",\n"id": "inv id if available",\n"metadata": {}}
+Note right of ingress: {"account": "000001",\n"category": "foo",\n"metadata": {},\n"request_id": "b234kfbnsvldkdf",\n"principal": "org_id",\n"service": "service_name",\n"size": 2048,\n"url": "some_s3_url",\n"b64_identity": "base64_identity_string",\n"timestamp": "2020-03-05T16:57:25.816427745Z"}
 @enduml
