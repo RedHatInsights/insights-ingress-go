@@ -22,6 +22,16 @@ var _ = Describe("Inventory", func() {
 		"insights_id": "1awekljf234b24bn",
 		"subscription_manager_id": "boopboop",
 		"machine_id": "1awekljf234b24bn",
+		"account": "000001",
+		"reporter": "ingress",
+		"stale_timestamp": "2020-02-20T18:33:44.638757+00:00"}`
+
+		invalidJSON string = `{"ip_addresses": ["127.0.0.1"],
+		"fqdn": "localhost.localdomain",
+		"mac_addresses": ["1234-5678-abcd-efgh"],
+		"insights_id": "1awekljf234b24bn",
+		"subscription_manager_id": "boopboop",
+		"machine_id": "1awekljf234b24bn",
 		"account": "000001"}`
 
 		badJSON string = `notatallajsondoc`
@@ -60,6 +70,19 @@ var _ = Describe("Inventory", func() {
 			id, err := h.GetID(validators.Metadata{}, "", "")
 			Expect(id).To(Equal(""))
 			Expect(err.Error()).To(Equal(invBadResponse + "\n"))
+		})
+
+		It("should fail on missing required fields", func() {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintln(w, `{"error": "missing required fields: reporter, stale_timestamp"}`)
+			}))
+			defer ts.Close()
+			h := &i.HTTP{Endpoint: ts.URL}
+			id, err := h.GetID(validators.Metadata{}, "", "")
+			Expect(id).To(Equal(""))
+			Expect(err.Error()).To(Equal(`{"error": "missing required fields: reporter, stale_timestamp"}` + "\n"))
 		})
 	})
 
@@ -102,6 +125,25 @@ var _ = Describe("Inventory", func() {
 			Expect(id).To(Equal(""))
 			Expect(err).ToNot(BeNil())
 		})
+
+		It("should fail on missing required fields", func() {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintln(w, `{"error": "missing required fields: reporter, stale_timestamp"}`)
+			}))
+			defer ts.Close()
+
+			jd := []byte(invalidJSON)
+			res, err := i.Post("12345", jd, ts.URL)
+			Expect(err).To(BeNil())
+			Expect(res.StatusCode).To(Equal(http.StatusBadRequest))
+			Expect(res.Header.Get("Content-Type")).To(Equal("application/json"))
+
+			id, err := i.ParseResponse(res)
+			Expect(id).To(Equal(""))
+			Expect(err).ToNot(BeNil())
+		})
 	})
 
 	Describe("Creating a post", func() {
@@ -124,7 +166,8 @@ var _ = Describe("Inventory", func() {
 			Expect(err).To(BeNil())
 			Expect(m[0].Account).To(Equal("000001"))
 			Expect(m[0].IPAddresses).To(ContainElement("127.0.0.1"))
-
+			Expect(m[0].Reporter).To(Equal("ingress"))
+			Expect(m[0].StaleTimestamp.IsZero()).To(Equal(false))
 		})
 	})
 })
