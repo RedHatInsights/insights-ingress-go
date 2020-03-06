@@ -100,10 +100,15 @@ func NewHandler(
 			logerr("Invalid upload payload", err)
 			return
 		}
-		observeSize(userAgent, fileHeader.Size)
+		contentType := fileHeader.Header.Get("Content-Type")
+		size := fileHeader.Size
 
-		requestLogger.WithFields(logrus.Fields{"ContentType": fileHeader.Header.Get("Content-Type")}).Debug("ContentType received from client")
-		serviceDescriptor, validationErr := getServiceDescriptor(fileHeader.Header.Get("Content-Type"))
+		observeSize(userAgent, size)
+
+		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size})
+
+		requestLogger.Debug("ContentType received from client")
+		serviceDescriptor, validationErr := getServiceDescriptor(contentType)
 		if validationErr != nil {
 			logerr("Unable to validate", validationErr)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
@@ -111,7 +116,7 @@ func NewHandler(
 		}
 
 		if fileHeader.Size > cfg.MaxSize {
-			requestLogger.WithFields(logrus.Fields{"size": fileHeader.Size}).Info("File exceeds maximum file size for upload")
+			requestLogger.Info("File exceeds maximum file size for upload")
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			return
 		}
@@ -136,6 +141,7 @@ func NewHandler(
 			id := identity.Get(r.Context())
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.Internal.OrgID
+			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.Principal})
 		}
 
 		md, err := GetMetadata(r)
