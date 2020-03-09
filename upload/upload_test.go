@@ -307,4 +307,22 @@ var _ = Describe("NormalizeUserAgent", func() {
 			Expect(NormalizeUserAgent("curl/7.3.1")).To(Equal("curl/7.3.1"))
 		})
 	})
+
+	Describe("when passed an insights-client agent with Core", func() {
+		It("should return the client and core version should be returned", func() {
+			Expect(NormalizeUserAgent("Foreman/1.22.2;redhat_access/2.2.5;insights-client/3.0.6 (Core 3.0.150; requests 2.6.0) Red Hat Enterprise Linux Server 7.7 (CPython 2.7.5; Linux 3.10.0-1062.9.1.el7.x86_64)")).To(Equal("insights-client/3.0.6 Core 3.0.150"))
+		})
+	})
+
+	Describe("when passed an insights-client agent without Core", func() {
+		It("should return the client version only", func() {
+			Expect(NormalizeUserAgent("Satellite/6.6.2;redhat_access/2.2.8;insights-client/3.0.121")).To(Equal("insights-client/3.0.121"))
+		})
+	})
+
+	Describe("when passed redhat-access-insights agents", func() {
+		It("should return the client version only", func() {
+			Expect(NormalizeUserAgent("Satellite/6.6.2;redhat_access/2.2.8;redhat-access-insights/1.0.13")).To(Equal("redhat-access-insights/1.0.13"))
+		})
+	})
 })
