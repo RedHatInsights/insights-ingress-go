@@ -1,7 +1,9 @@
 package upload
 
 import (
+	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +38,10 @@ var (
 		Name: "ingress_responses",
 		Help: "Count of response codes by code and user-agent",
 	}, []string{"useragent", "code"})
+
+	insightsClientCoreRE = regexp.MustCompile(`(insights-client/[0-9.]+) \((Core [0-9.]+)`)
+	insightsClientBareRE = regexp.MustCompile(`insights-client/[0-9.]+`)
+	accessInsightsRE     = regexp.MustCompile(`redhat-access-insights/[0-9.]+`)
 )
 
 func incRequests(userAgent string) {
@@ -55,6 +61,28 @@ func NormalizeUserAgent(userAgent string) string {
 	if strings.Contains(userAgent, "-operator") {
 		return strings.Fields(userAgent)[0]
 	}
+
+	if strings.Contains(userAgent, "Core") {
+		submatches := insightsClientCoreRE.FindStringSubmatch(userAgent)
+		if submatches != nil {
+			return fmt.Sprintf("%s %s", submatches[1], submatches[2])
+		}
+	}
+
+	if strings.Contains(userAgent, "insights-client") {
+		m := insightsClientBareRE.FindString(userAgent)
+		if m != "" {
+			return m
+		}
+	}
+
+	if strings.Contains(userAgent, "redhat-access-insights") {
+		m := accessInsightsRE.FindString(userAgent)
+		if m != "" {
+			return m
+		}
+	}
+
 	return userAgent
 }
 
