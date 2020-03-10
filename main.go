@@ -123,6 +123,9 @@ func main() {
 		close(idleConnsClosed)
 	}()
 
+	// create and expose the version information as a prometheus metric
+	version.ExposeVersion()
+
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Service Stopped")
 	}
