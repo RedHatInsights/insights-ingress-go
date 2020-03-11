@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/textproto"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -27,6 +28,10 @@ type FilePart struct {
 	Name        string
 	Content     string
 	ContentType string
+}
+
+func setTime() time.Time {
+	return time.Now()
 }
 
 func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error) {
@@ -83,6 +88,7 @@ var _ = Describe("Upload", func() {
 		validator *validators.Fake
 		handler   http.Handler
 		rr        *httptest.ResponseRecorder
+		timeNow   time.Time
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
@@ -101,6 +107,7 @@ var _ = Describe("Upload", func() {
 
 		rr = httptest.NewRecorder()
 		handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
+		timeNow = setTime()
 	})
 
 	Describe("Posting a file to /upload", func() {
@@ -130,8 +137,9 @@ var _ = Describe("Upload", func() {
 				in := stager.Input
 				Expect(in).To(Not(BeNil()))
 				vin := validator.In
+				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress"}))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", StaleTimestamp: timeNow}))
 				Expect(vin.ID).To(Equal("1234-abcd-5678-efgh"))
 			})
 		})
@@ -155,8 +163,9 @@ var _ = Describe("Upload", func() {
 				in := stager.Input
 				Expect(in).To(Not(BeNil()))
 				vin := validator.In
+				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress"}))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", StaleTimestamp: timeNow}))
 				Expect(vin.ID).To(Equal(""))
 			})
 		})
