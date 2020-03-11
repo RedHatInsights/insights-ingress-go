@@ -131,7 +131,7 @@ var _ = Describe("Upload", func() {
 				Expect(in).To(Not(BeNil()))
 				vin := validator.In
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345"}))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress"}))
 				Expect(vin.ID).To(Equal("1234-abcd-5678-efgh"))
 			})
 		})
@@ -156,7 +156,7 @@ var _ = Describe("Upload", func() {
 				Expect(in).To(Not(BeNil()))
 				vin := validator.In
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345"}))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress"}))
 				Expect(vin.ID).To(Equal(""))
 			})
 		})
