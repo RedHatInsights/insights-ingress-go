@@ -64,6 +64,8 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 	if err = json.Unmarshal(part, &md); err != nil {
 		return nil, err
 	}
+	md.Reporter = "ingress"
+	md.StaleTimestamp = time.Now().AddDate(0, 0, 30)
 	return &md, nil
 }
 
