@@ -1,0 +1,181 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: upload-service
+objects:
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    labels:
+      app: upload-service
+    name: upload-service
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: upload-service
+    strategy:
+      activeDeadlineSeconds: 21600
+      recreateParams:
+        timeoutSeconds: 600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: upload-service
+          deploymentconfig: upload-service
+      spec:
+        containers:
+        - env:
+          - name: INGRESS_LOG_LEVEL
+            value: ${LOG_LEVEL}
+          - name: INGRESS_PORT
+            value: '8080'
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws_access_key_id
+                name: upload-s3
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws_secret_access_key
+                name: upload-s3
+          - name: INGRESS_CW_AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: CW_AWS_SECRET_ACCESS_KEY
+                name: cloudwatch
+          - name: INGRESS_CW_AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: CW_AWS_ACCESS_KEY_ID
+                name: cloudwatch
+          - name: INGRESS_AWS_REGION
+            value: ${AWS_REGION}
+          - name: INGRESS_LOG_GROUP
+            value: ${CLOUD_WATCH_LOG_GROUP}
+          - name: AWS_REGION
+            value: ${AWS_REGION}
+          - name: INGRESS_STAGEBUCKET
+            value: ${INGRESS_STAGEBUCKET}
+          - name: INGRESS_REJECTBUCKET
+            value: ${INGRESS_REJECTBUCKET}
+          - name: INGRESS_KAFKABROKERS
+            value: ${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}
+          - name: INGRESS_INVENTORYURL
+            value: ${INGRESS_INVENTORYURL}
+          - name: INGRESS_VALIDTOPICS
+            value: ${INGRESS_VALIDTOPICS}
+          - name: INGRESS_MAXSIZE
+            value: ${INGRESS_MAXSIZE}
+          image: quay.io/cloudservices/insights-ingress:${IMAGE_TAG}
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 120
+          name: upload-service
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 120
+          resources:
+            limits:
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 60
+    test: false
+    triggers:
+    - type: ConfigChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    labels:
+      app: upload-service
+    name: upload-service
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      deploymentconfig: upload-service
+    sessionAffinity: None
+    type: ClusterIP
+parameters:
+- description: Name of your project (e.g. myproject)
+  name: NAMESPACE
+- description: The log group to use for cloudwatch logging
+  name: CLOUD_WATCH_LOG_GROUP
+  value: platform-dev
+- description: Name of the namespace app images are pulled from (if not buildfactory)
+  name: IMAGE_NAMESPACE
+  value: buildfactory
+- name: KAFKA_BOOTSTRAP_HOST
+  value: mq-kafka
+- name: KAFKA_BOOTSTRAP_PORT
+  value: '29092'
+- name: INGRESS_STAGEBUCKET
+  value: insights-dev-upload-perm
+- name: INGRESS_REJECTBUCKET
+  value: insights-dev-upload-rejected
+- name: INGRESS_INVENTORYURL
+  value: http://insights-inventory:8080/api/inventory/v1/hosts
+- name: INGRESS_VALIDTOPICS
+  value: advisor,advisor-pup,compliance,hccm,qpc,rhv,testareno,tower,leapp-reporting,topological-inventory,buckit,xavier,mkt
+- name: INGRESS_PORT
+  value: '8080'
+- name: INGRESS_KAFKABROKERS
+  value: mq-kafka:29092
+- name: AWS_REGION
+  value: us-east-1
+- name: INGRESS_MAXSIZE
+  value: '104857600'
+- name: LOG_LEVEL
+  value: INFO
+- description: Cpu limit of service
+  name: CPU_LIMIT
+  value: 500m
+- description: memory limit of service
+  name: MEMORY_LIMIT
+  value: 512Mi
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
