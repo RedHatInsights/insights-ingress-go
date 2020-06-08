@@ -21,6 +21,11 @@ func getServiceDescriptor(contentType string) (*validators.ServiceDescriptor, er
 			Service:  "advisor",
 			Category: "upload",
 		}, nil
+	case "application/gzip; charset=binary":
+		return &validators.ServiceDescriptor{
+			Service:  "advisor",
+			Category: "upload",
+		}, nil
 	default:
 		m := contentTypePat.FindStringSubmatch(ctype)
 		if m == nil {
