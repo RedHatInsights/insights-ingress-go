@@ -11,17 +11,7 @@ var contentTypePat = regexp.MustCompile(`application/vnd\.redhat\.([a-z0-9-]+)\.
 
 func getServiceDescriptor(contentType string) (*validators.ServiceDescriptor, error) {
 	switch ctype := contentType; ctype {
-	case "application/x-gzip; charset=binary":
-		return &validators.ServiceDescriptor{
-			Service:  "advisor",
-			Category: "upload",
-		}, nil
-	case "application/gzip":
-		return &validators.ServiceDescriptor{
-			Service:  "advisor",
-			Category: "upload",
-		}, nil
-	case "application/gzip; charset=binary":
+	case "application/x-gzip; charset=binary", "application/gzip", "application/gzip; charset=binary":
 		return &validators.ServiceDescriptor{
 			Service:  "advisor",
 			Category: "upload",
