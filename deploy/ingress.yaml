@@ -12,7 +12,7 @@ objects:
       app: upload-service
     name: upload-service
   spec:
-    replicas: 1
+    replicas: ${{REPLICAS}}
     selector:
       deploymentconfig: upload-service
     strategy:
@@ -179,3 +179,6 @@ parameters:
 - description: Image tag
   name: IMAGE_TAG
   required: true
+- description: number of pods to run
+  name: REPLICAS
+  value: "1"
