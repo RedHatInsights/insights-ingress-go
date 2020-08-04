@@ -1,0 +1,50 @@
+# This podman compose file stands up local dependencies for 
+# Kafka, Zookeeper, and Minio and optionally insights-ingress-go itself.
+# Please consult README.md for bucket creation steps
+version: "3"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=32181
+      - ZOOKEEPER_SERVER_ID=1
+  kafka:
+    image: confluentinc/cp-kafka
+    ports:
+      - 29092:29092
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092
+      - KAFKA_BROKER_ID=1
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+  minio:
+    image: minio/minio
+    command: server /data
+    volumes:
+      # These vars are defined in .env
+      # These are configurable
+      # Ensure the directories exist prior to running this file
+      - minio_conf:/root/.minio:Z
+      - minio_data:/data:Z
+    ports:
+      - 9000:9000
+    environment:
+      - MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
+      - MINIO_SECRET_KEY=$MINIO_SECRET_KEY
+  ingress:
+    image: quay.io/cloudservices/insights-ingress:latest
+    ports:
+      - 8080:3000
+    environment:
+      - INGRESS_STAGEBUCKET=insights-upload-perma
+        # VALIDTOPICS is required. This is derived from content type. ex: vnd.redhat.advisor.thing+tgz
+      - INGRESS_VALIDTOPICS=testareno,advisor
+      - OPENSHIFT_BUILD_COMMIT=somestring
+      - INGRESS_MINIODEV=true
+      - INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY
+      - INGRESS_MINIOSECRETKEY=$MINIO_SECERET_KEY
+      - INGRESS_MINIOENDPOINT=minio:9000
+    depends_on:
+       - kafka
