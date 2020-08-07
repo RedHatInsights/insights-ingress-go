@@ -1,6 +1,4 @@
-FROM golang:1.12 as builder
-
-ENV GO111MODULE="on"
+FROM registry.redhat.io/ubi8/go-toolset
 
 WORKDIR /go/src/app
 COPY . .
@@ -8,10 +6,11 @@ COPY . .
 RUN go get -d ./... && \
     go install -v ./...
 
-FROM registry.access.redhat.com/ubi8-minimal
+USER 0
+RUN cp /opt/app-root/src/go/bin/insights-ingress-go /usr/bin/ && \
+    cp /go/src/app/openapi.json /var/tmp/
 
-COPY --from=builder /go/bin/insights-ingress-go /usr/bin/
+RUN yum remove -y kernel-headers
 
 USER 1001
-
 CMD ["insights-ingress-go"]

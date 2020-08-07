@@ -35,7 +35,7 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiSpec(w http.ResponseWriter, r *http.Request) {
-	file, err := ioutil.ReadFile("/tmp/src/openapi.json")
+	file, err := ioutil.ReadFile("/var/tmp/openapi.json")
 	if err != nil {
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("Unable to print API spec")
 	}
