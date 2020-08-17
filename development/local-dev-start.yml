@@ -19,6 +19,7 @@ services:
       - KAFKA_BROKER_ID=1
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
   minio:
     image: minio/minio
     command: server /data
@@ -42,6 +43,7 @@ services:
         # VALIDTOPICS is required. This is derived from content type. ex: vnd.redhat.advisor.thing+tgz
       - INGRESS_VALIDTOPICS=testareno,advisor
       - OPENSHIFT_BUILD_COMMIT=somestring
+      - INGRESS_MAXSIZE=104857600
       - INGRESS_MINIODEV=true
       - INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY
       - INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY
