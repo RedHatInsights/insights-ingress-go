@@ -21,7 +21,6 @@ type IngressConfig struct {
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
-	InventoryURL         string
 	MinioDev             bool
 	MinioEndpoint        string
 	MinioAccessKey       string
@@ -43,7 +42,6 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
-	options.SetDefault("InventoryURL", "http://inventory:8080/api/inventory/v1/hosts")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
@@ -69,7 +67,6 @@ func Get() *IngressConfig {
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.12",
-		InventoryURL:         options.GetString("InventoryURL"),
 		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
 		MinioAccessKey:       options.GetString("MinioAccessKey"),

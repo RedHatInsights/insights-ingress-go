@@ -13,7 +13,6 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
-	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -76,7 +75,6 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(
 	stager stage.Stager,
-	inventory inventory.Inventory,
 	validator validators.Validator,
 	tracker announcers.Announcer,
 	cfg config.IngressConfig) http.HandlerFunc {
@@ -155,12 +153,6 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Debug("Failed to read metadata")
 		} else {
 			vr.Metadata = *md
-			vr.ID, err = inventory.GetID(*md, vr.Account, b64Identity)
-			if err != nil {
-				logerr("Failed to post to inventory", err)
-			} else {
-				requestLogger.WithFields(logrus.Fields{"inventory_id": vr.ID}).Info("Successfully posted to inventory")
-			}
 		}
 
 		ps := &announcers.Status{
