@@ -72,8 +72,6 @@ objects:
             value: ${INGRESS_REJECTBUCKET}
           - name: INGRESS_KAFKABROKERS
             value: ${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}
-          - name: INGRESS_INVENTORYURL
-            value: ${INGRESS_INVENTORYURL}
           - name: INGRESS_VALIDTOPICS
             value: ${INGRESS_VALIDTOPICS}
           - name: INGRESS_MAXSIZE
@@ -156,8 +154,6 @@ parameters:
   value: insights-dev-upload-perm
 - name: INGRESS_REJECTBUCKET
   value: insights-dev-upload-rejected
-- name: INGRESS_INVENTORYURL
-  value: http://insights-inventory:8080/api/inventory/v1/hosts
 - name: INGRESS_VALIDTOPICS
   value: advisor,advisor-pup,compliance,hccm,qpc,rhv,testareno,tower,leapp-reporting,topological-inventory,buckit,xavier,mkt
 - name: INGRESS_PORT

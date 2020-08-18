@@ -18,7 +18,6 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
-	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	. "github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -83,7 +82,6 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 var _ = Describe("Upload", func() {
 	var (
 		stager    *stage.Fake
-		inventory *i.Fake
 		tracker   announcers.Announcer
 		validator *validators.Fake
 		handler   http.Handler
@@ -102,11 +100,10 @@ var _ = Describe("Upload", func() {
 
 		stager = &stage.Fake{ShouldError: false}
 		validator = &validators.Fake{}
-		inventory = &i.Fake{}
 		tracker = &announcers.Fake{}
 
 		rr = httptest.NewRecorder()
-		handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
+		handler = NewHandler(stager, validator, tracker, *config.Get())
 		timeNow = setTime()
 	})
 
@@ -140,33 +137,6 @@ var _ = Describe("Upload", func() {
 				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
 				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", StaleTimestamp: timeNow}))
-				Expect(vin.ID).To(Equal("1234-abcd-5678-efgh"))
-			})
-		})
-
-		Context("with a metadata part, but inventory fails", func() {
-			It("should still return HTTP 202", func() {
-				inventory = &i.Fake{ShouldFail: true}
-				handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
-				boiler(http.StatusAccepted,
-					&FilePart{
-						Name:        "file",
-						Content:     "testing",
-						ContentType: "application/vnd.redhat.unit.test",
-					},
-					&FilePart{
-						Name:        "metadata",
-						Content:     `{"account": "012345"}`,
-						ContentType: "text/plain",
-					},
-				)
-				in := stager.Input
-				Expect(in).To(Not(BeNil()))
-				vin := validator.In
-				vin.Metadata.StaleTimestamp = timeNow
-				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", StaleTimestamp: timeNow}))
-				Expect(vin.ID).To(Equal(""))
 			})
 		})
 
@@ -291,7 +261,7 @@ var _ = Describe("Upload", func() {
 			It("should return 413", func() {
 				cfg := config.Get()
 				cfg.MaxSize = 1
-				handler = NewHandler(stager, inventory, validator, tracker, *cfg)
+				handler = NewHandler(stager, validator, tracker, *cfg)
 				boiler(http.StatusRequestEntityTooLarge, &FilePart{
 					Name:        "file",
 					Content:     "testing",
@@ -303,7 +273,7 @@ var _ = Describe("Upload", func() {
 		Context("when the payload fails to stage", func() {
 			It("should return 413", func() {
 				stager = &stage.Fake{ShouldError: true}
-				handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
+				handler = NewHandler(stager, validator, tracker, *config.Get())
 				boiler(http.StatusInternalServerError, &FilePart{
 					Name:        "file",
 					Content:     "testing",
