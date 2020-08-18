@@ -21,6 +21,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type responseBody struct {
+	RequestID string `json:"request_id"`
+}
+
 // GetFile verifies that the proper upload field is in place and returns the file
 func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 	file, fileHeader, fileErr := r.FormFile("file")
@@ -191,6 +195,21 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		w.WriteHeader(http.StatusAccepted)
+		response := responseBody{vr.RequestID}
+		jsonBody, err := json.Marshal(response)
+		if err != nil {
+			logerr("Unable to marshal JSON response body", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		metadata, err := readMetadataPart(r)
+		if metadata != nil {
+			w.WriteHeader(http.StatusAccepted)
+			w.Write(jsonBody)
+		} else {
+			w.WriteHeader(http.StatusCreated)
+			w.Write(jsonBody)
+		}
 	}
 }
