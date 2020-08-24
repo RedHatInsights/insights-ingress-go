@@ -121,6 +121,18 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
+		Context("from the openshift operator", func() {
+			It("should return HTTP 202", func() {
+				boiler(http.StatusAccepted,
+					&FilePart{
+						Name:        "file",
+						Content:     "testing",
+						ContentType: "application/vnd.redhat.openshift.test",
+					},
+				)
+			})
+		})
+
 		Context("with a metadata part", func() {
 			It("should return HTTP 202", func() {
 				boiler(http.StatusAccepted,
