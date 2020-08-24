@@ -204,7 +204,10 @@ func NewHandler(
 		}
 
 		metadata, err := readMetadataPart(r)
-		if metadata != nil {
+		if vr.Service == "openshift" {
+			w.WriteHeader(http.StatusAccepted)
+			w.Write(jsonBody)
+		} else if metadata != nil {
 			w.WriteHeader(http.StatusAccepted)
 			w.Write(jsonBody)
 		} else {
