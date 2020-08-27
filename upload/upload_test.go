@@ -94,7 +94,6 @@ var _ = Describe("Upload", func() {
 		Expect(err).To(BeNil())
 		handler.ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(code))
-		Expect(rr.Body).ToNot(BeNil())
 	}
 
 	BeforeEach(func() {
@@ -109,9 +108,9 @@ var _ = Describe("Upload", func() {
 	})
 
 	Describe("Posting a file to /upload", func() {
-		Context("with a valid Content-Type and no metadata", func() {
-			It("should return HTTP 201", func() {
-				boiler(http.StatusCreated, &FilePart{
+		Context("with a valid Content-Type", func() {
+			It("should return HTTP 202", func() {
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
@@ -175,8 +174,8 @@ var _ = Describe("Upload", func() {
 		})
 
 		Context("with a valid file part", func() {
-			It("should return a 201 and no metadata", func() {
-				boiler(http.StatusCreated, &FilePart{
+			It("should return a 202", func() {
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "upload",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
@@ -194,9 +193,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with a valid Content-Type and no metadata", func() {
+		Context("with a valid Content-Type", func() {
 			It("should invoke the stager", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
@@ -204,9 +203,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with a valid Content-Type and no metadata", func() {
+		Context("with a valid Content-Type", func() {
 			It("should parse to service and category", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
@@ -219,9 +218,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with legacy content type and no metadata", func() {
+		Context("with legacy content type", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/x-gzip; charset=binary",
@@ -229,9 +228,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with alternate legacy content type and no metadata", func() {
+		Context("with alternate legacy content type", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/gzip",
@@ -239,9 +238,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with new file command legacy type and no metadata", func() {
+		Context("with new file command legacy type", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/gzip; charset=binary",
