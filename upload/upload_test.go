@@ -109,16 +109,16 @@ var _ = Describe("Upload", func() {
 	})
 
 	Describe("Posting a file to /upload", func() {
-		Context("with a valid Content-Type and no metadata", func() {
+		Context("with a valid advisor Content-Type and no metadata", func() {
 			It("should return HTTP 201", func() {
 				boiler(http.StatusCreated, &FilePart{
 					Name:        "file",
 					Content:     "testing",
-					ContentType: "application/vnd.redhat.unit.test"})
+					ContentType: "application/vnd.redhat.advisor.test"})
 			})
 		})
 
-		Context("from the openshift operator", func() {
+		Context("with no metadata from something not advisor", func() {
 			It("should return HTTP 202", func() {
 				boiler(http.StatusAccepted,
 					&FilePart{
@@ -187,8 +187,8 @@ var _ = Describe("Upload", func() {
 		})
 
 		Context("with a valid file part", func() {
-			It("should return a 201 and no metadata", func() {
-				boiler(http.StatusCreated, &FilePart{
+			It("should return a 202", func() {
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "upload",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
@@ -208,7 +208,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with a valid Content-Type and no metadata", func() {
 			It("should invoke the stager", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
@@ -218,7 +218,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with a valid Content-Type and no metadata", func() {
 			It("should parse to service and category", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
