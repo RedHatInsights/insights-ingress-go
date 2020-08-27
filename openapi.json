@@ -37,8 +37,29 @@
           }
         },
         "responses": {
+          "201": {
+            "description": "Advisor content type with no metadata accepted for processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "request_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
           "202": {
-            "description": "Payload was accepted for processing."
+            "description": "Payload was accepted for processing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "request_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Authentication missing from request"
