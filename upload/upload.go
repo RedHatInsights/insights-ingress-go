@@ -79,12 +79,17 @@ func NewHandler(
 	tracker announcers.Announcer,
 	cfg config.IngressConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
 		requestLogger := l.Log.WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
 
 		logerr := func(msg string, err error) {
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
+		}
+
+		if config.Get().Auth == true {
+			id = identity.Get(r.Context())
 		}
 
 		if cfg.Debug && cfg.DebugUserAgent.MatchString(userAgent) {
@@ -99,8 +104,10 @@ func NewHandler(
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r)
 		if err != nil {
+			errString := "File or upload field not found"
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("File or Upload field not found"))
+			w.Write([]byte(errString))
+			requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusBadRequest, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID}).Info(errString)
 			logerr("Invalid upload payload", err)
 			return
 		}
@@ -109,23 +116,25 @@ func NewHandler(
 
 		observeSize(userAgent, size)
 
-		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size})
+		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID})
 
 		requestLogger.Debug("ContentType received from client")
 		serviceDescriptor, validationErr := getServiceDescriptor(contentType)
 		if validationErr != nil {
 			logerr("Unable to validate", validationErr)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusUnsupportedMediaType}).Info("Unable to validate")
 			return
 		}
 
 		if fileHeader.Size > cfg.MaxSize {
-			requestLogger.Info("File exceeds maximum file size for upload")
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			return
 		}
 
 		if err := validator.ValidateService(serviceDescriptor); err != nil {
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusUnsupportedMediaType}).Info("Unrecognized Service")
 			logerr("Unrecognized service", err)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
@@ -142,7 +151,6 @@ func NewHandler(
 		}
 
 		if config.Get().Auth == true {
-			id := identity.Get(r.Context())
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.Internal.OrgID
 			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.Principal})
