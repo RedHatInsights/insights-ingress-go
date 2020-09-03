@@ -18,7 +18,6 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
-	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	. "github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -83,7 +82,6 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 var _ = Describe("Upload", func() {
 	var (
 		stager    *stage.Fake
-		inventory *i.Fake
 		tracker   announcers.Announcer
 		validator *validators.Fake
 		handler   http.Handler
@@ -96,27 +94,39 @@ var _ = Describe("Upload", func() {
 		Expect(err).To(BeNil())
 		handler.ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(code))
+		Expect(rr.Body).ToNot(BeNil())
 	}
 
 	BeforeEach(func() {
 
 		stager = &stage.Fake{ShouldError: false}
 		validator = &validators.Fake{}
-		inventory = &i.Fake{}
 		tracker = &announcers.Fake{}
 
 		rr = httptest.NewRecorder()
-		handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
+		handler = NewHandler(stager, validator, tracker, *config.Get())
 		timeNow = setTime()
 	})
 
 	Describe("Posting a file to /upload", func() {
-		Context("with a valid Content-Type", func() {
-			It("should return HTTP 202", func() {
-				boiler(http.StatusAccepted, &FilePart{
+		Context("with a valid advisor Content-Type and no metadata", func() {
+			It("should return HTTP 201", func() {
+				boiler(http.StatusCreated, &FilePart{
 					Name:        "file",
 					Content:     "testing",
-					ContentType: "application/vnd.redhat.unit.test"})
+					ContentType: "application/vnd.redhat.advisor.test"})
+			})
+		})
+
+		Context("with no metadata from something not advisor", func() {
+			It("should return HTTP 202", func() {
+				boiler(http.StatusAccepted,
+					&FilePart{
+						Name:        "file",
+						Content:     "testing",
+						ContentType: "application/vnd.redhat.openshift.test",
+					},
+				)
 			})
 		})
 
@@ -140,33 +150,6 @@ var _ = Describe("Upload", func() {
 				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
 				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", StaleTimestamp: timeNow}))
-				Expect(vin.ID).To(Equal("1234-abcd-5678-efgh"))
-			})
-		})
-
-		Context("with a metadata part, but inventory fails", func() {
-			It("should still return HTTP 202", func() {
-				inventory = &i.Fake{ShouldFail: true}
-				handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
-				boiler(http.StatusAccepted,
-					&FilePart{
-						Name:        "file",
-						Content:     "testing",
-						ContentType: "application/vnd.redhat.unit.test",
-					},
-					&FilePart{
-						Name:        "metadata",
-						Content:     `{"account": "012345"}`,
-						ContentType: "text/plain",
-					},
-				)
-				in := stager.Input
-				Expect(in).To(Not(BeNil()))
-				vin := validator.In
-				vin.Metadata.StaleTimestamp = timeNow
-				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", StaleTimestamp: timeNow}))
-				Expect(vin.ID).To(Equal(""))
 			})
 		})
 
@@ -223,7 +206,7 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with a valid Content-Type", func() {
+		Context("with a valid Content-Type and no metadata", func() {
 			It("should invoke the stager", func() {
 				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
@@ -233,7 +216,7 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with a valid Content-Type", func() {
+		Context("with a valid Content-Type and no metadata", func() {
 			It("should parse to service and category", func() {
 				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
@@ -248,9 +231,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with legacy content type", func() {
+		Context("with legacy content type and no metadata", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusAccepted, &FilePart{
+				boiler(http.StatusCreated, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/x-gzip; charset=binary",
@@ -258,9 +241,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with alternate legacy content type", func() {
+		Context("with alternate legacy content type and no metadata", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusAccepted, &FilePart{
+				boiler(http.StatusCreated, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/gzip",
@@ -268,9 +251,9 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
-		Context("with new file command legacy type", func() {
+		Context("with new file command legacy type and no metadata", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusAccepted, &FilePart{
+				boiler(http.StatusCreated, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/gzip; charset=binary",
@@ -291,7 +274,7 @@ var _ = Describe("Upload", func() {
 			It("should return 413", func() {
 				cfg := config.Get()
 				cfg.MaxSize = 1
-				handler = NewHandler(stager, inventory, validator, tracker, *cfg)
+				handler = NewHandler(stager, validator, tracker, *cfg)
 				boiler(http.StatusRequestEntityTooLarge, &FilePart{
 					Name:        "file",
 					Content:     "testing",
@@ -303,7 +286,7 @@ var _ = Describe("Upload", func() {
 		Context("when the payload fails to stage", func() {
 			It("should return 413", func() {
 				stager = &stage.Fake{ShouldError: true}
-				handler = NewHandler(stager, inventory, validator, tracker, *config.Get())
+				handler = NewHandler(stager, validator, tracker, *config.Get())
 				boiler(http.StatusInternalServerError, &FilePart{
 					Name:        "file",
 					Content:     "testing",

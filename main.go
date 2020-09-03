@@ -10,7 +10,6 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
-	i "github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage"
@@ -35,7 +34,7 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiSpec(w http.ResponseWriter, r *http.Request) {
-	file, err := ioutil.ReadFile("/tmp/src/openapi.json")
+	file, err := ioutil.ReadFile("/var/tmp/openapi.json")
 	if err != nil {
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("Unable to print API spec")
 	}
@@ -71,10 +70,6 @@ func main() {
 		GroupID: cfg.KafkaGroupID,
 	}, cfg.ValidTopics...)
 
-	inventory := &i.HTTP{
-		Endpoint: cfg.InventoryURL,
-	}
-
 	tracker := announcers.NewStatusAnnouncer(&queue.ProducerConfig{
 		Brokers: cfg.KafkaBrokers,
 		Topic:   cfg.KafkaTrackerTopic,
@@ -82,7 +77,7 @@ func main() {
 	})
 
 	handler := upload.NewHandler(
-		stager, inventory, validator, tracker, *cfg,
+		stager, validator, tracker, *cfg,
 	)
 
 	var sub chi.Router = chi.NewRouter()

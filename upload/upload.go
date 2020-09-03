@@ -13,7 +13,6 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
-	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -21,6 +20,10 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"github.com/sirupsen/logrus"
 )
+
+type responseBody struct {
+	RequestID string `json:"request_id"`
+}
 
 // GetFile verifies that the proper upload field is in place and returns the file
 func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
@@ -72,7 +75,6 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(
 	stager stage.Stager,
-	inventory inventory.Inventory,
 	validator validators.Validator,
 	tracker announcers.Announcer,
 	cfg config.IngressConfig) http.HandlerFunc {
@@ -151,12 +153,6 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Debug("Failed to read metadata")
 		} else {
 			vr.Metadata = *md
-			vr.ID, err = inventory.GetID(*md, vr.Account, b64Identity)
-			if err != nil {
-				logerr("Failed to post to inventory", err)
-			} else {
-				requestLogger.WithFields(logrus.Fields{"inventory_id": vr.ID}).Info("Successfully posted to inventory")
-			}
 		}
 
 		ps := &announcers.Status{
@@ -199,6 +195,20 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		w.WriteHeader(http.StatusAccepted)
+		response := responseBody{vr.RequestID}
+		jsonBody, err := json.Marshal(response)
+		if err != nil {
+			logerr("Unable to marshal JSON response body", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		metadata, err := readMetadataPart(r)
+		if vr.Service == "advisor" && metadata == nil {
+			w.WriteHeader(http.StatusCreated)
+		} else {
+			w.WriteHeader(http.StatusAccepted)
+		}
+		w.Write(jsonBody)
 	}
 }

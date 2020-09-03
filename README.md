@@ -116,13 +116,9 @@ You can also build ingress using Docker/Podman with the provided Dockerfile.
 
     $> docker build . -t ingress:latest
 
-Or stand up the stack with required services using `docker-compose`.
+### Podman Compose
 
-    $> docker-compose up --build
-    
-The server will be available on TCP port 8080.
-
-    $> curl http://localhost:8080/api/ingress/v1/version
+See [instructions](https://github.com/RedHatInsights/insights-ingress-go/blob/master/development/README.md)
 
 #### Uploading a File
 
