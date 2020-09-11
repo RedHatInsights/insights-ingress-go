@@ -618,7 +618,7 @@ data:
     }
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-insights-ingress
+  name: grafana-dashboard-clouddot-insights-ingress
   labels:
     grafana_dashboard: "true"
   annotations:
