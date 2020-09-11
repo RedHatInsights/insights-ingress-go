@@ -222,6 +222,7 @@ func NewHandler(
 		} else {
 			w.WriteHeader(http.StatusAccepted)
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonBody)
 	}
 }
