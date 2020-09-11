@@ -111,6 +111,11 @@ func NewHandler(
 			logerr("Invalid upload payload", err)
 			return
 		}
+		// If we exit early we need to make sure this gets closed
+		// later we will close this via the stageInput.close()
+		// in that case, this defer will return an error because
+		// the file is already closed.
+		defer file.Close()
 		contentType := fileHeader.Header.Get("Content-Type")
 		size := fileHeader.Size
 
