@@ -1,5 +1,7 @@
 module github.com/redhatinsights/insights-ingress-go
 
+go 1.14
+
 require (
 	github.com/RedHatInsights/platform-go-middlewares v0.3.0 // indirect
 	github.com/aws/aws-sdk-go v1.19.29

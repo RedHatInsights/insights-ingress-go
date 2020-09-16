@@ -13,7 +13,6 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
 	"github.com/redhatinsights/insights-ingress-go/config"
-	"github.com/redhatinsights/insights-ingress-go/interactions/inventory"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/validators"
@@ -21,6 +20,10 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"github.com/sirupsen/logrus"
 )
+
+type responseBody struct {
+	RequestID string `json:"request_id"`
+}
 
 // GetFile verifies that the proper upload field is in place and returns the file
 func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
@@ -72,17 +75,21 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(
 	stager stage.Stager,
-	inventory inventory.Inventory,
 	validator validators.Validator,
 	tracker announcers.Announcer,
 	cfg config.IngressConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
 		requestLogger := l.Log.WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
 
 		logerr := func(msg string, err error) {
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
+		}
+
+		if config.Get().Auth == true {
+			id = identity.Get(r.Context())
 		}
 
 		if cfg.Debug && cfg.DebugUserAgent.MatchString(userAgent) {
@@ -97,33 +104,42 @@ func NewHandler(
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r)
 		if err != nil {
+			errString := "File or upload field not found"
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("File or Upload field not found"))
+			w.Write([]byte(errString))
+			requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusBadRequest, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID}).Info(errString)
 			logerr("Invalid upload payload", err)
 			return
 		}
+		// If we exit early we need to make sure this gets closed
+		// later we will close this via the stageInput.close()
+		// in that case, this defer will return an error because
+		// the file is already closed.
+		defer file.Close()
 		contentType := fileHeader.Header.Get("Content-Type")
 		size := fileHeader.Size
 
 		observeSize(userAgent, size)
 
-		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size})
+		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID})
 
 		requestLogger.Debug("ContentType received from client")
 		serviceDescriptor, validationErr := getServiceDescriptor(contentType)
 		if validationErr != nil {
 			logerr("Unable to validate", validationErr)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusUnsupportedMediaType}).Info("Unable to validate")
 			return
 		}
 
 		if fileHeader.Size > cfg.MaxSize {
-			requestLogger.Info("File exceeds maximum file size for upload")
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			return
 		}
 
 		if err := validator.ValidateService(serviceDescriptor); err != nil {
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusUnsupportedMediaType}).Info("Unrecognized Service")
 			logerr("Unrecognized service", err)
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
@@ -140,7 +156,6 @@ func NewHandler(
 		}
 
 		if config.Get().Auth == true {
-			id := identity.Get(r.Context())
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.Internal.OrgID
 			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.Principal})
@@ -151,12 +166,6 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Debug("Failed to read metadata")
 		} else {
 			vr.Metadata = *md
-			vr.ID, err = inventory.GetID(*md, vr.Account, b64Identity)
-			if err != nil {
-				logerr("Failed to post to inventory", err)
-			} else {
-				requestLogger.WithFields(logrus.Fields{"inventory_id": vr.ID}).Info("Successfully posted to inventory")
-			}
 		}
 
 		ps := &announcers.Status{
@@ -199,6 +208,21 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		w.WriteHeader(http.StatusAccepted)
+		response := responseBody{vr.RequestID}
+		jsonBody, err := json.Marshal(response)
+		if err != nil {
+			logerr("Unable to marshal JSON response body", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		metadata, err := readMetadataPart(r)
+		if vr.Service == "advisor" && metadata == nil {
+			w.WriteHeader(http.StatusCreated)
+		} else {
+			w.WriteHeader(http.StatusAccepted)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonBody)
 	}
 }
