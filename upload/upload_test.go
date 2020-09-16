@@ -300,7 +300,7 @@ var _ = Describe("Upload", func() {
 var _ = Describe("NormalizeUserAgent", func() {
 	Describe("when passed a support-operator agent", func() {
 		It("should trim off the cluster id", func() {
-			Expect(NormalizeUserAgent("support-operator/abc cluster/123")).To(Equal("support-operator/abc"))
+			Expect(NormalizeUserAgent("support-operator/abc cluster/123")).To(Equal("support-operator"))
 		})
 	})
 
