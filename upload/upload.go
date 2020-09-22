@@ -27,7 +27,7 @@ type responseBody struct {
 }
 
 type uploadData struct {
-	Account string `json:"account,omitempty"`
+	Account string `json:"account_number,omitempty"`
 }
 
 // GetFile verifies that the proper upload field is in place and returns the file
