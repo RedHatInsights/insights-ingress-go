@@ -22,7 +22,12 @@ import (
 )
 
 type responseBody struct {
-	RequestID string `json:"request_id"`
+	RequestID string     `json:"request_id"`
+	Upload    uploadData `json:"upload,omitempty"`
+}
+
+type uploadData struct {
+	Account string `json:"account,omitempty"`
 }
 
 // GetFile verifies that the proper upload field is in place and returns the file
@@ -111,6 +116,11 @@ func NewHandler(
 			logerr("Invalid upload payload", err)
 			return
 		}
+		// If we exit early we need to make sure this gets closed
+		// later we will close this via the stageInput.close()
+		// in that case, this defer will return an error because
+		// the file is already closed.
+		defer file.Close()
 		contentType := fileHeader.Header.Get("Content-Type")
 		size := fileHeader.Size
 
@@ -203,7 +213,8 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		response := responseBody{vr.RequestID}
+		upload := uploadData{Account: vr.Account}
+		response := responseBody{RequestID: vr.RequestID, Upload: upload}
 		jsonBody, err := json.Marshal(response)
 		if err != nil {
 			logerr("Unable to marshal JSON response body", err)
@@ -217,6 +228,7 @@ func NewHandler(
 		} else {
 			w.WriteHeader(http.StatusAccepted)
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonBody)
 	}
 }
