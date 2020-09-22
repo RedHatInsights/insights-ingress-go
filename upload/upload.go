@@ -22,7 +22,12 @@ import (
 )
 
 type responseBody struct {
-	RequestID string `json:"request_id"`
+	RequestID string     `json:"request_id"`
+	Upload    uploadData `json:"upload,omitempty"`
+}
+
+type uploadData struct {
+	Account string `json:"account,omitempty"`
 }
 
 // GetFile verifies that the proper upload field is in place and returns the file
@@ -208,7 +213,8 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		response := responseBody{vr.RequestID}
+		upload := uploadData{Account: vr.Account}
+		response := responseBody{RequestID: vr.RequestID, Upload: upload}
 		jsonBody, err := json.Marshal(response)
 		if err != nil {
 			logerr("Unable to marshal JSON response body", err)
