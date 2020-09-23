@@ -77,7 +77,7 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 	return &md, nil
 }
 
-func testBody(r *http.Request) bool {
+func isLegacyTestRequest(r *http.Request) bool {
 	r.ParseForm()
 	if r.FormValue("test") == "test" {
 		return true
@@ -114,7 +114,7 @@ func NewHandler(
 			}
 		}
 
-		if testBody(r) {
+		if isLegacyTestRequest(r) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
