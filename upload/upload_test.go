@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -79,6 +81,31 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 	return req, nil
 }
 
+func makeTestRequest(uri string) (*http.Request, error) {
+	formData := url.Values{"test": {"test"}}
+	req, err := http.NewRequest("POST", "/api/ingress/v1/upload", strings.NewReader(formData.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Length", strconv.Itoa(len(formData.Encode())))
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		Identity: identity.Identity{
+			AccountNumber: "540155",
+			Internal: identity.Internal{
+				OrgID: "12345",
+			},
+		},
+	})
+
+	req = req.WithContext(ctx)
+
+	return req, nil
+
+}
+
 var _ = Describe("Upload", func() {
 	var (
 		stager    *stage.Fake
@@ -106,6 +133,18 @@ var _ = Describe("Upload", func() {
 		rr = httptest.NewRecorder()
 		handler = NewHandler(stager, validator, tracker, *config.Get())
 		timeNow = setTime()
+	})
+
+	Describe("Post to endpoint", func() {
+		Context("with test data for test-connection", func() {
+			It("should return HTTP 200", func() {
+				req, err := makeTestRequest("/api/ingress/v1/upload")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+			})
+		})
 	})
 
 	Describe("Posting a file to /upload", func() {

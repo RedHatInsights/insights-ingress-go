@@ -77,6 +77,14 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 	return &md, nil
 }
 
+func isLegacyTestRequest(r *http.Request) bool {
+	r.ParseForm()
+	if r.FormValue("test") == "test" {
+		return true
+	}
+	return false
+}
+
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(
 	stager stage.Stager,
@@ -104,6 +112,11 @@ func NewHandler(
 			} else {
 				requestLogger.WithFields(logrus.Fields{"raw_request": dumpBytes}).Info("dumping request")
 			}
+		}
+
+		if isLegacyTestRequest(r) {
+			w.WriteHeader(http.StatusOK)
+			return
 		}
 
 		incRequests(userAgent)
