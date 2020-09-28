@@ -1,5 +1,5 @@
 ## Secure Coding Practices Checklist Link
-- https://github.com/RedHatInsights/insights-ingress-go
+- https://github.com/RedHatInsights/secure-coding-checklist
 
 ## Secure Coding Checklist
 - [ ] Input Validation
