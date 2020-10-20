@@ -1,8 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
+
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
+
+	"log"
 
 	"github.com/spf13/viper"
 )
@@ -31,16 +36,26 @@ type IngressConfig struct {
 
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
+	cfg := clowder.LoadedConfig
+	topic, ok := clowder.KafkaTopics["platform.upload.advisor"]
+	if !ok {
+		log.Fatal("topic not found")
+	}
+	// minio, ok := clowder.ObjectBuckets["ingress-uploads-perma"]
+	// if !ok {
+	// 	log.Fatal("bucket not found")
+	// }
 
 	options := viper.New()
 	options.SetDefault("MaxSize", 10*1024*1024)
-	options.SetDefault("Port", 3000)
+	options.SetDefault("Port", cfg.WebPort)
 	options.SetDefault("StageBucket", "available")
 	options.SetDefault("Auth", true)
-	options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
-	options.SetDefault("KafkaGroupID", "ingress")
-	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
+	options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%d", cfg.Kafka.Brokers[0].Hostname, cfg.Kafka.Brokers[0].Port))
+	options.SetDefault("KafkaGroupID", topic.ConsumerGroup)
+	options.SetDefault("KafkaTrackerTopic", topic.Name)
 	options.SetDefault("ValidTopics", "unit")
+	options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Debug", false)
@@ -69,7 +84,7 @@ func Get() *IngressConfig {
 		Version:              "1.0.8",
 		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
-		MinioAccessKey:       options.GetString("MinioAccessKey"),
-		MinioSecretKey:       options.GetString("MinioSecretKey"),
+		MinioAccessKey:       *cfg.ObjectStore.AccessKey,
+		MinioSecretKey:       *cfg.ObjectStore.SecretKey,
 	}
 }
