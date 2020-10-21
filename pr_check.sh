@@ -17,7 +17,7 @@
 # --------------------------------------------
 APP_NAME="ingress"  # name of app-sre "application" folder this component lives in
 COMPONENT_NAME="insights-ingress-go"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
-IMAGE="quay.io/cloudservices/insights-ingress"  # TODO: look IMAGE up from build_deploy.sh?
+IMAGE="quay.io/cloudservices/insights-ingress-go"  # TODO: look IMAGE up from build_deploy.sh?
 
 
 # ---------------------------
@@ -80,4 +80,4 @@ bonfire namespace wait-on-resources $NAMESPACE
 
 # Spin up iqe pod
 # python utils/create_iqe_pod.py $NAMESPACE
-# oc rsh -n $NAMESPACE iqe-tests curl -si http://ingres:9000/metrics
+oc rsh -n $NAMESPACE iqe-tests curl -si http://ingress-ingress:8000/metrics
