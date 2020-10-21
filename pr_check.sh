@@ -1,14 +1,10 @@
 #!/bin/bash
 
-# python3 -m venv .venv
-# source .venv/bin/activate
-# pip install .
-# pip install .[test]
-# INVENTORY_TOPIC=platform.inventory.host-ingress-p1 ACG_CONFIG=./cdappconfig.json pytest
+make test 
 
-# if [ $? != 0 ]; then
-#     exit 1
-# fi
+if [ $? != 0 ]; then
+    exit 1
+fi
 
 # deactivate
 

@@ -45,6 +45,7 @@ github.com/kdar/gtest v0.0.0-20171003232747-b20da4453579 h1:L+qix2kCiUHMDJRHgQF7
 github.com/kdar/gtest v0.0.0-20171003232747-b20da4453579/go.mod h1:536LC8OTUEct5Z16El02WNFqiBENncHy291DyyWd8Hs=
 github.com/kdar/logrus-cloudwatchlogs v0.0.0-20190402042352-9a67b2f09ba3 h1:JgnKm88BmvRizoU/WB+Iok9ZL9FpxWoMdwTl0HF6DiI=
 github.com/kdar/logrus-cloudwatchlogs v0.0.0-20190402042352-9a67b2f09ba3/go.mod h1:ofZiSRdosqysKOk+xr2jFgr+ZYXFXmlrttnm9Xg5Emo=
+github.com/konsorten/go-windows-terminal-sequences v1.0.1 h1:mweAR1A6xJ3oS2pRaGiHgQ4OO8tzTaLawm8vnODuwDk=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/magiconair/properties v1.8.0 h1:LLgXmsheXeRoUOBOjtwPQCWIYqM/LU1ayDtDePerRcY=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
