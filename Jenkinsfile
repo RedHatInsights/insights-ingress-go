@@ -11,7 +11,7 @@ pipeline {
         sh 'export GO111MODULE="on"'
         sh 'export GOPATH=/var/gopath'
         sh 'go version'
-        sh 'go test -v -race -covermode=atomic ./...'
+        sh 'make test'
       }
     }    
   }
