@@ -6,13 +6,11 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-# deactivate
-
 # --------------------------------------------
 # Options that must be configured by app owner
 # --------------------------------------------
 APP_NAME="ingress"  # name of app-sre "application" folder this component lives in
-COMPONENT_NAME="insights-ingress-go"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
+COMPONENT_NAME="ingress"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-ingress-go"  # TODO: look IMAGE up from build_deploy.sh?
 
 

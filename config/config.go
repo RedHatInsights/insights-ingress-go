@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -36,26 +37,31 @@ type IngressConfig struct {
 
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
-	cfg := clowder.LoadedConfig
-	topic, ok := clowder.KafkaTopics["platform.upload.advisor"]
-	if !ok {
-		log.Fatal("topic not found")
-	}
-	// minio, ok := clowder.ObjectBuckets["ingress-uploads-perma"]
-	// if !ok {
-	// 	log.Fatal("bucket not found")
-	// }
 
+	cfg := clowder.LoadedConfig
 	options := viper.New()
-	options.SetDefault("MaxSize", 10*1024*1024)
-	options.SetDefault("Port", cfg.WebPort)
+	if os.Getenv("CLOWDER_ENABLED") == "true" {
+		topic, ok := clowder.KafkaTopics["platform.upload.advisor"]
+		if !ok {
+			log.Fatal("topic not found")
+		}
+		options.SetDefault("Port", cfg.WebPort)
+		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%d", cfg.Kafka.Brokers[0].Hostname, cfg.Kafka.Brokers[0].Port))
+		options.SetDefault("KafkaGroupID", topic.ConsumerGroup)
+		options.SetDefault("KafkaTrackerTopic", topic.Name)
+		options.SetDefault("ValidTopics", "unit")
+		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
+
+	} else {
+		options.SetDefault("Port", 3000)
+		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
+		options.SetDefault("KafkaGroupID", "ingress")
+		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
+	}
+
 	options.SetDefault("StageBucket", "available")
 	options.SetDefault("Auth", true)
-	options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%d", cfg.Kafka.Brokers[0].Hostname, cfg.Kafka.Brokers[0].Port))
-	options.SetDefault("KafkaGroupID", topic.ConsumerGroup)
-	options.SetDefault("KafkaTrackerTopic", topic.Name)
-	options.SetDefault("ValidTopics", "unit")
-	options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
+	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Debug", false)
