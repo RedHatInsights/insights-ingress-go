@@ -4,10 +4,11 @@ go:
   - 1.12.x
 
 before_install:
-  - make dep
+  - go get -t -v ./...
 
 script:
-  - make test
+  - export ACG_CONFIG=$(pwd)/cdappconfig.json'
+  - ACG_CONFIG=$(ACG_CONFIG) go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...'
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

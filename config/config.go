@@ -38,9 +38,9 @@ type IngressConfig struct {
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
 
-	cfg := clowder.LoadedConfig
 	options := viper.New()
 	if os.Getenv("CLOWDER_ENABLED") == "true" {
+		cfg := clowder.LoadedConfig
 		topic, ok := clowder.KafkaTopics["platform.upload.advisor"]
 		if !ok {
 			log.Fatal("topic not found")
@@ -49,9 +49,9 @@ func Get() *IngressConfig {
 		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%d", cfg.Kafka.Brokers[0].Hostname, cfg.Kafka.Brokers[0].Port))
 		options.SetDefault("KafkaGroupID", topic.ConsumerGroup)
 		options.SetDefault("KafkaTrackerTopic", topic.Name)
-		options.SetDefault("ValidTopics", "unit")
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
-
+		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.AccessKey)
+		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.SecretKey)
 	} else {
 		options.SetDefault("Port", 3000)
 		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
@@ -63,6 +63,7 @@ func Get() *IngressConfig {
 	options.SetDefault("Auth", true)
 	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
+	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
@@ -90,7 +91,7 @@ func Get() *IngressConfig {
 		Version:              "1.0.8",
 		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
-		MinioAccessKey:       *cfg.ObjectStore.AccessKey,
-		MinioSecretKey:       *cfg.ObjectStore.SecretKey,
+		MinioAccessKey:       options.GetString("MinioAccessKey"),
+		MinioSecretKey:       options.GetString("MinioSecretKey"),
 	}
 }
