@@ -14,7 +14,6 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/minio"
-	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
 	"github.com/redhatinsights/insights-ingress-go/version"
@@ -55,15 +54,9 @@ func main() {
 
 	var stager stage.Stager
 
-	stager = &s3.Stager{
+	stager = minio.GetClient(&minio.Stager{
 		Bucket: cfg.StageBucket,
-	}
-
-	if cfg.MinioDev {
-		stager = minio.GetClient(&minio.Stager{
-			Bucket: cfg.StageBucket,
-		})
-	}
+	})
 
 	validator := kafka.New(&kafka.Config{
 		Brokers: cfg.KafkaBrokers,
