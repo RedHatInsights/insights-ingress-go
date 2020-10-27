@@ -14,6 +14,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/queue"
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/minio"
+	"github.com/redhatinsights/insights-ingress-go/stage/s3"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
 	"github.com/redhatinsights/insights-ingress-go/version"
@@ -53,10 +54,16 @@ func main() {
 	)
 
 	var stager stage.Stager
+	if os.Getenv("CLOWDER_ENABLED") == "true" {
+		stager = minio.GetClient(&minio.Stager{
+			Bucket: cfg.StageBucket,
+		})
 
-	stager = minio.GetClient(&minio.Stager{
-		Bucket: cfg.StageBucket,
-	})
+	} else {
+		stager = &s3.Stager{
+			Bucket: cfg.StageBucket,
+		}
+	}
 
 	validator := kafka.New(&kafka.Config{
 		Brokers: cfg.KafkaBrokers,
