@@ -27,7 +27,6 @@ type IngressConfig struct {
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
-	MinioDev             bool
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
@@ -39,28 +38,36 @@ type IngressConfig struct {
 func Get() *IngressConfig {
 
 	options := viper.New()
+
 	if os.Getenv("CLOWDER_ENABLED") == "true" {
 		cfg := clowder.LoadedConfig
-		topic, ok := clowder.KafkaTopics["platform.upload.advisor"]
+
+		sb := os.Getenv("INGRESS_STAGEBUCKET")
+		bucket, ok := clowder.ObjectBuckets[sb]
+		if !ok {
+			log.Fatal("bucket not found")
+		}
+
+		topic, ok := clowder.KafkaTopics["platform.payload-status"]
 		if !ok {
 			log.Fatal("topic not found")
 		}
+
 		options.SetDefault("Port", cfg.WebPort)
 		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port))
-		options.SetDefault("KafkaGroupID", cfg.Kafka.Topics[0].ConsumerGroup)
-		options.SetDefault("KafkaTrackerTopic", topic.Name)
+		options.SetDefault("KafkaTrackerTopic", topic.RequestedName)
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
 		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.AccessKey)
 		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.SecretKey)
-		options.SetDefault("StageBucket", cfg.ObjectStore.Buckets[0].Name)
+		options.SetDefault("StageBucket", bucket.RequestedName)
 	} else {
 		options.SetDefault("Port", 3000)
 		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
-		options.SetDefault("KafkaGroupID", "ingress")
 		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 		options.SetDefault("StageBucket", "available")
 	}
 
+	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("Auth", true)
 	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
@@ -90,7 +97,6 @@ func Get() *IngressConfig {
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
-		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
 		MinioAccessKey:       options.GetString("MinioAccessKey"),
 		MinioSecretKey:       options.GetString("MinioSecretKey"),
