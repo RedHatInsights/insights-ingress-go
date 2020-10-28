@@ -13,13 +13,13 @@ objects:
     pods:
     - name: ingress
       image: ${IMAGE}:${IMAGE_TAG}
-      minReplicas: ${REPLICAS}
+      minReplicas: ${{REPLICAS}}
       livenessProbe:
         failureThreshold: 3
         httpGet:
-        path: /
-        port: 8080
-        scheme: HTTP
+          path: /api/ingress/v1/version
+          port: 8000
+          scheme: HTTP
         initialDelaySeconds: 5
         periodSeconds: 5
         successThreshold: 1
@@ -27,9 +27,9 @@ objects:
       readinessProbe:
         failureThreshold: 3
         httpGet:
-        path: /
-        port: 8080
-        scheme: HTTP
+          path: /api/ingress/v1/version
+          port: 8000
+          scheme: HTTP
         initialDelaySeconds: 5
         periodSeconds: 5
         successThreshold: 1

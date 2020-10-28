@@ -46,20 +46,21 @@ func Get() *IngressConfig {
 			log.Fatal("topic not found")
 		}
 		options.SetDefault("Port", cfg.WebPort)
-		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%d", cfg.Kafka.Brokers[0].Hostname, cfg.Kafka.Brokers[0].Port))
-		options.SetDefault("KafkaGroupID", topic.ConsumerGroup)
+		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port))
+		options.SetDefault("KafkaGroupID", cfg.Kafka.Topics[0].ConsumerGroup)
 		options.SetDefault("KafkaTrackerTopic", topic.Name)
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
 		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.AccessKey)
 		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.SecretKey)
+		options.SetDefault("StageBucket", cfg.ObjectStore.Buckets[0].Name)
 	} else {
 		options.SetDefault("Port", 3000)
 		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
 		options.SetDefault("KafkaGroupID", "ingress")
 		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
+		options.SetDefault("StageBucket", "available")
 	}
 
-	options.SetDefault("StageBucket", "available")
 	options.SetDefault("Auth", true)
 	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
