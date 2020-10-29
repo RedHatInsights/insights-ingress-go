@@ -46,8 +46,8 @@ func Get() *IngressConfig {
 		options.SetDefault("Port", cfg.WebPort)
 		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port))
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
-		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.AccessKey)
-		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.SecretKey)
+		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
+		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
 		options.SetDefault("StageBucket", bucket.RequestedName)
 	} else {
 		options.SetDefault("Port", 3000)
