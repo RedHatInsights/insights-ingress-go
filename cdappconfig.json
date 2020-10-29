@@ -1,0 +1,40 @@
+{
+    "kafka": {
+        "brokers": [
+            {
+                "hostname": "ingress-env-kafka.clowder-system.svc",
+                "port": 29092
+            }
+        ],
+        "topics": [
+            {
+                "name": "platform.upload.advisor-ingress-env-clowder-system",
+                "requestedName": "platform.upload.advisor"
+            }
+        ]
+    },
+    "logging": {
+        "cloudwatch": {
+            "accessKeyId": "",
+            "logGroup": "",
+            "region": "",
+            "secretAccessKey": ""
+        },
+        "type": "null"
+    },
+    "metricsPath": "/metrics",
+    "metricsPort": 9000,
+    "objectStore": {
+        "accessKey": "key",
+        "buckets": [
+            {
+                "name": "ingress-uploads-perma",
+                "requestedName": "ingress-uploads-perma"
+            }
+        ],
+        "hostname": "ingress-env-minio.clowder-system.svc",
+        "port": 9000,
+        "secretKey": "value"
+    },
+    "webPort": 3000
+}

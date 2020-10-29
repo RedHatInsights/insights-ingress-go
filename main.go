@@ -44,8 +44,8 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	cfg := config.Get()
 	l.InitLogger()
+	cfg := config.Get()
 	r := chi.NewRouter()
 	r.Use(
 		request_id.ConfiguredRequestID("x-rh-insights-request-id"),
@@ -54,15 +54,15 @@ func main() {
 	)
 
 	var stager stage.Stager
-
-	stager = &s3.Stager{
-		Bucket: cfg.StageBucket,
-	}
-
-	if cfg.MinioDev {
+	if os.Getenv("CLOWDER_ENABLED") == "true" {
 		stager = minio.GetClient(&minio.Stager{
 			Bucket: cfg.StageBucket,
 		})
+
+	} else {
+		stager = &s3.Stager{
+			Bucket: cfg.StageBucket,
+		}
 	}
 
 	validator := kafka.New(&kafka.Config{

@@ -1,8 +1,12 @@
 package config
 
 import (
+	"fmt"
+	"os"
 	"regexp"
 	"strings"
+
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 
 	"github.com/spf13/viper"
 )
@@ -21,7 +25,6 @@ type IngressConfig struct {
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
-	MinioDev             bool
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
@@ -33,15 +36,31 @@ type IngressConfig struct {
 func Get() *IngressConfig {
 
 	options := viper.New()
-	options.SetDefault("MaxSize", 10*1024*1024)
-	options.SetDefault("Port", 3000)
-	options.SetDefault("StageBucket", "available")
-	options.SetDefault("Auth", true)
-	options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
-	options.SetDefault("KafkaGroupID", "ingress")
+
+	if os.Getenv("CLOWDER_ENABLED") == "true" {
+		cfg := clowder.LoadedConfig
+
+		sb := os.Getenv("INGRESS_STAGEBUCKET")
+		bucket, _ := clowder.ObjectBuckets[sb]
+
+		options.SetDefault("Port", cfg.WebPort)
+		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port))
+		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
+		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
+		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
+		options.SetDefault("StageBucket", bucket.RequestedName)
+	} else {
+		options.SetDefault("Port", 3000)
+		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
+		options.SetDefault("StageBucket", "available")
+	}
+
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
-	options.SetDefault("ValidTopics", "unit")
+	options.SetDefault("KafkaGroupID", "ingress")
+	options.SetDefault("Auth", true)
+	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
+	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
@@ -67,7 +86,6 @@ func Get() *IngressConfig {
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
-		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
 		MinioAccessKey:       options.GetString("MinioAccessKey"),
 		MinioSecretKey:       options.GetString("MinioSecretKey"),
