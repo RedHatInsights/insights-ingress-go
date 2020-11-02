@@ -28,6 +28,7 @@ type IngressConfig struct {
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
+	UseSSL               bool
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
 }
@@ -48,11 +49,13 @@ func Get() *IngressConfig {
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
 		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
 		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
+		options.SetDefault("UseSSL", true)
 		options.SetDefault("StageBucket", bucket.RequestedName)
 	} else {
 		options.SetDefault("Port", 3000)
 		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
 		options.SetDefault("StageBucket", "available")
+		options.SetDefault("UseSSL", false)
 	}
 
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
@@ -89,5 +92,6 @@ func Get() *IngressConfig {
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
 		MinioAccessKey:       options.GetString("MinioAccessKey"),
 		MinioSecretKey:       options.GetString("MinioSecretKey"),
+		UseSSL:               options.GetBool("UseSSL"),
 	}
 }

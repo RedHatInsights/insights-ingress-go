@@ -14,7 +14,7 @@ func GetClient(stager *Stager) stage.Stager {
 	endpoint := config.Get().MinioEndpoint
 	accessKeyID := config.Get().MinioAccessKey
 	secretAccessKey := config.Get().MinioSecretKey
-	useSSL := false
+	useSSL := config.Get().UseSSL
 
 	stager.Client, _ = minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
 
