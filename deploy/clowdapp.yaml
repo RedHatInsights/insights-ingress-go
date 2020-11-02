@@ -52,7 +52,7 @@ objects:
         requests:
           cpu: 200m
           memory: 256Mi
-    web: true
+      web: true
     objectStore:
     - ${INGRESS_STAGEBUCKET}
     kafkaTopics:
