@@ -11,7 +11,7 @@ objects:
   spec:
     envName: ${ENV_NAME}
     pods:
-    - name: ingress
+    - name: service
       image: ${IMAGE}:${IMAGE_TAG}
       minReplicas: ${{MIN_REPLICAS}}
       livenessProbe:
