@@ -9,7 +9,7 @@ APP_NAME="ingress"  # name of app-sre "application" folder this component lives 
 COMPONENT_NAME="ingress"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-ingress"  
 
-IQE_PLUGINS="ingress,advisor,host_inventory"
+IQE_PLUGINS="ingress"
 IQE_MARKER_EXPRESSION="smoke"
 IQE_FILTER_EXPRESSION=""
 
