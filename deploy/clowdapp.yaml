@@ -53,6 +53,12 @@ objects:
           cpu: 200m
           memory: 256Mi
       web: true
+      volumes:
+      - emptyDir: {}
+        name: tmpdir
+      volumeMounts:
+      - mountPath: /tmp
+        name: tmpdir
     objectStore:
     - ${INGRESS_STAGEBUCKET}
     kafkaTopics:
