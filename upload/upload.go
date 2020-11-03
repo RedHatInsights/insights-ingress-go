@@ -200,6 +200,7 @@ func NewHandler(
 			Key:     reqID,
 			Account: vr.Account,
 			OrgId:   vr.Principal,
+			Size:    size,
 		}
 
 		start := time.Now()

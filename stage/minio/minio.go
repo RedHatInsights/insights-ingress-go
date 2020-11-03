@@ -28,7 +28,7 @@ func (s *Stager) Stage(in *stage.Input) (string, error) {
 	object := in.Payload
 	contentType := "application/gzip"
 
-	_, err := s.Client.PutObject(bucketName, objectName, object, -1, minio.PutObjectOptions{ContentType: contentType})
+	_, err := s.Client.PutObject(bucketName, objectName, object, in.Size, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		return "", errors.New("Failed to upload to minio" + err.Error())
 	}

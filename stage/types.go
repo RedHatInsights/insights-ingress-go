@@ -8,6 +8,7 @@ type Input struct {
 	Key     string
 	Account string
 	OrgId   string
+	Size    int64
 }
 
 // Close closes the underlying ReadCloser as long as it isn't nil
