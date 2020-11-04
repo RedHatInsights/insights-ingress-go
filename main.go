@@ -47,6 +47,7 @@ func main() {
 	l.InitLogger()
 	cfg := config.Get()
 	r := chi.NewRouter()
+	mr := chi.NewRouter()
 	r.Use(
 		request_id.ConfiguredRequestID("x-rh-insights-request-id"),
 		middleware.RealIP,
@@ -94,17 +95,25 @@ func main() {
 	r.Mount("/api/ingress/v1", sub)
 	r.Mount("/r/insights/platform/ingress/v1", sub)
 	r.Get("/", lubDub)
-	r.Handle("/metrics", promhttp.Handler())
+	mr.Get("/", lubDub)
+	mr.Handle("/metrics", promhttp.Handler())
 
 	if cfg.Profile {
 		r.Mount("/debug", middleware.Profiler())
 	}
 
-	l.Log.WithFields(logrus.Fields{"port": cfg.Port}).Info("Starting Service")
+	l.Log.WithFields(logrus.Fields{"Web Port": cfg.WebPort}).Info("Starting Service")
 
 	srv := http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Port),
+		Addr:    fmt.Sprintf(":%d", cfg.WebPort),
 		Handler: r,
+	}
+
+	l.Log.WithFields(logrus.Fields{"Metrics Port": cfg.MetricsPort}).Info("Starting Service")
+
+	msrv := http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.MetricsPort),
+		Handler: mr,
 	}
 
 	idleConnsClosed := make(chan struct{})
@@ -115,11 +124,21 @@ func main() {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
+		if err := msrv.Shutdown(context.Background()); err != nil {
+			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+		}
 		close(idleConnsClosed)
 	}()
 
 	// create and expose the version information as a prometheus metric
 	version.ExposeVersion()
+
+	go func() {
+
+		if err := msrv.ListenAndServe(); err != http.ErrServerClosed {
+			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Metrics Service Stopped")
+		}
+	}()
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Service Stopped")

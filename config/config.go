@@ -21,7 +21,8 @@ type IngressConfig struct {
 	KafkaGroupID         string
 	KafkaTrackerTopic    string
 	ValidTopics          []string
-	Port                 int
+	WebPort              int
+	MetricsPort          int
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
@@ -44,7 +45,8 @@ func Get() *IngressConfig {
 		sb := os.Getenv("INGRESS_STAGEBUCKET")
 		bucket, _ := clowder.ObjectBuckets[sb]
 
-		options.SetDefault("Port", cfg.WebPort)
+		options.SetDefault("WebPort", cfg.WebPort)
+		options.SetDefault("MetricsPort", cfg.MetricsPort)
 		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port))
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
 		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
@@ -52,7 +54,8 @@ func Get() *IngressConfig {
 		options.SetDefault("UseSSL", cfg.ObjectStore.Tls)
 		options.SetDefault("StageBucket", bucket.RequestedName)
 	} else {
-		options.SetDefault("Port", 3000)
+		options.SetDefault("WebPort", 3000)
+		options.SetDefault("MetricsPort", 8080)
 		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
 		options.SetDefault("StageBucket", "available")
 		options.SetDefault("UseSSL", false)
@@ -83,7 +86,8 @@ func Get() *IngressConfig {
 		KafkaGroupID:         options.GetString("KafkaGroupID"),
 		KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
-		Port:                 options.GetInt("Port"),
+		WebPort:              options.GetInt("WebPort"),
+		MetricsPort:          options.GetInt("MetricsPort"),
 		Profile:              options.GetBool("Profile"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
