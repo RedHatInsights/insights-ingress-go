@@ -32,6 +32,7 @@ type IngressConfig struct {
 	UseSSL               bool
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
+	UseClowder           bool
 }
 
 // Get returns an initialized IngressConfig
@@ -97,5 +98,6 @@ func Get() *IngressConfig {
 		MinioAccessKey:       options.GetString("MinioAccessKey"),
 		MinioSecretKey:       options.GetString("MinioSecretKey"),
 		UseSSL:               options.GetBool("UseSSL"),
+		UseClowder:           os.Getenv("CLOWDER_ENABLED") == "true",
 	}
 }
