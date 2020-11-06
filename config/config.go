@@ -29,6 +29,11 @@ type IngressConfig struct {
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
+	LogGroup             string
+	LogLevel             string
+	AwsRegion            string
+	AwsAccessKeyId       string
+	AwsSecretAccessKey   string
 	UseSSL               bool
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
@@ -54,16 +59,25 @@ func Get() *IngressConfig {
 		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
 		options.SetDefault("UseSSL", cfg.ObjectStore.Tls)
 		options.SetDefault("StageBucket", bucket.RequestedName)
+		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
+		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
+		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
+		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
 	} else {
 		options.SetDefault("WebPort", 3000)
 		options.SetDefault("MetricsPort", 8080)
 		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
 		options.SetDefault("StageBucket", "available")
+		options.SetDefault("LogGroup", "platform-dev")
+		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("UseSSL", false)
+		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
+		options.SetDefault("AwsSecretAccessKey", os.Getenv("CW_AWS_SECRET_ACCESS_KEY"))
 	}
 
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
+	options.SetDefault("LogLevel", "INFO")
 	options.SetDefault("Auth", true)
 	options.SetDefault("MaxSize", 10*1024*1024)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
@@ -97,6 +111,11 @@ func Get() *IngressConfig {
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
 		MinioAccessKey:       options.GetString("MinioAccessKey"),
 		MinioSecretKey:       options.GetString("MinioSecretKey"),
+		LogGroup:             options.GetString("LogGroup"),
+		LogLevel:             options.GetString("LogLevel"),
+		AwsRegion:            options.GetString("AwsRegion"),
+		AwsAccessKeyId:       options.GetString("AwsAccessKeyId"),
+		AwsSecretAccessKey:   options.GetString("AwsSecretAccessKey"),
 		UseSSL:               options.GetBool("UseSSL"),
 		UseClowder:           os.Getenv("CLOWDER_ENABLED") == "true",
 	}
