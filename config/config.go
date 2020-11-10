@@ -65,7 +65,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("Auth", true)
-	options.SetDefault("MaxSize", 10*1024*1024)
+	options.SetDefault("MaxSize", 100*1024*1024)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("Profile", false)
