@@ -55,7 +55,7 @@ func main() {
 	)
 
 	var stager stage.Stager
-	if os.Getenv("CLOWDER_ENABLED") == "true" {
+	if cfg.UseClowder {
 		stager = minio.GetClient(&minio.Stager{
 			Bucket: cfg.StageBucket,
 		})
