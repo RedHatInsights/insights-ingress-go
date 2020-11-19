@@ -4,13 +4,10 @@
 
 @Library("github.com/RedHatInsights/insights-pipeline-lib@v3") _
 
-
-if (env.CHANGE_ID) {
-    execSmokeTest (
-        ocDeployerBuilderPath: "platform/ingress",
-        ocDeployerComponentPath: "platform/ingress",
-        ocDeployerServiceSets: "advisor,ingress,inventory,platform-mq",
-        iqePlugins: ["iqe-advisor-plugin", "iqe-upload-plugin", "iqe-host-inventory-plugin"],
-        pytestMarker: "smoke",
-    )
-}
+execSmokeTest (
+    ocDeployerBuilderPath: "ingress/ingress",
+    ocDeployerComponentPath: "ingress/ingress",
+    ocDeployerServiceSets: "ingress,inventory,platform-mq",
+    iqePlugins: ["iqe-ingress-plugin","iqe-e2e-plugin"],
+    pytestMarker: "smoke"
+)
