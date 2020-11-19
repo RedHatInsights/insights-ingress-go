@@ -7,7 +7,7 @@ Kafka message queue to other platform services.
 
 Ingress is a component of cloud.redhat.com that allows for clients to upload data
 to Red Hat. The service sites behind a 3Scale gateway that handles authentication,
-routing, and assignment of unique ID to the upload.
+routing, and assignment of unique ID to the upload. 
 
 Ingress has an interface into cloud storage to retain customer data. It also connects
 to a Kafka message queue in order to notify services of new and available uploads
