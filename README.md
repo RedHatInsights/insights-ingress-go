@@ -128,7 +128,7 @@ You can provide these headers manually with a curl command
         $> curl -F "file=@somefile.tar.gz;type=application/vnd.redhat.<service-name>.somefile+tgz" -H "x-rh-identity: <base64 string>" -H "x-rh-request_id: testtesttest" \
         http://localhost:3000/api/ingress/v1/upload
 
-Note, that your service name needs to be in the `INGRESS_VALID_TOPICS` variable inside of the `.env` file.
+Note, that your service name needs to be in the `INGRESS_VALIDTOPICS` variable inside of the `.env` file.
 
 For testing, the following base64 identity can be used:
 
