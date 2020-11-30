@@ -98,6 +98,9 @@ objects:
     - replicas: 3
       partitions: 10
       topicName: platform.upload.mkt
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.catalog
 
 parameters:
 - name: INGRESS_STAGEBUCKET
