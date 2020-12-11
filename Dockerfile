@@ -11,7 +11,7 @@ RUN go get -d ./... && \
 RUN cp /opt/app-root/src/go/bin/insights-ingress-go /usr/bin/ && \
     cp /go/src/app/openapi.json /var/tmp/
 
-RUN yum remove -y kernel-headers npm nodejs nodejs-full-i18n
+RUN yum remove -y kernel-headers npm nodejs nodejs-full-i18n && yum update -y && yum clean all
 
 USER 1001
 CMD ["insights-ingress-go"]
