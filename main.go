@@ -55,11 +55,10 @@ func main() {
 	)
 
 	var stager stage.Stager
-	if cfg.UseClowder {
+	if cfg.MinioEndpoint != ""{
 		stager = minio.GetClient(&minio.Stager{
 			Bucket: cfg.StageBucket,
 		})
-
 	} else {
 		stager = &s3.Stager{
 			Bucket: cfg.StageBucket,
