@@ -81,14 +81,29 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 	return req, nil
 }
 
-func makeTestRequest(uri string) (*http.Request, error) {
-	formData := url.Values{"test": {"test"}}
-	req, err := http.NewRequest("POST", "/api/ingress/v1/upload", strings.NewReader(formData.Encode()))
-	if err != nil {
-		return nil, err
+func makeTestRequest(uri string, testType string, body string) (*http.Request, error) {
+
+	var req *http.Request
+	var err error
+
+	if testType == "new" {
+		formData := url.Values{"test": {"test"}}
+		req, err = http.NewRequest("POST", uri, strings.NewReader(formData.Encode()))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Add("Content-Length", strconv.Itoa(len(formData.Encode())))
 	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Content-Length", strconv.Itoa(len(formData.Encode())))
+
+	if testType == "legacy" {
+		req, err = http.NewRequest("POST", uri, strings.NewReader(body))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Content-Length", strconv.Itoa(len(body)))
+	}
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
@@ -138,10 +153,30 @@ var _ = Describe("Upload", func() {
 	Describe("Post to endpoint", func() {
 		Context("with test data for test-connection", func() {
 			It("should return HTTP 200", func() {
-				req, err := makeTestRequest("/api/ingress/v1/upload")
+				req, err := makeTestRequest("/api/ingress/v1/upload", "new", "")
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+			})
+		})
+
+		Context("with test data for legacy test-connection", func() {
+			It("should return HTTP 200", func() {
+				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", `{"test": "test"}`)
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+			})
+		})
+
+		Context("with bad test data for a legacy test connection", func() {
+			It("should return a 400", func() {
+				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", `{"some": "garbage"}`)
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(400))
 				Expect(rr.Body).ToNot(BeNil())
 			})
 		})

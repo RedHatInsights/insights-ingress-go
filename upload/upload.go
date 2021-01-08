@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -85,6 +86,20 @@ func isLegacyTestRequest(r *http.Request) bool {
 	return false
 }
 
+func isSatelliteTestRequest(r *http.Request) bool {
+
+	if r.Header.Get("Content-Type") == "application/json" {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(r.Body)
+		body := buf.String()
+		if body == `{"test": "test"}` {
+			return true
+		}
+	}
+
+	return false
+}
+
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(
 	stager stage.Stager,
@@ -115,6 +130,11 @@ func NewHandler(
 		}
 
 		if isLegacyTestRequest(r) {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if isSatelliteTestRequest(r) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
