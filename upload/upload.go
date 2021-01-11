@@ -170,12 +170,6 @@ func NewHandler(
 			return
 		}
 
-		if fileHeader.Size > cfg.MaxSize {
-			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
-			return
-		}
-
 		if err := validator.ValidateService(serviceDescriptor); err != nil {
 			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusUnsupportedMediaType}).Info("Unrecognized Service")
 			logerr("Unrecognized service", err)
@@ -191,6 +185,21 @@ func NewHandler(
 			Service:     serviceDescriptor.Service,
 			Category:    serviceDescriptor.Category,
 			B64Identity: b64Identity,
+		}
+
+		var maxSize int64
+
+		switch vr.Service {
+		case "qpc":
+			maxSize = 150*1024*1024
+		default:
+			maxSize = cfg.MaxSize
+		}
+
+		if fileHeader.Size > maxSize {
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			return
 		}
 
 		if config.Get().Auth == true {

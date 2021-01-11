@@ -357,6 +357,19 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
+		Context("with content type of qpc that is larger than global allowed size", func() {
+			It("should return a 202", func() {
+				cfg := config.Get()
+				cfg.MaxSize = 1
+				handler = NewHandler(stager, validator, tracker, *cfg)
+				boiler(http.StatusAccepted, &FilePart{
+					Name: "file",
+					Content: "testing",
+					ContentType: "application/vnd.redhat.qpc.test",
+				})
+			})
+		})
+
 		Context("when the payload fails to stage", func() {
 			It("should return 413", func() {
 				stager = &stage.Fake{ShouldError: true}
