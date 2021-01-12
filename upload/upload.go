@@ -31,6 +31,13 @@ type uploadData struct {
 	Account string `json:"account_number,omitempty"`
 }
 
+var contentSizeMap map[string]int64
+
+func init() {
+	contentSizeMap = make(map[string]int64)
+	contentSizeMap["qpc"] = config.Get().QPCMaxSize
+}
+
 // GetFile verifies that the proper upload field is in place and returns the file
 func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
 	file, fileHeader, fileErr := r.FormFile("file")
@@ -187,16 +194,19 @@ func NewHandler(
 			B64Identity: b64Identity,
 		}
 
-		var maxSize int64
+		var exceedsSizeLimit bool
 
-		switch vr.Service {
-		case "qpc":
-			maxSize = 150*1024*1024
-		default:
-			maxSize = cfg.MaxSize
+		if val, ok := contentSizeMap[vr.Service]; ok {
+			if fileHeader.Size > val {
+				exceedsSizeLimit = true
+			}
+		} else if fileHeader.Size > cfg.MaxSize {
+			exceedsSizeLimit = true
+		} else {
+			exceedsSizeLimit = false
 		}
 
-		if fileHeader.Size > maxSize {
+		if exceedsSizeLimit {
 			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			return
