@@ -163,7 +163,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with test data for legacy test-connection", func() {
 			It("should return HTTP 200", func() {
-				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", `{"test": "test"}`)
+				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", `{'test': 'test'}`)
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
