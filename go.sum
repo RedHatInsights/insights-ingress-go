@@ -379,6 +379,8 @@ github.com/redhatinsights/app-common-go v0.0.0-20201029223219-7c9180b354fa h1:Fr
 github.com/redhatinsights/app-common-go v0.0.0-20201029223219-7c9180b354fa/go.mod h1:SqgG5JkX/RNlk2d+sXamIFxhOIvWLgCBr8uK6q70ESk=
 github.com/redhatinsights/app-common-go v0.0.0-20201103171931-3c874ef92d2a h1:0IIhrwH7dlePuMdYhKGv3weoC4wxAQED4jiNmpDkgfM=
 github.com/redhatinsights/app-common-go v0.0.0-20201103171931-3c874ef92d2a/go.mod h1:SqgG5JkX/RNlk2d+sXamIFxhOIvWLgCBr8uK6q70ESk=
+github.com/redhatinsights/app-common-go v0.0.0-20201209144413-30bb68eb9891 h1:3bL5XvtQ4iQAZKdfz4q0XGJBEmtAZRJG8o54SOpUNm0=
+github.com/redhatinsights/app-common-go v0.0.0-20201209144413-30bb68eb9891/go.mod h1:SqgG5JkX/RNlk2d+sXamIFxhOIvWLgCBr8uK6q70ESk=
 github.com/redhatinsights/platform-go-middlewares v0.1.1 h1:H4EW/OhAv+g20goNwMw8AmEQPn1RPaZsPD8l4C1avP0=
 github.com/redhatinsights/platform-go-middlewares v0.1.1/go.mod h1:rRCteJQClf/CPqV81N73E3olVwTqpSg7twSAK9piH6s=
 github.com/redhatinsights/platform-go-middlewares v0.2.1 h1:Cb+GyNvdME1D/gIQIiBjK00pFGKWuBjyJwP2bUVFPCM=

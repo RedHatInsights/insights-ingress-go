@@ -29,12 +29,15 @@
         "buckets": [
             {
                 "name": "ingress-uploads-perma",
-                "requestedName": "ingress-uploads-perma"
+                "requestedName": "ingress-uploads-perma",
+                "accessKey": "",
+                "secretKey": ""
             }
         ],
         "hostname": "ingress-env-minio.clowder-system.svc",
         "port": 9000,
-        "secretKey": "value"
+        "secretKey": "value",
+	"tls": false
     },
     "webPort": 3000
 }
