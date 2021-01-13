@@ -92,7 +92,7 @@ func isSatelliteTestRequest(r *http.Request) bool {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
 		body := buf.String()
-		if body == `{"test": "test"}` {
+		if body == `{"test":"test"}` {
 			return true
 		}
 	}
