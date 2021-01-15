@@ -104,12 +104,15 @@ objects:
     - replicas: 3
       partitions: 3
       topicName: platform.upload.playbook
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.resource-optimization
 
 parameters:
 - name: INGRESS_STAGEBUCKET
   value: insights-upload-perma
 - name: INGRESS_VALIDTOPICS
-  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,topological-inventory,buckit,xavier,mkt,catalog,playbook
+  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,topological-inventory,buckit,xavier,mkt,catalog,playbook,resource-optimization
 - name: INGRESS_INVENTORYURL
   value: http://insights-inventory:8080/api/inventory/v1/hosts
 - name: INGRESS_MAXSIZE
