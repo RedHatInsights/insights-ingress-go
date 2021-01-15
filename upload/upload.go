@@ -117,7 +117,7 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
 		}
 
-		if config.Get().Auth == true {
+		if cfg.Auth == true {
 			id = identity.Get(r.Context())
 		}
 
@@ -207,7 +207,7 @@ func NewHandler(
 			return
 		}
 
-		if config.Get().Auth == true {
+		if cfg.Auth == true {
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.Internal.OrgID
 			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.Principal})
