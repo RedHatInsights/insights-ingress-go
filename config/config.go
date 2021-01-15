@@ -14,8 +14,8 @@ import (
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
 	Hostname             string
-	MaxSize              int64
-	QPCMaxSize			 int64
+	DefaultMaxSize		 int64
+	MaxSizeMap			 map[string]string
 	StageBucket          string
 	Auth                 bool
 	KafkaBrokers         []string
@@ -80,8 +80,8 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("LogLevel", "INFO")
 	options.SetDefault("Auth", true)
-	options.SetDefault("MaxSize", 100*1024*1024)
-	options.SetDefault("QPCMaxSize", 150*1024*1024)
+	options.SetDefault("DefaultMaxSize", 100*1024*1024)
+	options.SetDefault("MaxSizeMap", `{}`)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("Profile", false)
@@ -96,8 +96,8 @@ func Get() *IngressConfig {
 
 	return &IngressConfig{
 		Hostname:             kubenv.GetString("Hostname"),
-		MaxSize:              options.GetInt64("MaxSize"),
-		QPCMaxSize:			  options.GetInt64("QPCMaxSize"),
+		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
+		MaxSizeMap:			  options.GetStringMapString("MaxSizeMap"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),
 		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),

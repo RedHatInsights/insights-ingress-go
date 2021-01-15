@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
@@ -29,13 +30,6 @@ type responseBody struct {
 
 type uploadData struct {
 	Account string `json:"account_number,omitempty"`
-}
-
-var contentSizeMap map[string]int64
-
-func init() {
-	contentSizeMap = make(map[string]int64)
-	contentSizeMap["qpc"] = config.Get().QPCMaxSize
 }
 
 // GetFile verifies that the proper upload field is in place and returns the file
@@ -196,11 +190,12 @@ func NewHandler(
 
 		var exceedsSizeLimit bool
 
-		if val, ok := contentSizeMap[vr.Service]; ok {
-			if fileHeader.Size > val {
+		if val, ok := cfg.MaxSizeMap[vr.Service]; ok {
+			fileSize, _ := strconv.ParseInt(val, 10, 64)
+			if fileHeader.Size > fileSize {
 				exceedsSizeLimit = true
 			}
-		} else if fileHeader.Size > cfg.MaxSize {
+		} else if fileHeader.Size > cfg.DefaultMaxSize {
 			exceedsSizeLimit = true
 		} else {
 			exceedsSizeLimit = false
