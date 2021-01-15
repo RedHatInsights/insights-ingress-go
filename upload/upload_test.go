@@ -347,12 +347,28 @@ var _ = Describe("Upload", func() {
 		Context("with content that is larger than the max allowed size", func() {
 			It("should return 413", func() {
 				cfg := config.Get()
-				cfg.MaxSize = 1
+				cfg.DefaultMaxSize = 1
 				handler = NewHandler(stager, validator, tracker, *cfg)
 				boiler(http.StatusRequestEntityTooLarge, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
+				})
+			})
+		})
+
+		Context("with content type of qpc that is larger than global allowed size", func() {
+			It("should return a 202", func() {
+				TypeMap := make(map[string]string)
+				TypeMap["qpc"] = "157286400"
+				cfg := config.Get()
+				cfg.DefaultMaxSize = 1
+				cfg.MaxSizeMap = TypeMap
+				handler = NewHandler(stager, validator, tracker, *cfg)
+				boiler(http.StatusAccepted, &FilePart{
+					Name: "file",
+					Content: "testing",
+					ContentType: "application/vnd.redhat.qpc.test",
 				})
 			})
 		})

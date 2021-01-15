@@ -115,8 +115,10 @@ parameters:
   value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,topological-inventory,buckit,xavier,mkt,catalog,playbook,resource-optimization
 - name: INGRESS_INVENTORYURL
   value: http://insights-inventory:8080/api/inventory/v1/hosts
-- name: INGRESS_MAXSIZE
+- name: INGRESS_DEFAULTMAXSIZE
   value: '104857600'
+- name: INGRESS_MAXSIZEMAP
+  value: '{"qpc": "157286400"}'
 - name: LOG_LEVEL
   value: INFO
 - description: Cpu limit of service
