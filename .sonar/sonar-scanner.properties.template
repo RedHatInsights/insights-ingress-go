@@ -20,7 +20,7 @@ sonar.host.url=$host
 
 ## we recommend running the scanner from within the code directory
 sonar.sources=./
-sonar.exclusions=build/**,deployment/**,dist/**,node_modules/**,test/**
+sonar.exclusions=build/**,deployment/**,dist/**,node_modules/**,test/**,dashboards/**,deploy/**,development/**,docs/**
 
 #===== Optional
 

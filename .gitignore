@@ -3,3 +3,4 @@ insights-ingress-go
 .idea
 coverage.txt
 .scannerwork
+.sonar/sonar-scanner.properties
