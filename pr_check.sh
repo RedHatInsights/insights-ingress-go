@@ -13,7 +13,8 @@ IQE_PLUGINS="ingress"
 IQE_MARKER_EXPRESSION="smoke"
 IQE_FILTER_EXPRESSION=""
 
-echo "LABEL quay.expires-after=3d" >> $APP_ROOT/Dockerfile # tag expire in 3 days
+IMAGE_TAG_RETENTION="3d"
+echo "LABEL quay.expires-after=$IMAGE_TAG_RETENTION" >> $APP_ROOT/Dockerfile # tag to expire automatically
 
 # Install bonfire repo/initialize
 CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
