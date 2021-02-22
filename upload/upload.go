@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -79,21 +80,18 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 	return &md, nil
 }
 
-func isLegacyTestRequest(r *http.Request) bool {
+func isTestRequest(r *http.Request) bool {
 	r.ParseForm()
 	if r.FormValue("test") == "test" {
 		return true
 	}
-	return false
-}
-
-func isSatelliteTestRequest(r *http.Request) bool {
-
+	
 	if r.Header.Get("Content-Type") == "application/json" {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
 		body := buf.String()
-		if body == `{"test":"test"}` {
+		matched, _ := regexp.Match(`\{\s*\"test\"\s*\:\s*\"test\"\s*\}`, []byte(body))
+		if matched {
 			return true
 		}
 	}
@@ -130,12 +128,7 @@ func NewHandler(
 			}
 		}
 
-		if isLegacyTestRequest(r) {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if isSatelliteTestRequest(r) {
+		if isTestRequest(r) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
