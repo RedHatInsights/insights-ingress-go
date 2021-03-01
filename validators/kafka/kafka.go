@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/redhatinsights/insights-ingress-go/config"
 	l "github.com/redhatinsights/insights-ingress-go/logger"
 	"github.com/redhatinsights/insights-ingress-go/queue"
@@ -28,8 +29,14 @@ func New(cfg *Config, topics ...string) *Validator {
 		KafkaGroupID:              cfg.GroupID,
 	}
 	for _, topic := range topics {
+		var realizedTopicName string
 		topic = fmt.Sprintf("platform.upload.%s", topic)
-		kv.addProducer(topic)
+		if config.Get().UseClowder {
+			realizedTopicName = rhiconfig.KafkaTopics[topic].Name
+		} else {
+			realizedTopicName = topic
+		}
+		kv.addProducer(realizedTopicName)
 	}
 
 	return kv
@@ -44,8 +51,14 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	}
 	topic := serviceToTopic(vr.Service)
 	topic = fmt.Sprintf("platform.upload.%s", topic)
-	l.Log.WithFields(logrus.Fields{"data": data, "topic": topic}).Debug("Posting data to topic")
-	kv.ValidationProducerMapping[topic] <- data
+	var realizedTopicName string
+	if config.Get().UseClowder {
+		realizedTopicName = rhiconfig.KafkaTopics[topic].Name
+	} else {
+		realizedTopicName = topic
+	}
+	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
+	kv.ValidationProducerMapping[realizedTopicName] <- data
 }
 
 func (kv *Validator) addProducer(topic string) {

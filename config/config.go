@@ -1,8 +1,12 @@
 package config
 
 import (
+	"fmt"
+	"os"
 	"regexp"
 	"strings"
+
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 
 	"github.com/spf13/viper"
 )
@@ -10,38 +14,76 @@ import (
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
 	Hostname             string
-	MaxSize              int64
+	DefaultMaxSize		 int64
+	MaxSizeMap			 map[string]string
 	StageBucket          string
 	Auth                 bool
 	KafkaBrokers         []string
 	KafkaGroupID         string
 	KafkaTrackerTopic    string
 	ValidTopics          []string
-	Port                 int
+	WebPort              int
+	MetricsPort          int
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
-	MinioDev             bool
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
+	LogGroup             string
+	LogLevel             string
+	AwsRegion            string
+	AwsAccessKeyId       string
+	AwsSecretAccessKey   string
+	UseSSL               bool
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
+	UseClowder           bool
 }
 
 // Get returns an initialized IngressConfig
 func Get() *IngressConfig {
 
 	options := viper.New()
-	options.SetDefault("MaxSize", 10*1024*1024)
-	options.SetDefault("Port", 3000)
-	options.SetDefault("StageBucket", "available")
-	options.SetDefault("Auth", true)
-	options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
-	options.SetDefault("KafkaGroupID", "ingress")
+
+	if os.Getenv("CLOWDER_ENABLED") == "true" {
+		cfg := clowder.LoadedConfig
+
+		sb := os.Getenv("INGRESS_STAGEBUCKET")
+		bucket, _ := clowder.ObjectBuckets[sb]
+
+		options.SetDefault("WebPort", cfg.WebPort)
+		options.SetDefault("MetricsPort", cfg.MetricsPort)
+		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port))
+		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
+		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
+		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
+		options.SetDefault("UseSSL", cfg.ObjectStore.Tls)
+		options.SetDefault("StageBucket", bucket.RequestedName)
+		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
+		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
+		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
+		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
+	} else {
+		options.SetDefault("WebPort", 3000)
+		options.SetDefault("MetricsPort", 8080)
+		options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
+		options.SetDefault("StageBucket", "available")
+		options.SetDefault("LogGroup", "platform-dev")
+		options.SetDefault("AwsRegion", "us-east-1")
+		options.SetDefault("UseSSL", false)
+		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
+		options.SetDefault("AwsSecretAccessKey", os.Getenv("CW_AWS_SECRET_ACCESS_KEY"))
+	}
+
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
-	options.SetDefault("ValidTopics", "unit")
+	options.SetDefault("KafkaGroupID", "ingress")
+	options.SetDefault("LogLevel", "INFO")
+	options.SetDefault("Auth", true)
+	options.SetDefault("DefaultMaxSize", 100*1024*1024)
+	options.SetDefault("MaxSizeMap", `{}`)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
+	options.SetDefault("ValidTopics", "unit")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
@@ -54,22 +96,30 @@ func Get() *IngressConfig {
 
 	return &IngressConfig{
 		Hostname:             kubenv.GetString("Hostname"),
-		MaxSize:              options.GetInt64("MaxSize"),
+		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
+		MaxSizeMap:			  options.GetStringMapString("MaxSizeMap"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),
 		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
 		KafkaGroupID:         options.GetString("KafkaGroupID"),
 		KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
-		Port:                 options.GetInt("Port"),
+		WebPort:              options.GetInt("WebPort"),
+		MetricsPort:          options.GetInt("MetricsPort"),
 		Profile:              options.GetBool("Profile"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
-		MinioDev:             options.GetBool("MinioDev"),
 		MinioEndpoint:        options.GetString("MinioEndpoint"),
 		MinioAccessKey:       options.GetString("MinioAccessKey"),
 		MinioSecretKey:       options.GetString("MinioSecretKey"),
+		LogGroup:             options.GetString("LogGroup"),
+		LogLevel:             options.GetString("LogLevel"),
+		AwsRegion:            options.GetString("AwsRegion"),
+		AwsAccessKeyId:       options.GetString("AwsAccessKeyId"),
+		AwsSecretAccessKey:   options.GetString("AwsSecretAccessKey"),
+		UseSSL:               options.GetBool("UseSSL"),
+		UseClowder:           os.Getenv("CLOWDER_ENABLED") == "true",
 	}
 }

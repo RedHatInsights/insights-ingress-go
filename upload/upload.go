@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,7 +9,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
+	"regexp"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/announcers"
@@ -77,11 +80,27 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 	return &md, nil
 }
 
-func isLegacyTestRequest(r *http.Request) bool {
+// isTestRequest allows for two different test types from clients
+// Current clients test using form data to the upload endpoint
+// Legacy and satellite clients send a message body json of {"test": "test"}
+// This function is meant to allow for both tests and use regex in the event that the
+// json is sent differently in the message body depending on client version
+func isTestRequest(r *http.Request) bool {
 	r.ParseForm()
 	if r.FormValue("test") == "test" {
 		return true
 	}
+	
+	if r.Header.Get("Content-Type") == "application/json" {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(r.Body)
+		body := buf.String()
+		matched, _ := regexp.Match(`\{\s*\"test\"\s*\:\s*\"test\"\s*\}`, []byte(body))
+		if matched {
+			return true
+		}
+	}
+
 	return false
 }
 
@@ -101,7 +120,7 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
 		}
 
-		if config.Get().Auth == true {
+		if cfg.Auth == true {
 			id = identity.Get(r.Context())
 		}
 
@@ -114,7 +133,7 @@ func NewHandler(
 			}
 		}
 
-		if isLegacyTestRequest(r) {
+		if isTestRequest(r) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
@@ -150,12 +169,6 @@ func NewHandler(
 			return
 		}
 
-		if fileHeader.Size > cfg.MaxSize {
-			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
-			return
-		}
-
 		if err := validator.ValidateService(serviceDescriptor); err != nil {
 			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusUnsupportedMediaType}).Info("Unrecognized Service")
 			logerr("Unrecognized service", err)
@@ -173,7 +186,26 @@ func NewHandler(
 			B64Identity: b64Identity,
 		}
 
-		if config.Get().Auth == true {
+		var exceedsSizeLimit bool
+
+		if val, ok := cfg.MaxSizeMap[vr.Service]; ok {
+			fileSize, _ := strconv.ParseInt(val, 10, 64)
+			if fileHeader.Size > fileSize {
+				exceedsSizeLimit = true
+			}
+		} else if fileHeader.Size > cfg.DefaultMaxSize {
+			exceedsSizeLimit = true
+		} else {
+			exceedsSizeLimit = false
+		}
+
+		if exceedsSizeLimit {
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			return
+		}
+
+		if cfg.Auth == true {
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.Internal.OrgID
 			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.Principal})
@@ -200,6 +232,7 @@ func NewHandler(
 			Key:     reqID,
 			Account: vr.Account,
 			OrgId:   vr.Principal,
+			Size:    size,
 		}
 
 		start := time.Now()

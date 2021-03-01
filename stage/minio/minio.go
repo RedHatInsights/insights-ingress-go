@@ -14,7 +14,7 @@ func GetClient(stager *Stager) stage.Stager {
 	endpoint := config.Get().MinioEndpoint
 	accessKeyID := config.Get().MinioAccessKey
 	secretAccessKey := config.Get().MinioSecretKey
-	useSSL := false
+	useSSL := config.Get().UseSSL
 
 	stager.Client, _ = minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
 
@@ -28,7 +28,7 @@ func (s *Stager) Stage(in *stage.Input) (string, error) {
 	object := in.Payload
 	contentType := "application/gzip"
 
-	_, err := s.Client.PutObject(bucketName, objectName, object, -1, minio.PutObjectOptions{ContentType: contentType})
+	_, err := s.Client.PutObject(bucketName, objectName, object, in.Size, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		return "", errors.New("Failed to upload to minio" + err.Error())
 	}
