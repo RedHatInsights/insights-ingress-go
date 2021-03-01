@@ -27,8 +27,8 @@ services:
       # These vars are defined in .env
       # These are configurable
       # Ensure the directories exist prior to running this file
-      - minio_conf:/root/.minio:Z
-      - minio_data:/data:Z
+      - minio_conf:$MINIO_CONFIG_DIR
+      - minio_data:$MINIO_DATA_DIR
     ports:
       - 9000:9000
     environment:
