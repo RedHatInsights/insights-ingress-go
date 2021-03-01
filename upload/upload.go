@@ -80,6 +80,11 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 	return &md, nil
 }
 
+// isTestRequest allows for two different test types from clients
+// Current clients test using form data to the upload endpoint
+// Legacy and satellite clients send a message body json of {"test": "test"}
+// This function is meant to allow for both tests and use regex in the event that the
+// json is sent differently in the message body depending on client version
 func isTestRequest(r *http.Request) bool {
 	r.ParseForm()
 	if r.FormValue("test") == "test" {
