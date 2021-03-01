@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -79,21 +80,23 @@ func GetMetadata(r *http.Request) (*validators.Metadata, error) {
 	return &md, nil
 }
 
-func isLegacyTestRequest(r *http.Request) bool {
+// isTestRequest allows for two different test types from clients
+// Current clients test using form data to the upload endpoint
+// Legacy and satellite clients send a message body json of {"test": "test"}
+// This function is meant to allow for both tests and use regex in the event that the
+// json is sent differently in the message body depending on client version
+func isTestRequest(r *http.Request) bool {
 	r.ParseForm()
 	if r.FormValue("test") == "test" {
 		return true
 	}
-	return false
-}
-
-func isSatelliteTestRequest(r *http.Request) bool {
-
+	
 	if r.Header.Get("Content-Type") == "application/json" {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
 		body := buf.String()
-		if body == `{"test":"test"}` {
+		matched, _ := regexp.Match(`\{\s*\"test\"\s*\:\s*\"test\"\s*\}`, []byte(body))
+		if matched {
 			return true
 		}
 	}
@@ -130,12 +133,7 @@ func NewHandler(
 			}
 		}
 
-		if isLegacyTestRequest(r) {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if isSatelliteTestRequest(r) {
+		if isTestRequest(r) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
