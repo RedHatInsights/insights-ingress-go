@@ -29,6 +29,7 @@ type Metadata struct {
 	MacAddresses   []string  `json:"mac_addresses,omitempty"`
 	FQDN           string    `json:"fqdn,omitempty"`
 	BiosUUID       string    `json:"bios_uuid,omitempty"`
+	DisplayName    string    `json:"display_name,omitempty"`
 	Reporter       string    `json:"reporter"`
 	StaleTimestamp time.Time `json:"stale_timestamp"`
 }
