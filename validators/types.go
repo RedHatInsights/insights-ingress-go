@@ -30,7 +30,7 @@ type Metadata struct {
 	FQDN            string    `json:"fqdn,omitempty"`
 	BiosUUID        string    `json:"bios_uuid,omitempty"`
 	DisplayName     string    `json:"display_name,omitempty"`
-	AnsibleHostname string    `json:"ansible_hostname,omitempty"`
+	AnsibleHost 	string    `json:"ansible_host,omitempty"`
 	Reporter        string    `json:"reporter"`
 	StaleTimestamp  time.Time `json:"stale_timestamp"`
 }
