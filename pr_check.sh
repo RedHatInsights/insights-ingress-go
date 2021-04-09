@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "just testing..."
 # source unit_test.sh
 
 # --------------------------------------------
