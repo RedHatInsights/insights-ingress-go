@@ -17,7 +17,7 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/prometheus/client_golang v0.9.2
 	github.com/redhatinsights/app-common-go v0.0.0-20201103171931-3c874ef92d2a
-	github.com/redhatinsights/platform-go-middlewares v0.7.0
+	github.com/redhatinsights/platform-go-middlewares v0.8.0
 	github.com/segmentio/kafka-go v0.2.4
 	github.com/sirupsen/logrus v1.4.2
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
