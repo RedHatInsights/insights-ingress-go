@@ -14,7 +14,7 @@ IQE_FILTER_EXPRESSION=""
 
 # Install bonfire repo/initialize
 #CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
-CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/97ab2481e3c08998201d3b8b7e1f497689eec5aa/cicd
+CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/4dbcd5653beaccb2047a9e2bca16d23adcfa47d3/cicd/bootstrap.sh
 curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
 source $CICD_ROOT/build.sh
