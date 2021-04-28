@@ -55,9 +55,9 @@ objects:
           limits:
             cpu: ${CPU_LIMIT}
             memory: ${MEMORY_LIMIT}
-        requests:
-          cpu: 200m
-          memory: 256Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
         volumes:
         - emptyDir: {}
           name: tmpdir
