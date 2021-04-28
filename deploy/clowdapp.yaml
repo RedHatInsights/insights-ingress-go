@@ -59,6 +59,8 @@ objects:
     webServices:
       public:
         enabled: true
+    objectStore:
+    - ${INGRESS_STAGEBUCKET} 
     deployments:
     - name: service
       minReplicas: ${{MIN_REPLICAS}}
@@ -110,8 +112,6 @@ objects:
         volumeMounts:
         - mountPath: /tmp
           name: tmpdir
-      objectStore:
-      - ${INGRESS_STAGEBUCKET}
 
 parameters:
 - name: INGRESS_STAGEBUCKET
