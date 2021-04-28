@@ -10,12 +10,58 @@ objects:
     name: ingress
   spec:
     envName: ${ENV_NAME}
+    kafkaTopics:
+    - replicas: 3
+      partitions: 64
+      topicName: platform.upload.advisor
+    - replicas: 3
+      partitions: 3
+      topicName: platform.payload-status
+    - replicas: 3
+      partitions: 4
+      topicName: platform.upload.compliance
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.hccm
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.qpc
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.rhv
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.tower
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.leapp-reporting
+    - replicas: 3
+      partitions: 2
+      topicName: platform.upload.topological-inventory
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.buckit
+    - replicas: 3
+      partitions: 16
+      topicName: platform.upload.xavier
+    - replicas: 3
+      partitions: 10
+      topicName: platform.upload.mkt
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.catalog
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.playbook
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.resource-optimization
+    webServices:
+      public:
+        enabled: true
     deployments:
     - name: service
       minReplicas: ${{MIN_REPLICAS}}
-      webServices:
-        public:
-          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         livenessProbe:
@@ -66,52 +112,6 @@ objects:
           name: tmpdir
       objectStore:
       - ${INGRESS_STAGEBUCKET}
-      kafkaTopics:
-      - replicas: 3
-        partitions: 64
-        topicName: platform.upload.advisor
-      - replicas: 3
-        partitions: 3
-        topicName: platform.payload-status
-      - replicas: 3
-        partitions: 4
-        topicName: platform.upload.compliance
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.hccm
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.qpc
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.rhv
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.tower
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.leapp-reporting
-      - replicas: 3
-        partitions: 2
-        topicName: platform.upload.topological-inventory
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.buckit
-      - replicas: 3
-        partitions: 16
-        topicName: platform.upload.xavier
-      - replicas: 3
-        partitions: 10
-        topicName: platform.upload.mkt
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.catalog
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.playbook
-      - replicas: 3
-        partitions: 3
-        topicName: platform.upload.resource-optimization
 
 parameters:
 - name: INGRESS_STAGEBUCKET
