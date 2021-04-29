@@ -7,4 +7,3 @@ ACG_CONFIG="$(pwd)/cdappconfig.json"  go test -v -race -coverprofile=coverage.tx
 if [ $? != 0 ]; then
     exit 1
 fi
-
