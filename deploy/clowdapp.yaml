@@ -56,14 +56,14 @@ objects:
     - replicas: 3
       partitions: 3
       topicName: platform.upload.resource-optimization
-    webServices:
-      public:
-        enabled: true
     objectStore:
     - ${INGRESS_STAGEBUCKET} 
     deployments:
     - name: service
       minReplicas: ${{MIN_REPLICAS}}
+      webServices:
+        public:
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         livenessProbe:
