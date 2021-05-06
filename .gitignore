@@ -4,3 +4,4 @@ insights-ingress-go
 coverage.txt
 .scannerwork
 .sonar/sonar-scanner.properties
+gopath

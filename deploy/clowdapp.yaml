@@ -10,6 +10,9 @@ objects:
     name: ingress
   spec:
     envName: ${ENV_NAME}
+    optionalDependencies:
+    - puptoo
+    - storage-broker
     pods:
     - name: service
       image: ${IMAGE}:${IMAGE_TAG}
