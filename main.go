@@ -30,7 +30,7 @@ import (
 func lubDub(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("lubdub"))
+	w.Write([]byte("lubdubfoo"))
 }
 
 func apiSpec(w http.ResponseWriter, r *http.Request) {
