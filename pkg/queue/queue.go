@@ -3,7 +3,7 @@ package queue
 import (
 	"time"
 
-	l "github.com/redhatinsights/insights-ingress-go/logger"
+	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 

@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
-	"github.com/redhatinsights/insights-ingress-go/config"
-	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/queue"
-	"github.com/redhatinsights/insights-ingress-go/validators"
+	"github.com/redhatinsights/insights-ingress-go/pkg/config"
+	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
+	"github.com/redhatinsights/insights-ingress-go/pkg/queue"
+	"github.com/redhatinsights/insights-ingress-go/pkg/validators"
 	"github.com/sirupsen/logrus"
 )
 

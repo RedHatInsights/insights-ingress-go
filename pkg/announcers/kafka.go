@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/queue"
+	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
+	"github.com/redhatinsights/insights-ingress-go/pkg/queue"
 	"github.com/sirupsen/logrus"
 )
 

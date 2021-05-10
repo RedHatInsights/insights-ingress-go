@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/redhatinsights/insights-ingress-go/config"
+	"github.com/redhatinsights/insights-ingress-go/pkg/config"
 	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"

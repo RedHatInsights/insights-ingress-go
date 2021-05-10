@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v6"
-	"github.com/redhatinsights/insights-ingress-go/config"
-	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/pkg/config"
+	"github.com/redhatinsights/insights-ingress-go/pkg/stage"
 )
 
 // GetClient gets the minio client info
