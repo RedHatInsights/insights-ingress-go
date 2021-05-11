@@ -70,6 +70,9 @@ func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 		return nil, err
 	}
 
+	// Add newline to make stdout readable
+	j = append(j, 0x0a)
+
 	b.Write(j)
 
 	return b.Bytes(), nil
