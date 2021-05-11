@@ -2,7 +2,7 @@ FROM registry.redhat.io/ubi8/go-toolset as builder
 
 USER 0
 WORKDIR /go/src/app
-COPY go.mod go.sum .
+COPY go.mod go.sum ./
 RUN go mod download
 COPY main.go .
 COPY pkg/ ./pkg/
