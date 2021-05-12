@@ -136,7 +136,7 @@ func Get() *IngressConfig {
 			caPath, err := cfg.KafkaCa(broker)
 
 			if err != nil {
-				//TODO log some kind of error??
+				panic("Kafka CA failed to write")
 			}
 
 			ingressCfg.KafkaCA = caPath
