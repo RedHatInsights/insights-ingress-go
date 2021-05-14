@@ -14,11 +14,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/redhatinsights/insights-ingress-go/announcers"
-	"github.com/redhatinsights/insights-ingress-go/config"
-	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/stage"
-	"github.com/redhatinsights/insights-ingress-go/validators"
+	"github.com/redhatinsights/insights-ingress-go/pkg/announcers"
+	"github.com/redhatinsights/insights-ingress-go/pkg/config"
+	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
+	"github.com/redhatinsights/insights-ingress-go/pkg/stage"
+	"github.com/redhatinsights/insights-ingress-go/pkg/validators"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"github.com/sirupsen/logrus"
@@ -90,7 +90,7 @@ func isTestRequest(r *http.Request) bool {
 	if r.FormValue("test") == "test" {
 		return true
 	}
-	
+
 	if r.Header.Get("Content-Type") == "application/json" {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)

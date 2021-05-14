@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/pkg/stage"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

@@ -6,8 +6,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	cfg "github.com/redhatinsights/insights-ingress-go/config"
-	l "github.com/redhatinsights/insights-ingress-go/logger"
+	cfg "github.com/redhatinsights/insights-ingress-go/pkg/config"
+	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
 )
 
 func constructVersion() *IngressVersion {

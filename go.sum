@@ -66,6 +66,8 @@ github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
+github.com/confluentinc/confluent-kafka-go v1.6.1 h1:YxM/UtMQ2vgJX2gIgeJFUD0ANQYTEvfo4Cs4qKUlmGE=
+github.com/confluentinc/confluent-kafka-go v1.6.1/go.mod h1:u2zNLny2xq+5rWeTQjFHbDzzNuba4P1vo31r9r4uAdg=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
@@ -381,6 +383,8 @@ github.com/redhatinsights/app-common-go v0.0.0-20201029223219-7c9180b354fa h1:Fr
 github.com/redhatinsights/app-common-go v0.0.0-20201029223219-7c9180b354fa/go.mod h1:SqgG5JkX/RNlk2d+sXamIFxhOIvWLgCBr8uK6q70ESk=
 github.com/redhatinsights/app-common-go v0.0.0-20201103171931-3c874ef92d2a h1:0IIhrwH7dlePuMdYhKGv3weoC4wxAQED4jiNmpDkgfM=
 github.com/redhatinsights/app-common-go v0.0.0-20201103171931-3c874ef92d2a/go.mod h1:SqgG5JkX/RNlk2d+sXamIFxhOIvWLgCBr8uK6q70ESk=
+github.com/redhatinsights/app-common-go v1.5.0 h1:tKJHmRKWjwxh91SQNU5XJ1KaEw+0RNu2aVqYPCUWElE=
+github.com/redhatinsights/app-common-go v1.5.0/go.mod h1:SqgG5JkX/RNlk2d+sXamIFxhOIvWLgCBr8uK6q70ESk=
 github.com/redhatinsights/platform-go-middlewares v0.1.1 h1:H4EW/OhAv+g20goNwMw8AmEQPn1RPaZsPD8l4C1avP0=
 github.com/redhatinsights/platform-go-middlewares v0.1.1/go.mod h1:rRCteJQClf/CPqV81N73E3olVwTqpSg7twSAK9piH6s=
 github.com/redhatinsights/platform-go-middlewares v0.2.1 h1:Cb+GyNvdME1D/gIQIiBjK00pFGKWuBjyJwP2bUVFPCM=
@@ -684,6 +688,8 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/cheggaaa/pb.v1 v1.0.25/go.mod h1:V/YB90LKu/1FcN3WVnfiiE5oMCibMjukxqG/qStrOgw=
+gopkg.in/confluentinc/confluent-kafka-go.v1 v1.6.1 h1:nKc5Vj4Kko8O6khwOIxQ2UqkEZP7ZZ91vb/lI+ephvk=
+gopkg.in/confluentinc/confluent-kafka-go.v1 v1.6.1/go.mod h1:ZdI3yfYmdNSLQPNCpO1y00EHyWaHG5EnQEyL/ntAegY=
 gopkg.in/errgo.v2 v2.1.0/go.mod h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=
 gopkg.in/fsnotify.v1 v1.4.7 h1:xOHLXZwVvI9hhs+cLKq5+I5onOuwQLhQwiu63xxlHs4=
 gopkg.in/fsnotify.v1 v1.4.7/go.mod h1:Tz8NjZHkW78fSQdbUxIjBTcgA1z1m8ZHf0WmKUhAMys=

@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
-	"github.com/redhatinsights/insights-ingress-go/config"
-	l "github.com/redhatinsights/insights-ingress-go/logger"
-	"github.com/redhatinsights/insights-ingress-go/queue"
-	"github.com/redhatinsights/insights-ingress-go/validators"
+	"github.com/redhatinsights/insights-ingress-go/pkg/config"
+	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
+	"github.com/redhatinsights/insights-ingress-go/pkg/queue"
+	"github.com/redhatinsights/insights-ingress-go/pkg/validators"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,6 +28,16 @@ func New(cfg *Config, topics ...string) *Validator {
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
 	}
+
+	if cfg.CA != "" {
+		kv.CA = cfg.CA
+	}
+
+	if cfg.Username != "" {
+		kv.Username = cfg.Username
+		kv.Password = cfg.Password
+	}
+
 	for _, topic := range topics {
 		var realizedTopicName string
 		topic = fmt.Sprintf("platform.upload.%s", topic)
@@ -64,8 +74,11 @@ func (kv *Validator) Validate(vr *validators.Request) {
 func (kv *Validator) addProducer(topic string) {
 	ch := make(chan []byte, 100)
 	go queue.Producer(ch, &queue.ProducerConfig{
-		Brokers: kv.KafkaBrokers,
-		Topic:   topic,
+		Brokers:  kv.KafkaBrokers,
+		Topic:    topic,
+		CA:       kv.CA,
+		Username: kv.Username,
+		Password: kv.Password,
 	})
 	kv.ValidationProducerMapping[topic] = ch
 }

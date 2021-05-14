@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/redhatinsights/insights-ingress-go/validators"
-	. "github.com/redhatinsights/insights-ingress-go/validators/kafka"
+	"github.com/redhatinsights/insights-ingress-go/pkg/validators"
+	. "github.com/redhatinsights/insights-ingress-go/pkg/validators/kafka"
 )
 
 var _ = Describe("Kafka", func() {
