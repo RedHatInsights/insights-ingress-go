@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
+	l "github.com/redhatinsights/insights-ingress-go/logger"
 )
 
 func TestInventory(t *testing.T) {

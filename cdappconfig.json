@@ -10,10 +10,6 @@
             {
                 "name": "platform.upload.advisor-ingress-env-clowder-system",
                 "requestedName": "platform.upload.advisor"
-            },
-            {
-                "name": "platform.payload-status-ingress-env",
-                "requestedName": "platform.payload-status"
             }
         ]
     },
@@ -32,16 +28,13 @@
         "accessKey": "key",
         "buckets": [
             {
-                "accessKey": "key",
                 "name": "ingress-uploads-perma",
-                "requestedName": "ingress-uploads-perma",
-                "secretKey": "value"
+                "requestedName": "ingress-uploads-perma"
             }
         ],
         "hostname": "ingress-env-minio.clowder-system.svc",
         "port": 9000,
-        "secretKey": "value",
-        "tls": false
+        "secretKey": "value"
     },
     "webPort": 3000
 }

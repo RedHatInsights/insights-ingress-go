@@ -14,16 +14,13 @@ import (
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
 	Hostname             string
-	DefaultMaxSize       int64
-	MaxSizeMap           map[string]string
+	DefaultMaxSize		 int64
+	MaxSizeMap			 map[string]string
 	StageBucket          string
 	Auth                 bool
 	KafkaBrokers         []string
 	KafkaGroupID         string
 	KafkaTrackerTopic    string
-	KafkaCA              string
-	KafkaUsername        string
-	KafkaPassword        string
 	ValidTopics          []string
 	WebPort              int
 	MetricsPort          int
@@ -67,7 +64,6 @@ func Get() *IngressConfig {
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
-		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 	} else {
 		options.SetDefault("WebPort", 3000)
 		options.SetDefault("MetricsPort", 8080)
@@ -78,9 +74,9 @@ func Get() *IngressConfig {
 		options.SetDefault("UseSSL", false)
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
 		options.SetDefault("AwsSecretAccessKey", os.Getenv("CW_AWS_SECRET_ACCESS_KEY"))
-		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	}
 
+	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("LogLevel", "INFO")
 	options.SetDefault("Auth", true)
@@ -98,10 +94,10 @@ func Get() *IngressConfig {
 	kubenv.SetDefault("Hostname", "Hostname_Unavailable")
 	kubenv.AutomaticEnv()
 
-	ingressCfg := &IngressConfig{
+	return &IngressConfig{
 		Hostname:             kubenv.GetString("Hostname"),
 		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
-		MaxSizeMap:           options.GetStringMapString("MaxSizeMap"),
+		MaxSizeMap:			  options.GetStringMapString("MaxSizeMap"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),
 		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
@@ -126,23 +122,4 @@ func Get() *IngressConfig {
 		UseSSL:               options.GetBool("UseSSL"),
 		UseClowder:           os.Getenv("CLOWDER_ENABLED") == "true",
 	}
-
-	if os.Getenv("CLOWDER_ENABLED") == "true" {
-		cfg := clowder.LoadedConfig
-		broker := cfg.Kafka.Brokers[0]
-
-		if broker.Authtype != nil {
-			ingressCfg.KafkaUsername = *broker.Sasl.Username
-			ingressCfg.KafkaPassword = *broker.Sasl.Password
-			caPath, err := cfg.KafkaCa(broker)
-
-			if err != nil {
-				panic("Kafka CA failed to write")
-			}
-
-			ingressCfg.KafkaCA = caPath
-		}
-	}
-
-	return ingressCfg
 }
