@@ -8,16 +8,16 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/redhatinsights/insights-ingress-go/pkg/announcers"
-	"github.com/redhatinsights/insights-ingress-go/pkg/config"
-	l "github.com/redhatinsights/insights-ingress-go/pkg/logger"
-	"github.com/redhatinsights/insights-ingress-go/pkg/queue"
-	"github.com/redhatinsights/insights-ingress-go/pkg/stage"
-	"github.com/redhatinsights/insights-ingress-go/pkg/stage/minio"
-	"github.com/redhatinsights/insights-ingress-go/pkg/stage/s3"
-	"github.com/redhatinsights/insights-ingress-go/pkg/upload"
-	"github.com/redhatinsights/insights-ingress-go/pkg/validators/kafka"
-	"github.com/redhatinsights/insights-ingress-go/pkg/version"
+	"github.com/redhatinsights/insights-ingress-go/announcers"
+	"github.com/redhatinsights/insights-ingress-go/config"
+	l "github.com/redhatinsights/insights-ingress-go/logger"
+	"github.com/redhatinsights/insights-ingress-go/queue"
+	"github.com/redhatinsights/insights-ingress-go/stage"
+	"github.com/redhatinsights/insights-ingress-go/stage/minio"
+	"github.com/redhatinsights/insights-ingress-go/stage/s3"
+	"github.com/redhatinsights/insights-ingress-go/upload"
+	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
+	"github.com/redhatinsights/insights-ingress-go/version"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -55,7 +55,7 @@ func main() {
 	)
 
 	var stager stage.Stager
-	if cfg.MinioEndpoint != "" {
+	if cfg.MinioEndpoint != ""{
 		stager = minio.GetClient(&minio.Stager{
 			Bucket: cfg.StageBucket,
 		})
@@ -65,32 +65,16 @@ func main() {
 		}
 	}
 
-	kafkaCfg := kafka.Config{
+	validator := kafka.New(&kafka.Config{
 		Brokers: cfg.KafkaBrokers,
 		GroupID: cfg.KafkaGroupID,
-	}
+	}, cfg.ValidTopics...)
 
-	producerCfg := queue.ProducerConfig{
+	tracker := announcers.NewStatusAnnouncer(&queue.ProducerConfig{
 		Brokers: cfg.KafkaBrokers,
 		Topic:   cfg.KafkaTrackerTopic,
 		Async:   true,
-	}
-
-	if cfg.KafkaCA != "" {
-		kafkaCfg.CA = cfg.KafkaCA
-		producerCfg.CA = cfg.KafkaCA
-	}
-
-	if cfg.KafkaUsername != "" {
-		kafkaCfg.Username = cfg.KafkaUsername
-		producerCfg.Username = cfg.KafkaUsername
-		kafkaCfg.Password = cfg.KafkaPassword
-		producerCfg.Password = cfg.KafkaPassword
-	}
-
-	validator := kafka.New(&kafkaCfg, cfg.ValidTopics...)
-
-	tracker := announcers.NewStatusAnnouncer(&producerCfg)
+	})
 
 	handler := upload.NewHandler(
 		stager, validator, tracker, *cfg,

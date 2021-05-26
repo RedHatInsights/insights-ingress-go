@@ -1,17 +1,19 @@
-FROM registry.redhat.io/ubi8/go-toolset as builder
+FROM registry.redhat.io/ubi8/go-toolset
+
+WORKDIR /go/src/app
+COPY . .
 
 USER 0
-WORKDIR /go/src/app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY main.go .
-COPY pkg/ ./pkg/
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o insights-ingress-go main.go
 
-FROM registry.redhat.io/ubi8/go-toolset
-WORKDIR /
-COPY --from=builder /go/src/app/insights-ingress-go /insights-ingress-go
-COPY openapi.json /var/tmp
+RUN go get -d ./... && \
+    go install -v ./...
+
+RUN cp /opt/app-root/src/go/bin/insights-ingress-go /usr/bin/ && \
+    cp /go/src/app/openapi.json /var/tmp/
+
+RUN REMOVE_PKGS="kernel-headers npm nodejs nodejs-full-i18n binutils" && \
+    yum remove -y $REMOVE_PKGS && \
+    yum clean all
+
 USER 1001
-
-ENTRYPOINT ["/insights-ingress-go"]
+CMD ["insights-ingress-go"]

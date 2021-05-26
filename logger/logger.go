@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/redhatinsights/insights-ingress-go/pkg/config"
+	"github.com/redhatinsights/insights-ingress-go/config"
 	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -69,9 +69,6 @@ func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Add newline to make stdout readable
-	j = append(j, 0x0a)
 
 	b.Write(j)
 

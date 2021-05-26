@@ -4,7 +4,7 @@ import (
 	"errors"
 	"regexp"
 
-	"github.com/redhatinsights/insights-ingress-go/pkg/validators"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
 var contentTypePat = regexp.MustCompile(`application/vnd\.redhat\.([a-z0-9-]+)\.([a-z0-9-]+).*`)

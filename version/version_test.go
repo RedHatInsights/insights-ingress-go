@@ -3,8 +3,8 @@ package version_test
 import (
 	"fmt"
 
-	"github.com/redhatinsights/insights-ingress-go/pkg/config"
-	"github.com/redhatinsights/insights-ingress-go/pkg/version"
+	"github.com/redhatinsights/insights-ingress-go/config"
+	"github.com/redhatinsights/insights-ingress-go/version"
 
 	"net/http"
 	"net/http/httptest"

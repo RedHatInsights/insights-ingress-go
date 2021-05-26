@@ -18,11 +18,11 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 
-	"github.com/redhatinsights/insights-ingress-go/pkg/announcers"
-	"github.com/redhatinsights/insights-ingress-go/pkg/config"
-	"github.com/redhatinsights/insights-ingress-go/pkg/stage"
-	. "github.com/redhatinsights/insights-ingress-go/pkg/upload"
-	"github.com/redhatinsights/insights-ingress-go/pkg/validators"
+	"github.com/redhatinsights/insights-ingress-go/announcers"
+	"github.com/redhatinsights/insights-ingress-go/config"
+	"github.com/redhatinsights/insights-ingress-go/stage"
+	. "github.com/redhatinsights/insights-ingress-go/upload"
+	"github.com/redhatinsights/insights-ingress-go/validators"
 )
 
 type FilePart struct {
