@@ -200,8 +200,9 @@ func NewHandler(
 		}
 
 		if exceedsSizeLimit {
-			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info("File exceeds maximum file size for upload")
+			requestLogger.WithFields(logrus.Fields{"status_code": http.StatusRequestEntityTooLarge}).Info(fmt.Sprintf("File exceeds maximum file size (%v) for upload: %v", cfg.DefaultMaxSize, fileHeader.Size))
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			w.Write([]byte(fmt.Sprintf("File exceeds maximum file size (%v) for upload: %v", cfg.DefaultMaxSize, fileHeader.Size)))
 			return
 		}
 
