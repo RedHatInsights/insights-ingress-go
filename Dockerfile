@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi8/go-toolset
+FROM registry.redhat.io/ubi8/go-toolset as builder
 
 WORKDIR /go/src/app
 COPY . .
@@ -11,9 +11,13 @@ RUN go get -d ./... && \
 RUN cp /opt/app-root/src/go/bin/insights-ingress-go /usr/bin/ && \
     cp /go/src/app/openapi.json /var/tmp/
 
-RUN REMOVE_PKGS="kernel-headers npm nodejs nodejs-full-i18n binutils" && \
-    yum remove -y $REMOVE_PKGS && \
-    yum clean all
+FROM registry.redhat.io/ubi8/ubi-minimal
+
+WORKDIR /
+
+COPY --from=builder /opt/app-root/src/go/bin/insights-ingress-go ./insights-ingress-go
+COPY --from=builder /go/src/app/openapi.json /var/tmp
 
 USER 1001
-CMD ["insights-ingress-go"]
+
+CMD ["/insights-ingress-go"]
