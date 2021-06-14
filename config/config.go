@@ -27,6 +27,7 @@ type IngressConfig struct {
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
+	PayloadTrackerURL  string
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
@@ -79,6 +80,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("LogLevel", "INFO")
+	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
@@ -106,6 +108,7 @@ func Get() *IngressConfig {
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		WebPort:              options.GetInt("WebPort"),
 		MetricsPort:          options.GetInt("MetricsPort"),
+		PayloadTrackerURL:   options.GetString("PayloadTrackerURL"),
 		Profile:              options.GetBool("Profile"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),

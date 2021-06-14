@@ -15,6 +15,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/minio"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
+	"github.com/redhatinsights/insights-ingress-go/track"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
 	"github.com/redhatinsights/insights-ingress-go/version"
@@ -80,10 +81,15 @@ func main() {
 		stager, validator, tracker, *cfg,
 	)
 
+	trackEndpoint := track.NewHandler(
+		*cfg,
+	)
+
 	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
 		sub.With(identity.EnforceIdentity).Get("/", lubDub)
 		sub.With(upload.ResponseMetricsMiddleware, identity.EnforceIdentity, middleware.Logger).Post("/upload", handler)
+		sub.With(identity.EnforceIdentity).Get("/track/{requestID}", trackEndpoint)
 	} else {
 		sub.Get("/", lubDub)
 		sub.With(upload.ResponseMetricsMiddleware, middleware.Logger).Post("/upload", handler)
