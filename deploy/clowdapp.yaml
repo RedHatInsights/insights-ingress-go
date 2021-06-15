@@ -44,8 +44,8 @@ objects:
         value: ${LOG_LEVEL}
       - name: INGRESS_VALIDTOPICS
         value: ${INGRESS_VALIDTOPICS}
-      - name: INGRESS_INVENTORYURL
-        value: ${INGRESS_INVENTORYURL}
+      - name: INGRESS_PAYLOADTRACKERURL
+        value: ${INGRESS_PAYLOADTRACKERURL}
       - name: INGRESS_MAXSIZEMAP
         value: ${INGRESS_MAXSIZEMAP}
       - name: CLOWDER_ENABLED
