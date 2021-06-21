@@ -56,7 +56,7 @@ func main() {
 	)
 
 	var stager stage.Stager
-	if cfg.MinioEndpoint != ""{
+	if cfg.MinioEndpoint != "" {
 		stager = minio.GetClient(&minio.Stager{
 			Bucket: cfg.StageBucket,
 		})
@@ -66,16 +66,20 @@ func main() {
 		}
 	}
 
-	validator := kafka.New(&kafka.Config{
+	kafkaCfg := kafka.Config{
 		Brokers: cfg.KafkaBrokers,
 		GroupID: cfg.KafkaGroupID,
-	}, cfg.ValidTopics...)
+	}
 
-	tracker := announcers.NewStatusAnnouncer(&queue.ProducerConfig{
+	producerCfg := queue.ProducerConfig{
 		Brokers: cfg.KafkaBrokers,
-		Topic:   cfg.KafkaTrackerTopic,
-		Async:   true,
-	})
+		Topic: cfg.KafkaTrackerTopic,
+		Async: true,
+	}
+
+	validator := kafka.New(&kafkaCfg, cfg.ValidTopics...)
+
+	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
 	handler := upload.NewHandler(
 		stager, validator, tracker, *cfg,
