@@ -65,6 +65,7 @@ func Get() *IngressConfig {
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
+		options.SetDefault("kafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 	} else {
 		options.SetDefault("WebPort", 3000)
 		options.SetDefault("MetricsPort", 8080)
@@ -75,6 +76,7 @@ func Get() *IngressConfig {
 		options.SetDefault("UseSSL", false)
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
 		options.SetDefault("AwsSecretAccessKey", os.Getenv("CW_AWS_SECRET_ACCESS_KEY"))
+		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	}
 
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
