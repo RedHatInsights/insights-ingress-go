@@ -43,25 +43,33 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	defer p.Close()
 
+	// DeliveryChannel that we can read from for success/failure tracking
+	deliveryChan := make(chan kafka.Event)
+
 	for v := range in {
 		go func(v []byte) {
 			start := time.Now()
-			err := p.Produce(&kafka.Message{
+			err = p.Produce(&kafka.Message{
 				TopicPartition: kafka.TopicPartition{
 					Topic:     &config.Topic,
 					Partition: kafka.PartitionAny,
 				},
 				Value: v,
-			}, nil)
+			}, deliveryChan)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
-			if err != nil {
+			
+			e := <-deliveryChan
+			m := e.(*kafka.Message)
+
+			if m.TopicPartition.Error != nil {
 				l.Log.WithFields(logrus.Fields{"error": err}).Error("error while writing, putting message back into the channel")
 				in <- v
 				publishFailures.With(prom.Labels{"topic": config.Topic}).Inc()
 				return
+			} else {
+				messagesPublished.With(prom.Labels{"topic": config.Topic}).Inc()
 			}
-
-			messagesPublished.With(prom.Labels{"topic": config.Topic}).Inc()
 		}(v)
 	}
+
 }
