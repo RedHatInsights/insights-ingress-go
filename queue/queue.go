@@ -36,6 +36,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 		"sasl.password": config.Password,
 		"security.protocol": config.Protocol,
 		"sasl.mechanism": config.SASLMechanism,
+		"ssl.ca.location": config.CA,
 	}
 
 	p, err := kafka.NewProducer(&configMap)
