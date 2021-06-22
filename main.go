@@ -83,10 +83,20 @@ func main() {
 	}
 
 	if cfg.KafkaUsername != "" {
-		kafkaCfg.Username =cfg.KafkaUsername
+		kafkaCfg.Username = cfg.KafkaUsername
 		producerCfg.Username = cfg.KafkaUsername
 		kafkaCfg.Password = cfg.KafkaPassword
 		producerCfg.Password = cfg.KafkaPassword
+	}
+
+	if cfg.SASLMechanism != "" {
+		kafkaCfg.SASLMechanism = cfg.SASLMechanism
+		producerCfg.SASLMechanism = cfg.SASLMechanism
+	}
+
+	if cfg.Protocol != "" {
+		kafkaCfg.Protocol = cfg.Protocol
+		producerCfg.Protocol = cfg.Protocol
 	}
 
 	validator := kafka.New(&kafkaCfg, cfg.ValidTopics...)

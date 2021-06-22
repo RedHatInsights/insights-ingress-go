@@ -38,6 +38,11 @@ func New(cfg *Config, topics ...string) *Validator {
 		kv.Password = cfg.Password
 	}
 
+	if cfg.SASLMechanism != "" {
+		kv.SASLMechanism = cfg.SASLMechanism
+		kv.Protocol = cfg.Protocol
+	}
+
 	for _, topic := range topics {
 		var realizedTopicName string
 		topic = fmt.Sprintf("platform.upload.%s", topic)
@@ -79,6 +84,8 @@ func (kv *Validator) addProducer(topic string) {
 		CA: kv.CA,
 		Username: kv.Username,
 		Password: kv.Password,
+		Protocol: kv.Protocol,
+		SASLMechanism: kv.SASLMechanism,
 	})
 	kv.ValidationProducerMapping[topic] = ch
 }

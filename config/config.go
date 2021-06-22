@@ -24,6 +24,8 @@ type IngressConfig struct {
 	KafkaCA				 string
 	KafkaUsername		 string
 	KafkaPassword		 string
+	SASLMechanism		 string
+	Protocol             string
 	ValidTopics          []string
 	WebPort              int
 	MetricsPort          int
@@ -138,6 +140,8 @@ func Get() *IngressConfig {
 		if broker.Authtype != nil {
 			ingressCfg.KafkaUsername = *broker.Sasl.Username
 			ingressCfg.KafkaPassword = *broker.Sasl.Password
+			ingressCfg.SASLMechanism = "SCRAM-SHA-512"
+			ingressCfg.Protocol = "sasl_ssl"
 			caPath, err := cfg.KafkaCa(broker)
 
 			if err != nil {
