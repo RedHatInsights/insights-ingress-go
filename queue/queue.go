@@ -30,13 +30,22 @@ var (
 // Each message is sent to the writer via a goroutine so that the internal batch
 // buffer has an opportunity to fill.
 func Producer(in chan []byte, config *ProducerConfig) {
-	configMap := kafka.ConfigMap{
+
+	var configMap kafka.ConfigMap
+
+	if config.SASLMechanism != "" {
+		configMap = kafka.ConfigMap{
+			"bootstrap.servers": config.Brokers[0],
+			"security.protocol": config.Protocol,
+			"sasl.mechanism": config.SASLMechanism,
+			"ssl.ca.location": config.CA,
+			"sasl.username": config.Username,
+			"sasl.password": config.Password,
+		}
+	} else {
+		configMap = kafka.ConfigMap{
 		"bootstrap.servers": config.Brokers[0],
-		"sasl.username": config.Username,
-		"sasl.password": config.Password,
-		"security.protocol": config.Protocol,
-		"sasl.mechanism": config.SASLMechanism,
-		"ssl.ca.location": config.CA,
+		}
 	}
 
 	p, err := kafka.NewProducer(&configMap)
