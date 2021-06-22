@@ -32,6 +32,10 @@ var (
 func Producer(in chan []byte, config *ProducerConfig) {
 	configMap := kafka.ConfigMap{
 		"bootstrap.servers": config.Brokers[0],
+		"sasl.username": config.Username,
+		"sasl.password": config.Password,
+		"security.protocol": config.Protocol,
+		"sasl.mechanism": config.SASLMechanism,
 	}
 
 	p, err := kafka.NewProducer(&configMap)

@@ -8,6 +8,8 @@ type Validator struct {
 	Username				  string
 	Password			      string
 	CA						  string
+	SASLMechanism			  string
+	Protocol                  string
 }
 
 // Config configures a new Kafka Validator
@@ -18,4 +20,6 @@ type Config struct {
 	Username        string
 	Password        string
 	CA              string
+	Protocol        string
+	SASLMechanism   string
 }
