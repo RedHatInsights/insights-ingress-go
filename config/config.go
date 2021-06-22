@@ -21,6 +21,9 @@ type IngressConfig struct {
 	KafkaBrokers         []string
 	KafkaGroupID         string
 	KafkaTrackerTopic    string
+	KafkaCA				 string
+	KafkaUsername		 string
+	KafkaPassword		 string
 	ValidTopics          []string
 	WebPort              int
 	MetricsPort          int
@@ -98,7 +101,7 @@ func Get() *IngressConfig {
 	kubenv.SetDefault("Hostname", "Hostname_Unavailable")
 	kubenv.AutomaticEnv()
 
-	return &IngressConfig{
+	ingressCfg := &IngressConfig{
 		Hostname:             kubenv.GetString("Hostname"),
 		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
 		MaxSizeMap:			  options.GetStringMapString("MaxSizeMap"),
@@ -127,4 +130,24 @@ func Get() *IngressConfig {
 		UseSSL:               options.GetBool("UseSSL"),
 		UseClowder:           os.Getenv("CLOWDER_ENABLED") == "true",
 	}
+	
+	if os.Getenv("CLOWDER_ENABLED") == "true" {
+		cfg := clowder.LoadedConfig
+		broker := cfg.Kafka.Brokers[0]
+
+		if broker.Authtype != nil {
+			ingressCfg.KafkaUsername = *broker.Sasl.Username
+			ingressCfg.KafkaPassword = *broker.Sasl.Password
+			caPath, err := cfg.KafkaCa(broker)
+
+			if err != nil {
+				panic("Kafka CA failed to write")
+			}
+
+			ingressCfg.KafkaCA = caPath
+		}
+	}
+
+	return ingressCfg
+
 }

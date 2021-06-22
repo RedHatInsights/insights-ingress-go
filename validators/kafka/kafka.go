@@ -28,6 +28,16 @@ func New(cfg *Config, topics ...string) *Validator {
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
 	}
+
+	if cfg.CA != "" {
+		kv.CA = cfg.CA
+	}
+
+	if cfg.Username != "" {
+		kv.Username = cfg.Username
+		kv.Password = cfg.Password
+	}
+
 	for _, topic := range topics {
 		var realizedTopicName string
 		topic = fmt.Sprintf("platform.upload.%s", topic)
@@ -66,6 +76,9 @@ func (kv *Validator) addProducer(topic string) {
 	go queue.Producer(ch, &queue.ProducerConfig{
 		Brokers: kv.KafkaBrokers,
 		Topic:   topic,
+		CA: kv.CA,
+		Username: kv.Username,
+		Password: kv.Password,
 	})
 	kv.ValidationProducerMapping[topic] = ch
 }

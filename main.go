@@ -77,6 +77,18 @@ func main() {
 		Async: true,
 	}
 
+	if cfg.KafkaCA != "" {
+		kafkaCfg.CA = cfg.KafkaCA
+		producerCfg.CA = cfg.KafkaCA
+	}
+
+	if cfg.KafkaUsername != "" {
+		kafkaCfg.Username =cfg.KafkaUsername
+		producerCfg.Username = cfg.KafkaUsername
+		kafkaCfg.Password = cfg.KafkaPassword
+		producerCfg.Password = cfg.KafkaPassword
+	}
+
 	validator := kafka.New(&kafkaCfg, cfg.ValidTopics...)
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
