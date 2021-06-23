@@ -41,10 +41,11 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			"ssl.ca.location": config.CA,
 			"sasl.username": config.Username,
 			"sasl.password": config.Password,
+			"go.delivery.reports": false,
 		}
 	} else {
 		configMap = kafka.ConfigMap{
-		"bootstrap.servers": config.Brokers[0],
+			"bootstrap.servers": config.Brokers[0],
 		}
 	}
 
@@ -57,26 +58,20 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	defer p.Close()
 
-	// DeliveryChannel that we can read from for success/failure tracking
-	deliveryChan := make(chan kafka.Event)
-
 	for v := range in {
 		go func(v []byte) {
 			start := time.Now()
-			err = p.Produce(&kafka.Message{
+			err := p.Produce(&kafka.Message{
 				TopicPartition: kafka.TopicPartition{
 					Topic:     &config.Topic,
 					Partition: kafka.PartitionAny,
 				},
 				Value: v,
-			}, deliveryChan)
+			}, nil)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
-			
-			e := <-deliveryChan
-			m := e.(*kafka.Message)
 
-			if m.TopicPartition.Error != nil {
-				l.Log.WithFields(logrus.Fields{"error": err}).Error("error while writing, putting message back into the channel")
+			if err != nil {
+				l.Log.WithFields(logrus.Fields{"error": err}).Error("error while writing, putting message back into channel")
 				in <- v
 				publishFailures.With(prom.Labels{"topic": config.Topic}).Inc()
 				return
