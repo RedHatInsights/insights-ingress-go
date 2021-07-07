@@ -145,4 +145,4 @@ parameters:
   value: "false"
 - description: ClowdEnv Name
   name: ENV_NAME
-  requred: false
+  required: true
