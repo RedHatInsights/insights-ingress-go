@@ -15,7 +15,7 @@ import (
 	. "github.com/redhatinsights/insights-ingress-go/track"
 )
 
-func makeTestRequest(uri string, request_id string, account string) (*http.Request, error) {
+func makeTestRequest(uri string, request_id string, account string, account_type string) (*http.Request, error) {
 
 	var req *http.Request
 	var err error
@@ -29,14 +29,29 @@ func makeTestRequest(uri string, request_id string, account string) (*http.Reque
 	rctx.URLParams.Add("request-id", request_id)
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
-		Identity: identity.Identity{
-			AccountNumber: account,
-			Internal: identity.Internal{
-				OrgID: "12345",
-			},
-		},
-	})
+
+	switch account_type {
+		case "associate":
+			ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+				Identity: identity.Identity{
+					AccountNumber: account,
+					Internal: identity.Internal{
+						OrgID: "12345",
+					},
+					Type: "Associate",
+				},
+			})
+		default:
+			ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+				Identity: identity.Identity{
+					AccountNumber: account,
+					Internal: identity.Internal{
+						OrgID: "12345",
+					},
+				},
+			})
+
+	}
 
 	req = req.WithContext(context.WithValue(ctx, chi.RouteCtxKey, rctx))
 
@@ -63,7 +78,7 @@ var _ = Describe("Track", func() {
 		Context("with a valid request-id", func() {
 			It("should return HTTP 200", func() {
 				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
-				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719")
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "customer")
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
@@ -75,7 +90,7 @@ var _ = Describe("Track", func() {
 		Context("with an invalid request-id", func () {
 			It("should return HTTP 404", func () {
 				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, badJsonID))
-				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719")
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "customer")
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(404))
@@ -85,10 +100,22 @@ var _ = Describe("Track", func() {
 		Context("with an incorrect account", func() {
 			It("should return an HTTP 403", func () {
 				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
-				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710")
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710", "customer")
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(403))
+			})
+		})
+
+		Context("with an associate login", func() {
+			It("should return HTTP 200", func() {
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710", "associate")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+				Expect(rr.Body.String()).To(Equal(goodJsonBody))
 			})
 		})
 	})

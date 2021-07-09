@@ -52,10 +52,12 @@ func NewHandler(
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-
-		if pt.Data[0].Account != id.Identity.AccountNumber {
-			w.WriteHeader(http.StatusForbidden)
-			return
+		
+		if id.Identity.Type != "Associate" {
+			if pt.Data[0].Account != id.Identity.AccountNumber {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
