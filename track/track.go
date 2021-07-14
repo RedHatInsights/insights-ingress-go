@@ -82,7 +82,7 @@ func NewHandler(
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if verbosity >= "1" {
+		if verbosity >= "2" {
 			w.Write(body)
 		} else {
 			w.Write(responseBody)
