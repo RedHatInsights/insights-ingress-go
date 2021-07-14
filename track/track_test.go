@@ -91,7 +91,7 @@ var _ = Describe("Track", func() {
 		Context("with a valid request-id and higher verbisity", func() {
 			It("should return HTTP 200", func() {
 				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
-				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2?verbosity=2", "3e3f56e642a248008811cce123b2c0f2", "6089719")
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2?verbosity=2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "customer")
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
@@ -128,7 +128,7 @@ var _ = Describe("Track", func() {
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
 				Expect(rr.Body).ToNot(BeNil())
-				Expect(rr.Body.String()).To(Equal(goodJsonBody))
+				Expect(rr.Body.String()).To(Equal(minimalJsonBody))
 			})
 		})
 	})
