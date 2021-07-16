@@ -146,4 +146,5 @@ parameters:
   value: "false"
 - description: ClowdEnv Name
   name: ENV_NAME
-  requred: false
+  value: "insights-ingress"
+  required: true
