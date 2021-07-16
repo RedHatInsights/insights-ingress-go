@@ -56,11 +56,11 @@ func Get() *IngressConfig {
 		cfg := clowder.LoadedConfig
 
 		sb := os.Getenv("INGRESS_STAGEBUCKET")
-		bucket, _ := clowder.ObjectBuckets[sb]
+		bucket := clowder.ObjectBuckets[sb]
 
-		options.SetDefault("WebPort", cfg.WebPort)
+		options.SetDefault("WebPort", cfg.PublicPort)
 		options.SetDefault("MetricsPort", cfg.MetricsPort)
-		options.SetDefault("KafkaBrokers", fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port))
+		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
 		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
 		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
