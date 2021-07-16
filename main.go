@@ -15,6 +15,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/stage"
 	"github.com/redhatinsights/insights-ingress-go/stage/minio"
 	"github.com/redhatinsights/insights-ingress-go/stage/s3"
+	"github.com/redhatinsights/insights-ingress-go/track"
 	"github.com/redhatinsights/insights-ingress-go/upload"
 	"github.com/redhatinsights/insights-ingress-go/validators/kafka"
 	"github.com/redhatinsights/insights-ingress-go/version"
@@ -55,7 +56,7 @@ func main() {
 	)
 
 	var stager stage.Stager
-	if cfg.MinioEndpoint != ""{
+	if cfg.MinioEndpoint != "" {
 		stager = minio.GetClient(&minio.Stager{
 			Bucket: cfg.StageBucket,
 		})
@@ -65,25 +66,56 @@ func main() {
 		}
 	}
 
-	validator := kafka.New(&kafka.Config{
+	kafkaCfg := kafka.Config{
 		Brokers: cfg.KafkaBrokers,
 		GroupID: cfg.KafkaGroupID,
-	}, cfg.ValidTopics...)
+	}
 
-	tracker := announcers.NewStatusAnnouncer(&queue.ProducerConfig{
+	producerCfg := queue.ProducerConfig{
 		Brokers: cfg.KafkaBrokers,
-		Topic:   cfg.KafkaTrackerTopic,
-		Async:   true,
-	})
+		Topic: cfg.KafkaTrackerTopic,
+		Async: true,
+	}
+
+	if cfg.KafkaCA != "" {
+		kafkaCfg.CA = cfg.KafkaCA
+		producerCfg.CA = cfg.KafkaCA
+	}
+
+	if cfg.KafkaUsername != "" {
+		kafkaCfg.Username = cfg.KafkaUsername
+		producerCfg.Username = cfg.KafkaUsername
+		kafkaCfg.Password = cfg.KafkaPassword
+		producerCfg.Password = cfg.KafkaPassword
+	}
+
+	if cfg.SASLMechanism != "" {
+		kafkaCfg.SASLMechanism = cfg.SASLMechanism
+		producerCfg.SASLMechanism = cfg.SASLMechanism
+	}
+
+	if cfg.Protocol != "" {
+		kafkaCfg.Protocol = cfg.Protocol
+		producerCfg.Protocol = cfg.Protocol
+	}
+
+	validator := kafka.New(&kafkaCfg, cfg.ValidTopics...)
+
+	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
 	handler := upload.NewHandler(
 		stager, validator, tracker, *cfg,
+	)
+
+	trackEndpoint := track.NewHandler(
+		*cfg,
 	)
 
 	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
 		sub.With(identity.EnforceIdentity).Get("/", lubDub)
 		sub.With(upload.ResponseMetricsMiddleware, identity.EnforceIdentity, middleware.Logger).Post("/upload", handler)
+		sub.With(identity.EnforceIdentity).Get("/track/{requestID}", trackEndpoint)
 	} else {
 		sub.Get("/", lubDub)
 		sub.With(upload.ResponseMetricsMiddleware, middleware.Logger).Post("/upload", handler)

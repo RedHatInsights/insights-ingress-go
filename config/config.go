@@ -21,12 +21,18 @@ type IngressConfig struct {
 	KafkaBrokers         []string
 	KafkaGroupID         string
 	KafkaTrackerTopic    string
+	KafkaCA				 string
+	KafkaUsername		 string
+	KafkaPassword		 string
+	SASLMechanism		 string
+	Protocol             string
 	ValidTopics          []string
 	WebPort              int
 	MetricsPort          int
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
+	PayloadTrackerURL  string
 	MinioEndpoint        string
 	MinioAccessKey       string
 	MinioSecretKey       string
@@ -64,6 +70,7 @@ func Get() *IngressConfig {
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
+		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 	} else {
 		options.SetDefault("WebPort", 3000)
 		options.SetDefault("MetricsPort", 8080)
@@ -74,11 +81,13 @@ func Get() *IngressConfig {
 		options.SetDefault("UseSSL", false)
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
 		options.SetDefault("AwsSecretAccessKey", os.Getenv("CW_AWS_SECRET_ACCESS_KEY"))
+		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	}
 
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("LogLevel", "INFO")
+	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
@@ -94,7 +103,7 @@ func Get() *IngressConfig {
 	kubenv.SetDefault("Hostname", "Hostname_Unavailable")
 	kubenv.AutomaticEnv()
 
-	return &IngressConfig{
+	ingressCfg := &IngressConfig{
 		Hostname:             kubenv.GetString("Hostname"),
 		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
 		MaxSizeMap:			  options.GetStringMapString("MaxSizeMap"),
@@ -106,6 +115,7 @@ func Get() *IngressConfig {
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		WebPort:              options.GetInt("WebPort"),
 		MetricsPort:          options.GetInt("MetricsPort"),
+		PayloadTrackerURL:   options.GetString("PayloadTrackerURL"),
 		Profile:              options.GetBool("Profile"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
@@ -122,4 +132,26 @@ func Get() *IngressConfig {
 		UseSSL:               options.GetBool("UseSSL"),
 		UseClowder:           os.Getenv("CLOWDER_ENABLED") == "true",
 	}
+	
+	if os.Getenv("CLOWDER_ENABLED") == "true" {
+		cfg := clowder.LoadedConfig
+		broker := cfg.Kafka.Brokers[0]
+
+		if broker.Authtype != nil {
+			ingressCfg.KafkaUsername = *broker.Sasl.Username
+			ingressCfg.KafkaPassword = *broker.Sasl.Password
+			ingressCfg.SASLMechanism = "SCRAM-SHA-512"
+			ingressCfg.Protocol = "sasl_ssl"
+			caPath, err := cfg.KafkaCa(broker)
+
+			if err != nil {
+				panic("Kafka CA failed to write")
+			}
+
+			ingressCfg.KafkaCA = caPath
+		}
+	}
+
+	return ingressCfg
+
 }
