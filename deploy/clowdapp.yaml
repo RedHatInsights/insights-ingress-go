@@ -13,57 +13,58 @@ objects:
     optionalDependencies:
     - puptoo
     - storage-broker
-    pods:
+    deployments:
     - name: service
-      image: ${IMAGE}:${IMAGE_TAG}
       minReplicas: ${{MIN_REPLICAS}}
-      livenessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /
-          port: 8000
-          scheme: HTTP
-        initialDelaySeconds: 35
-        periodSeconds: 5
-        successThreshold: 1
-        timeoutSeconds: 120
-      readinessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /
-          port: 8000
-          scheme: HTTP
-        initialDelaySeconds: 35
-        periodSeconds: 5
-        successThreshold: 1
-        timeoutSeconds: 120
-      env:
-      - name: INGRESS_STAGEBUCKET
-        value: ${INGRESS_STAGEBUCKET}
-      - name: INGRESS_LOG_LEVEL
-        value: ${LOG_LEVEL}
-      - name: INGRESS_VALIDTOPICS
-        value: ${INGRESS_VALIDTOPICS}
-      - name: INGRESS_PAYLOADTRACKERURL
-        value: ${INGRESS_PAYLOADTRACKERURL}
-      - name: INGRESS_MAXSIZEMAP
-        value: ${INGRESS_MAXSIZEMAP}
-      - name: CLOWDER_ENABLED
-        value: ${CLOWDER_ENABLED}
-      resources:
-        limits:
-          cpu: ${CPU_LIMIT}
-          memory: ${MEMORY_LIMIT}
-        requests:
-          cpu: 200m
-          memory: 256Mi
       web: true
-      volumes:
-      - emptyDir: {}
-        name: tmpdir
-      volumeMounts:
-      - mountPath: /tmp
-        name: tmpdir
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 35
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 120
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 35
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 120
+        env:
+        - name: INGRESS_STAGEBUCKET
+          value: ${INGRESS_STAGEBUCKET}
+        - name: INGRESS_LOG_LEVEL
+          value: ${LOG_LEVEL}
+        - name: INGRESS_VALIDTOPICS
+          value: ${INGRESS_VALIDTOPICS}
+        - name: INGRESS_INVENTORYURL
+          value: ${INGRESS_INVENTORYURL}
+        - name: INGRESS_MAXSIZEMAP
+          value: ${INGRESS_MAXSIZEMAP}
+        - name: CLOWDER_ENABLED
+          value: ${CLOWDER_ENABLED}
+        resources:
+          limits:
+            cpu: ${CPU_LIMIT}
+            memory: ${MEMORY_LIMIT}
+          requests:
+            cpu: 200m
+            memory: 256Mi
+        volumes:
+        - emptyDir: {}
+          name: tmpdir
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmpdir
     objectStore:
     - ${INGRESS_STAGEBUCKET}
     kafkaTopics:
@@ -145,4 +146,5 @@ parameters:
   value: "false"
 - description: ClowdEnv Name
   name: ENV_NAME
-  requred: false
+  value: "insights-ingress"
+  required: true
