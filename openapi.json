@@ -85,7 +85,41 @@
           }
         }
       }
-    }
+    },
+    "/track/{request_id}": {
+      "get": {
+        "summary": "Find status of a specific request",
+        "responses": {
+          "200": {
+            "description": "Payload responses"
+          },
+          "403": {
+            "description": "Authentication failure for specific request_id"
+          },
+          "404": {
+            "description": "Request_id not found"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "verbosity",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 2
+        }
+      ]
   },
   "components": {
     "schemas": {
