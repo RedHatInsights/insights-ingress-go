@@ -70,6 +70,8 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			}, nil)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
 
+			p.Flush(15 * 1000)
+
 			if err != nil {
 				l.Log.WithFields(logrus.Fields{"error": err}).Error("error while writing, putting message back into channel")
 				in <- v
@@ -80,5 +82,4 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			}
 		}(v)
 	}
-
 }
