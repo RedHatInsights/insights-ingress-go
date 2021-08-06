@@ -24,6 +24,10 @@ var (
 		Name: "ingress_kafka_produce_failures",
 		Help: "Number of times a message was failed to be produced",
 	}, []string{"topic"})
+	producerCount = pa.NewGauge(prom.GaugeOpts{
+		Name: "ingress_kafka_producer_go_routine_count",
+		Help: "Number of go routines currently publishing to kafka",
+	})
 )
 
 // Producer consumes in and produces to the topic in config
@@ -60,6 +64,8 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	for v := range in {
 		go func(v []byte) {
+			producerCount.Inc()
+			defer producerCount.Dec()
 			start := time.Now()
 			err := p.Produce(&kafka.Message{
 				TopicPartition: kafka.TopicPartition{
@@ -69,8 +75,6 @@ func Producer(in chan []byte, config *ProducerConfig) {
 				Value: v,
 			}, nil)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
-
-			p.Flush(15 * 1000)
 
 			if err != nil {
 				l.Log.WithFields(logrus.Fields{"error": err}).Error("error while writing, putting message back into channel")
