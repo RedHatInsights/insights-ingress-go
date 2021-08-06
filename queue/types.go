@@ -10,5 +10,5 @@ type ProducerConfig struct {
 	CA        string
 	Protocol  string
 	SASLMechanism string
-	DeliveryReports bool
+	KafkaDeliveryReports bool
 }
