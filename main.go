@@ -75,6 +75,7 @@ func main() {
 		Brokers: cfg.KafkaBrokers,
 		Topic: cfg.KafkaTrackerTopic,
 		Async: true,
+		DeliveryReports: cfg.DeliveryReports,
 	}
 
 	if cfg.KafkaCA != "" {

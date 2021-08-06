@@ -45,11 +45,12 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			"ssl.ca.location": config.CA,
 			"sasl.username": config.Username,
 			"sasl.password": config.Password,
-			"go.delivery.reports": false,
+			"go.delivery.reports": config.DeliveryReports,
 		}
 	} else {
 		configMap = kafka.ConfigMap{
 			"bootstrap.servers": config.Brokers[0],
+			"go.delivery.reports": config.DeliveryReports,
 		}
 	}
 
