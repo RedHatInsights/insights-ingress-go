@@ -24,6 +24,7 @@ type IngressConfig struct {
 	KafkaCA				 string
 	KafkaUsername		 string
 	KafkaPassword		 string
+	KafkaDeliveryReports	   	 bool
 	SASLMechanism		 string
 	Protocol             string
 	ValidTopics          []string
@@ -86,6 +87,7 @@ func Get() *IngressConfig {
 
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
+	options.SetDefault("KafkaDeliveryReports", false)
 	options.SetDefault("LogLevel", "INFO")
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("Auth", true)
@@ -112,6 +114,7 @@ func Get() *IngressConfig {
 		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
 		KafkaGroupID:         options.GetString("KafkaGroupID"),
 		KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
+		KafkaDeliveryReports:       options.GetBool("KafkaDeliveryReports"),
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		WebPort:              options.GetInt("WebPort"),
 		MetricsPort:          options.GetInt("MetricsPort"),
