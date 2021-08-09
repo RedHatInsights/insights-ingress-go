@@ -63,6 +63,19 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	defer p.Close()
 
+	go func() {
+		for e := range p.Events() {
+			switch ev := e.(type) {
+			case *kafka.Message:	
+				if ev.TopicPartition.Error != nil {
+					l.Log.WithFields(logrus.Fields{"error": ev.TopicPartition.Error}).Error("Error publishing to kafka")
+				} else {
+					l.Log.Info("Message published to kafka")
+				}
+			}
+		}
+	}()
+
 	for v := range in {
 		go func(v []byte) {
 			producerCount.Inc()

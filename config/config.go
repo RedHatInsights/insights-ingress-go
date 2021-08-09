@@ -87,7 +87,7 @@ func Get() *IngressConfig {
 
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
-	options.SetDefault("KafkaDeliveryReports", false)
+	options.SetDefault("KafkaDeliveryReports", true)
 	options.SetDefault("LogLevel", "INFO")
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("Auth", true)
