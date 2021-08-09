@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -152,11 +154,25 @@ func NewHandler(
 		// later we will close this via the stageInput.close()
 		// in that case, this defer will return an error because
 		// the file is already closed.
-		defer file.Close()
 		contentType := fileHeader.Header.Get("Content-Type")
 		size := fileHeader.Size
 
 		observeSize(userAgent, size)
+
+		// store the uploaded file in a temporary location
+		dst, err := os.Create(fmt.Sprintf("/tmp/%s", fileHeader.Filename))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		_, err = io.Copy(dst, file)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		file.Close()
+		defer dst.Close()
 
 		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID})
 
@@ -229,7 +245,7 @@ func NewHandler(
 		tracker.Status(ps)
 
 		stageInput := &stage.Input{
-			Payload: file,
+			Payload: dst,
 			Key:     reqID,
 			Account: vr.Account,
 			OrgId:   vr.Principal,
@@ -244,6 +260,12 @@ func NewHandler(
 			logerr("Error staging", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+
+		// clean up the temp file
+		err = os.Remove(fmt.Sprintf("/tmp/%s", fileHeader.Filename))
+		if err != nil {
+			logerr("Error removing temp file", err)
 		}
 
 		vr.URL = url
