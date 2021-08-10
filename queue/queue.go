@@ -63,27 +63,10 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	defer p.Close()
 
-	// Read the Events() channel for this producer, if an Error exists in the TopicPartition, then put the
-	// message back in the queue to be reprocessed. This is to keep messages from getting lost in the event
-	// of a brief kafka outage.
-	go func() {
-		for e := range p.Events() {
-			switch ev := e.(type) {
-			case *kafka.Message:
-				if ev.TopicPartition.Error != nil {
-					l.Log.WithFields(logrus.Fields{"error": ev.TopicPartition.Error}).Error("Error publishing to kafka")
-					in <- ev.Value
-					publishFailures.With(prom.Labels{"topic": config.Topic}).Inc()
-				} else {
-					messagesPublished.With(prom.Labels{"topic": config.Topic}).Inc()
-					l.Log.Info("Message published to kafka")
-				}
-			}
-		}
-	}()
-
 	for v := range in {
 		go func(v []byte) {
+			delivery_chan := make(chan kafka.Event)
+			defer close(delivery_chan)
 			producerCount.Inc()
 			defer producerCount.Dec()
 			start := time.Now()
@@ -93,8 +76,20 @@ func Producer(in chan []byte, config *ProducerConfig) {
 					Partition: kafka.PartitionAny,
 				},
 				Value: v,
-			}, nil)
+			}, delivery_chan)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
+
+			e := <-delivery_chan
+			m := e.(*kafka.Message)
+
+			if m.TopicPartition.Error != nil {
+				l.Log.WithFields(logrus.Fields{"error": m.TopicPartition.Error}).Error("Error publishing to kafka")
+				in <- m.Value
+				publishFailures.With(prom.Labels{"topic": config.Topic}).Inc()
+				return
+			} else {
+				messagesPublished.With(prom.Labels{"topic": config.Topic}).Inc()
+			}
 		}(v)
 	}
 }
