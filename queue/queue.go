@@ -69,7 +69,10 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			case *kafka.Message:	
 				if ev.TopicPartition.Error != nil {
 					l.Log.WithFields(logrus.Fields{"error": ev.TopicPartition.Error}).Error("Error publishing to kafka")
+					in <- ev.Value
+					publishFailures.With(prom.Labels{"topic": config.Topic}).Inc()
 				} else {
+					messagesPublished.With(prom.Labels{"topic": config.Topic}).Inc()
 					l.Log.Info("Message published to kafka")
 				}
 			}
@@ -81,7 +84,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 			producerCount.Inc()
 			defer producerCount.Dec()
 			start := time.Now()
-			err := p.Produce(&kafka.Message{
+			p.Produce(&kafka.Message{
 				TopicPartition: kafka.TopicPartition{
 					Topic:     &config.Topic,
 					Partition: kafka.PartitionAny,
@@ -89,15 +92,6 @@ func Producer(in chan []byte, config *ProducerConfig) {
 				Value: v,
 			}, nil)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
-
-			if err != nil {
-				l.Log.WithFields(logrus.Fields{"error": err}).Error("error while writing, putting message back into channel")
-				in <- v
-				publishFailures.With(prom.Labels{"topic": config.Topic}).Inc()
-				return
-			} else {
-				messagesPublished.With(prom.Labels{"topic": config.Topic}).Inc()
-			}
 		}(v)
 	}
 }
