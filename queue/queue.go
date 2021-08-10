@@ -39,17 +39,17 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	if config.SASLMechanism != "" {
 		configMap = kafka.ConfigMap{
-			"bootstrap.servers": config.Brokers[0],
-			"security.protocol": config.Protocol,
-			"sasl.mechanism": config.SASLMechanism,
-			"ssl.ca.location": config.CA,
-			"sasl.username": config.Username,
-			"sasl.password": config.Password,
+			"bootstrap.servers":   config.Brokers[0],
+			"security.protocol":   config.Protocol,
+			"sasl.mechanism":      config.SASLMechanism,
+			"ssl.ca.location":     config.CA,
+			"sasl.username":       config.Username,
+			"sasl.password":       config.Password,
 			"go.delivery.reports": config.KafkaDeliveryReports,
 		}
 	} else {
 		configMap = kafka.ConfigMap{
-			"bootstrap.servers": config.Brokers[0],
+			"bootstrap.servers":   config.Brokers[0],
 			"go.delivery.reports": config.KafkaDeliveryReports,
 		}
 	}
@@ -66,7 +66,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 	go func() {
 		for e := range p.Events() {
 			switch ev := e.(type) {
-			case *kafka.Message:	
+			case *kafka.Message:
 				if ev.TopicPartition.Error != nil {
 					l.Log.WithFields(logrus.Fields{"error": ev.TopicPartition.Error}).Error("Error publishing to kafka")
 					in <- ev.Value
