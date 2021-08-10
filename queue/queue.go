@@ -63,6 +63,9 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	defer p.Close()
 
+	// Read the Events() channel for this producer, if an Error exists in the TopicPartition, then put the
+	// message back in the queue to be reprocessed. This is to keep messages from getting lost in the event
+	// of a brief kafka outage.
 	go func() {
 		for e := range p.Events() {
 			switch ev := e.(type) {
