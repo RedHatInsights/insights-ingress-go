@@ -35,6 +35,13 @@ type uploadData struct {
 
 // GetFile verifies that the proper upload field is in place and returns the file
 func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
+	// Reduce memory usage of multipart form. This indicates that 8MB of memory will be used
+	// before writting to disk. Default: 32MB
+	err := r.ParseMultipartForm(8 << 20)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to parse form data: %v", err)
+	}
+
 	file, fileHeader, fileErr := r.FormFile("file")
 	if fileErr == nil {
 		return file, fileHeader, nil
