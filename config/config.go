@@ -16,6 +16,7 @@ type IngressConfig struct {
 	Hostname             string
 	DefaultMaxSize		 int64
 	MaxSizeMap			 map[string]string
+	MaxUploadMem		 int64
 	StageBucket          string
 	Auth                 bool
 	KafkaBrokers         []string
@@ -85,6 +86,7 @@ func Get() *IngressConfig {
 		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	}
 
+	options.SetDefault("MaxUploadMem", 1024 * 1024 * 8)
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("KafkaDeliveryReports", true)
@@ -109,6 +111,7 @@ func Get() *IngressConfig {
 		Hostname:             kubenv.GetString("Hostname"),
 		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
 		MaxSizeMap:			  options.GetStringMapString("MaxSizeMap"),
+		MaxUploadMem:         options.GetInt64("MaxUploadMem"),
 		StageBucket:          options.GetString("StageBucket"),
 		Auth:                 options.GetBool("Auth"),
 		KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
