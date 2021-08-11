@@ -34,10 +34,10 @@ type uploadData struct {
 }
 
 // GetFile verifies that the proper upload field is in place and returns the file
-func GetFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
-	// Reduce memory usage of multipart form. This indicates that 8MB of memory will be used
-	// before writting to disk. Default: 32MB
-	err := r.ParseMultipartForm(8 << 20)
+func GetFile(r *http.Request, m int64) (multipart.File, *multipart.FileHeader, error) {
+	// Reduce memory usage of multipart form. This indicates of memory will be used
+	// before writting to disk. Default: 8MB
+	err := r.ParseMultipartForm(m)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to parse form data: %v", err)
 	}
@@ -146,7 +146,7 @@ func NewHandler(
 		}
 
 		incRequests(userAgent)
-		file, fileHeader, err := GetFile(r)
+		file, fileHeader, err := GetFile(r, cfg.MaxUploadMem)
 		if err != nil {
 			errString := "File or upload field not found"
 			w.WriteHeader(http.StatusBadRequest)
