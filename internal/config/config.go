@@ -35,9 +35,9 @@ type IngressConfig struct {
 	OpenshiftBuildCommit string
 	Version              string
 	PayloadTrackerURL    string
-	MinioEndpoint        string
-	MinioAccessKey       string
-	MinioSecretKey       string
+	StorageEndpoint        string
+	StorageAccessKey       string
+	StorageSecretKey       string
 	LogGroup             string
 	LogLevel             string
 	AwsRegion            string
@@ -63,9 +63,9 @@ func Get() *IngressConfig {
 		options.SetDefault("WebPort", cfg.PublicPort)
 		options.SetDefault("MetricsPort", cfg.MetricsPort)
 		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
-		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
-		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
-		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
+		options.SetDefault("StorageEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
+		options.SetDefault("StorageAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
+		options.SetDefault("StorageSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
 		options.SetDefault("UseSSL", cfg.ObjectStore.Tls)
 		options.SetDefault("StageBucket", bucket.RequestedName)
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
@@ -131,9 +131,9 @@ func Get() *IngressConfig {
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
-		MinioEndpoint:        options.GetString("MinioEndpoint"),
-		MinioAccessKey:       options.GetString("MinioAccessKey"),
-		MinioSecretKey:       options.GetString("MinioSecretKey"),
+		StorageEndpoint:        options.GetString("StorageEndpoint"),
+		StorageAccessKey:       options.GetString("StorageAccessKey"),
+		StorageSecretKey:       options.GetString("StorageSecretKey"),
 		LogGroup:             options.GetString("LogGroup"),
 		LogLevel:             options.GetString("LogLevel"),
 		AwsRegion:            options.GetString("AwsRegion"),

@@ -12,9 +12,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
-	"github.com/redhatinsights/insights-ingress-go/internal/stage"
-	"github.com/redhatinsights/insights-ingress-go/internal/stage/minio"
-	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
 	"github.com/redhatinsights/insights-ingress-go/internal/track"
 	"github.com/redhatinsights/insights-ingress-go/internal/upload"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
@@ -55,16 +53,9 @@ func main() {
 		middleware.Recoverer,
 	)
 
-	var stager stage.Stager
-	if cfg.MinioEndpoint != "" {
-		stager = minio.GetClient(&minio.Stager{
-			Bucket: cfg.StageBucket,
-		})
-	} else {
-		stager = &s3.Stager{
-			Bucket: cfg.StageBucket,
-		}
-	}
+	stager := s3compat.GetClient(&s3compat.Stager{
+		Bucket: cfg.StageBucket,
+	})
 
 	kafkaCfg := kafka.Config{
 		Brokers: cfg.KafkaBrokers,
