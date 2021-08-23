@@ -35,7 +35,7 @@ In the root of the insights-ingress-go repo, execute the following commands:
 There should now be an executable in the directory. You need to supply some env vars for the application to work
 properly. Here is an example:
 
-    $> INGRESS_STAGEBUCKET=insights-upload-perma INGRESS_VALIDTOPICS=advisor OPENSHIFT_BUILD_COMMIT=somestring INGRESS_MINIODEV=true INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY INGRESS_MINIOENDPOINT=localhost:9000 ./insights-ingress-go
+    $> INGRESS_STAGEBUCKET=insights-upload-perma INGRESS_VALIDTOPICS=advisor OPENSHIFT_BUILD_COMMIT=somestring INGRESS_MINIODEV=true INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY INGRESS_KAFKA_BROKERS=localhost:9092 INGRESS_MINIOENDPOINT=localhost:9000 ./insights-ingress-go
 
 ## Running from Podman
 
