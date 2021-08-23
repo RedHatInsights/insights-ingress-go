@@ -9,6 +9,12 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 )
 
+// Stager provides the mechanism to stage a payload via aws S3
+type Stager struct {
+	Bucket string
+	Client *minio.Client
+}
+
 // GetClient gets the minio client info
 func GetClient(stager *Stager) stage.Stager {
 	endpoint := config.Get().MinioEndpoint

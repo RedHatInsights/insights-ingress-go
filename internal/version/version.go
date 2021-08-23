@@ -10,6 +10,12 @@ import (
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 )
 
+// IngressVersion is the json structure for the /version endpoint
+type IngressVersion struct {
+	Version string `json:"version"`
+	Commit  string `json:"commit"`
+}
+
 func constructVersion() *IngressVersion {
 	return &IngressVersion{
 		Commit:  cfg.Get().OpenshiftBuildCommit,

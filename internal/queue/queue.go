@@ -30,6 +30,19 @@ var (
 	})
 )
 
+// ProducerConfig configures a producer
+type ProducerConfig struct {
+	Topic                string
+	Brokers              []string
+	Async                bool
+	Username             string
+	Password             string
+	CA                   string
+	Protocol             string
+	SASLMechanism        string
+	KafkaDeliveryReports bool
+}
+
 // Producer consumes in and produces to the topic in config
 // Each message is sent to the writer via a goroutine so that the internal batch
 // buffer has an opportunity to fill.
