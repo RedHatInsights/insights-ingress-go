@@ -35,9 +35,9 @@ type IngressConfig struct {
 	OpenshiftBuildCommit string
 	Version              string
 	PayloadTrackerURL    string
-	StorageEndpoint        string
-	StorageAccessKey       string
-	StorageSecretKey       string
+	StorageEndpoint      string
+	StorageAccessKey     string
+	StorageSecretKey     string
 	LogGroup             string
 	LogLevel             string
 	AwsRegion            string
@@ -131,9 +131,9 @@ func Get() *IngressConfig {
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
-		StorageEndpoint:        options.GetString("StorageEndpoint"),
-		StorageAccessKey:       options.GetString("StorageAccessKey"),
-		StorageSecretKey:       options.GetString("StorageSecretKey"),
+		StorageEndpoint:      options.GetString("StorageEndpoint"),
+		StorageAccessKey:     options.GetString("StorageAccessKey"),
+		StorageSecretKey:     options.GetString("StorageSecretKey"),
 		LogGroup:             options.GetString("LogGroup"),
 		LogLevel:             options.GetString("LogLevel"),
 		AwsRegion:            options.GetString("AwsRegion"),

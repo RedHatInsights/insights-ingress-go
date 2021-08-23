@@ -40,18 +40,18 @@ func (s *Stager) Stage(in *stage.Input) (string, error) {
 	contentType := "application/gzip"
 
 	_, err := s.Client.PutObject(bucketName,
-								 objectName,
-								 object,
-								 in.Size,
-								 minio.PutObjectOptions{
-									 ContentType: contentType,
-									 UserMetadata: map[string]string{
-										 "requestID": in.Key,
-										 "account": in.Account,
-										 "org": in.OrgId,
-										},
-									},
-								)
+		objectName,
+		object,
+		in.Size,
+		minio.PutObjectOptions{
+			ContentType: contentType,
+			UserMetadata: map[string]string{
+				"requestID": in.Key,
+				"account":   in.Account,
+				"org":       in.OrgId,
+			},
+		},
+	)
 	if err != nil {
 		return "", errors.New("Failed to upload to storage" + err.Error())
 	}
