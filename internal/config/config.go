@@ -63,9 +63,9 @@ func Get() *IngressConfig {
 		options.SetDefault("WebPort", cfg.PublicPort)
 		options.SetDefault("MetricsPort", cfg.MetricsPort)
 		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
-		options.SetDefault("StorageEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
-		options.SetDefault("StorageAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
-		options.SetDefault("StorageSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
+		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
+		options.SetDefault("MinioAccessKey", *cfg.ObjectStore.Buckets[0].AccessKey)
+		options.SetDefault("MinioSecretKey", *cfg.ObjectStore.Buckets[0].SecretKey)
 		options.SetDefault("UseSSL", cfg.ObjectStore.Tls)
 		options.SetDefault("StageBucket", bucket.RequestedName)
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
@@ -131,9 +131,9 @@ func Get() *IngressConfig {
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              "1.0.8",
-		StorageEndpoint:      options.GetString("StorageEndpoint"),
-		StorageAccessKey:     options.GetString("StorageAccessKey"),
-		StorageSecretKey:     options.GetString("StorageSecretKey"),
+		StorageEndpoint:      options.GetString("MinioEndpoint"),
+		StorageAccessKey:     options.GetString("MinioAccessKey"),
+		StorageSecretKey:     options.GetString("MinioSecretKey"),
 		LogGroup:             options.GetString("LogGroup"),
 		LogLevel:             options.GetString("LogLevel"),
 		AwsRegion:            options.GetString("AwsRegion"),
