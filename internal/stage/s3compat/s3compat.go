@@ -18,7 +18,7 @@ type Stager struct {
 // GetClient gets the s3 compatible client info
 func GetClient(stager *Stager) stage.Stager {
 	var endpoint string
-	if config.Get().StorageEndpoint != "" {
+	if config.Get().StorageEndpoint == "" {
 		endpoint = "s3.amazonaws.com"
 	} else {
 		endpoint = config.Get().StorageEndpoint
