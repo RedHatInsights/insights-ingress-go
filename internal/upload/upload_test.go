@@ -366,8 +366,8 @@ var _ = Describe("Upload", func() {
 				cfg.MaxSizeMap = TypeMap
 				handler = NewHandler(stager, validator, tracker, *cfg)
 				boiler(http.StatusAccepted, &FilePart{
-					Name: "file",
-					Content: "testing",
+					Name:        "file",
+					Content:     "testing",
 					ContentType: "application/vnd.redhat.qpc.test",
 				})
 			})

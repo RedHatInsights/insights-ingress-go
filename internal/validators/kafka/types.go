@@ -5,10 +5,10 @@ type Validator struct {
 	ValidationProducerMapping map[string]chan []byte
 	KafkaBrokers              []string
 	KafkaGroupID              string
-	Username				  string
-	Password			      string
-	CA						  string
-	SASLMechanism			  string
+	Username                  string
+	Password                  string
+	CA                        string
+	SASLMechanism             string
 	Protocol                  string
 }
 

@@ -57,7 +57,7 @@ func NewHandler(
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		
+
 		if id.Identity.Type != "Associate" {
 			if pt.Data[0].Account != id.Identity.AccountNumber {
 				w.WriteHeader(http.StatusForbidden)
@@ -68,10 +68,10 @@ func NewHandler(
 		// Response with minimal status data by default
 		latestStatus := pt.Data[len(pt.Data)-1]
 		ms := MinimalStatus{
-			Status: latestStatus.Status,
-			Date: latestStatus.Date,
-			StatusMsg: latestStatus.StatusMsg,
-			Service: latestStatus.Service,
+			Status:      latestStatus.Status,
+			Date:        latestStatus.Date,
+			StatusMsg:   latestStatus.StatusMsg,
+			Service:     latestStatus.Service,
 			InventoryID: latestStatus.InventoryID,
 		}
 

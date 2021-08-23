@@ -79,12 +79,12 @@ func (kv *Validator) Validate(vr *validators.Request) {
 func (kv *Validator) addProducer(topic string) {
 	ch := make(chan []byte, 100)
 	go queue.Producer(ch, &queue.ProducerConfig{
-		Brokers: kv.KafkaBrokers,
-		Topic:   topic,
-		CA: kv.CA,
-		Username: kv.Username,
-		Password: kv.Password,
-		Protocol: kv.Protocol,
+		Brokers:       kv.KafkaBrokers,
+		Topic:         topic,
+		CA:            kv.CA,
+		Username:      kv.Username,
+		Password:      kv.Password,
+		Protocol:      kv.Protocol,
 		SASLMechanism: kv.SASLMechanism,
 	})
 	kv.ValidationProducerMapping[topic] = ch

@@ -72,9 +72,9 @@ func main() {
 	}
 
 	producerCfg := queue.ProducerConfig{
-		Brokers: cfg.KafkaBrokers,
-		Topic: cfg.KafkaTrackerTopic,
-		Async: true,
+		Brokers:              cfg.KafkaBrokers,
+		Topic:                cfg.KafkaTrackerTopic,
+		Async:                true,
 		KafkaDeliveryReports: cfg.KafkaDeliveryReports,
 	}
 

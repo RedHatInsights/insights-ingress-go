@@ -97,7 +97,7 @@ func isTestRequest(r *http.Request) bool {
 	if r.FormValue("test") == "test" {
 		return true
 	}
-	
+
 	if r.Header.Get("Content-Type") == "application/json" {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
