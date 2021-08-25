@@ -54,12 +54,9 @@ func NewHandler(
 			id = identity.Get(r.Context())
 		}
 
-		verbosity_level := r.URL.Query().Get("verbosity")
-		verbosity, err := strconv.Atoi(verbosity_level)
-		if err != nil && verbosity != 0 {
-			logerr("Verbosity level must be an integer", err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
+		verbosity, err := strconv.Atoi(r.URL.Query().Get("verbosity"))
+		if err != nil {
+			logerr("Verbosity level must be an integer. Assuming verbosity 0", err)
 		}
 		response, err := http.Get(cfg.PayloadTrackerURL + reqID)
 		if err != nil {
