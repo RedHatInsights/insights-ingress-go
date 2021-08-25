@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -43,10 +44,6 @@ func NewHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
 		reqID := chi.URLParam(r, "requestID")
-		verbosity := r.URL.Query().Get("verbosity")
-		if verbosity == "" {
-			verbosity = "0"
-		}
 		requestLogger := l.Log.WithFields(logrus.Fields{"source_host": cfg.Hostname, "name": "ingress"})
 
 		logerr := func(msg string, err error) {
@@ -57,6 +54,13 @@ func NewHandler(
 			id = identity.Get(r.Context())
 		}
 
+		verbosity_level := r.URL.Query().Get("verbosity")
+		verbosity, err := strconv.Atoi(verbosity_level)
+		if err != nil && verbosity != 0 {
+			logerr("Verbosity level must be an integer", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		response, err := http.Get(cfg.PayloadTrackerURL + reqID)
 		if err != nil {
 			logerr("Failed to get payload status", err)
@@ -106,7 +110,7 @@ func NewHandler(
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if verbosity >= "2" {
+		if verbosity >= 2 {
 			w.Write(body)
 		} else {
 			w.Write(responseBody)
