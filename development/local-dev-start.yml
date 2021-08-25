@@ -24,25 +24,25 @@ services:
     image: minio/minio
     command: server /data
     volumes:
-      # These vars are defined in .env
-      # These are configurable
-      # Ensure the directories exist prior to running this file
-      - minio_conf:$MINIO_CONFIG_DIR
-      - minio_data:$MINIO_DATA_DIR
+      - '/mnt/config:/data:z'
+      - '/mnt/data:/root/.minio:z'
     ports:
       - 9000:9000
     environment:
       - MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
       - MINIO_SECRET_KEY=$MINIO_SECRET_KEY
   ingress:
-    image: quay.io/cloudservices/insights-ingress:latest
+    #image: quay.io/cloudservices/insights-ingress:latest
+    image: ingress:latest
     ports:
       - 8080:3000
+    mem_limit: 512M
     environment:
       - INGRESS_STAGEBUCKET=insights-upload-perma
         # VALIDTOPICS is required. This is derived from content type. ex: vnd.redhat.advisor.thing+tgz
-      - INGRESS_VALIDTOPICS=testareno,advisor
+      - INGRESS_VALIDTOPICS=$INGRESS_VALIDTOPICS
       - OPENSHIFT_BUILD_COMMIT=somestring
+      - INGRESS_METRICSPORT=8081
       - INGRESS_MAXSIZE=104857600
       - INGRESS_MINIODEV=true
       - INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY
