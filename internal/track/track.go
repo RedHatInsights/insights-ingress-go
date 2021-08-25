@@ -50,7 +50,7 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
 		}
 
-		if cfg.Auth == true {
+		if cfg.Auth {
 			id = identity.Get(r.Context())
 		}
 
