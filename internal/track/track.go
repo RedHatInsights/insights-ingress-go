@@ -54,10 +54,7 @@ func NewHandler(
 			id = identity.Get(r.Context())
 		}
 
-		verbosity, err := strconv.Atoi(r.URL.Query().Get("verbosity"))
-		if err != nil {
-			logerr("Verbosity level must be an integer. Assuming verbosity 0", err)
-		}
+		verbosity, _ := strconv.Atoi(r.URL.Query().Get("verbosity"))
 		response, err := http.Get(cfg.PayloadTrackerURL + reqID)
 		if err != nil {
 			logerr("Failed to get payload status", err)
