@@ -18,7 +18,7 @@ CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
 curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
 # For testing
-curl https://raw.githubusercontent.com/RedHatInsights/bonfire/d5100478650b5507c8591fcd12540c1f38e3877d/cicd/build.sh > $CICD_ROOT/build.sh
+curl https://raw.githubusercontent.com/RedHatInsights/bonfire/check_quay_first/cicd/build.sh > $CICD_ROOT/build.sh
 
 source $CICD_ROOT/build.sh
 source $APP_ROOT/unit_test.sh
