@@ -17,6 +17,9 @@ IQE_CJI_TIMEOUT="30m"
 CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
 curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
+# For testing
+curl https://raw.githubusercontent.com/RedHatInsights/bonfire/d5100478650b5507c8591fcd12540c1f38e3877d/cicd/build.sh > $CICD_ROOT/build.sh
+
 source $CICD_ROOT/build.sh
 source $APP_ROOT/unit_test.sh
 source $CICD_ROOT/deploy_ephemeral_env.sh
