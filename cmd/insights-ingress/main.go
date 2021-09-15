@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
+	"github.com/redhatinsights/insights-ingress-go/internal/api"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+
 func lubDub(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -33,13 +34,9 @@ func lubDub(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiSpec(w http.ResponseWriter, r *http.Request) {
-	file, err := ioutil.ReadFile("/var/tmp/openapi.json")
-	if err != nil {
-		l.Log.WithFields(logrus.Fields{"error": err}).Error("Unable to print API spec")
-	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write(file)
+	w.Write(api.Api)
 }
 
 func main() {
