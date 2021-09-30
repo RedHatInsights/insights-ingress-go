@@ -26,6 +26,7 @@ type IngressConfig struct {
 	KafkaUsername        string
 	KafkaPassword        string
 	KafkaDeliveryReports bool
+	AnnounceTopic		 string
 	SASLMechanism        string
 	Protocol             string
 	ValidTopics          []string
@@ -94,13 +95,14 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("KafkaDeliveryReports", true)
+	options.SetDefault("AnnounceTopic", "platform.upload.announce")
 	options.SetDefault("LogLevel", "INFO")
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
-	options.SetDefault("ValidTopics", "unit")
+	options.SetDefault("ValidTopics", "unit,announce")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
@@ -122,6 +124,7 @@ func Get() *IngressConfig {
 		KafkaGroupID:         options.GetString("KafkaGroupID"),
 		KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
 		KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
+		AnnounceTopic: 	      options.GetString("AnnounceTopic"),
 		ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		WebPort:              options.GetInt("WebPort"),
 		MetricsPort:          options.GetInt("MetricsPort"),

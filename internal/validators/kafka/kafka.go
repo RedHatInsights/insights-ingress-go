@@ -45,6 +45,11 @@ type Config struct {
 	SASLMechanism   string
 }
 
+type IngestChannel struct {
+	Service string
+	Data chan []byte
+}
+
 // New constructs and initializes a new Kafka Validator
 func New(cfg *Config, topics ...string) *Validator {
 	kv := &Validator{
@@ -98,6 +103,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	}
 	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
 	kv.ValidationProducerMapping[realizedTopicName] <- data
+	kv.ValidationProducerMapping[config.Get().AnnounceTopic] <- data
 }
 
 func (kv *Validator) addProducer(topic string) {

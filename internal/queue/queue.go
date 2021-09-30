@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"encoding/json"
 	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
@@ -43,6 +44,10 @@ type ProducerConfig struct {
 	KafkaDeliveryReports bool
 }
 
+type ServiceDef struct {
+	Service string `json:"service,omitempty"`
+}
+
 // Producer consumes in and produces to the topic in config
 // Each message is sent to the writer via a goroutine so that the internal batch
 // buffer has an opportunity to fill.
@@ -78,12 +83,18 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 	for v := range in {
 		go func(v []byte) {
+			var s ServiceDef
+			err := json.Unmarshal(v, &s)
+			if err != nil {
+				l.Log.WithFields(logrus.Fields{"error": err, "topic": config.Topic}).Error("unable to gather service name for headers")
+			}
 			delivery_chan := make(chan kafka.Event)
 			defer close(delivery_chan)
 			producerCount.Inc()
 			defer producerCount.Dec()
 			start := time.Now()
 			p.Produce(&kafka.Message{
+				Headers: []kafka.Header{{Key: "service", Value: []byte(s.Service)}},
 				TopicPartition: kafka.TopicPartition{
 					Topic:     &config.Topic,
 					Partition: kafka.PartitionAny,
