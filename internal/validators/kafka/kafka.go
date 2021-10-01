@@ -72,6 +72,9 @@ func New(cfg *Config, topics ...string) *Validator {
 		kv.Protocol = cfg.Protocol
 	}
 
+	// ensure the announce topic is added and valid
+	topics = append(topics, "announce")
+
 	for _, topic := range topics {
 		var realizedTopicName string
 		topic = fmt.Sprintf("platform.upload.%s", topic)
