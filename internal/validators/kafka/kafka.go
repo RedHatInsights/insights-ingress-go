@@ -45,11 +45,6 @@ type Config struct {
 	SASLMechanism   string
 }
 
-type IngestChannel struct {
-	Service string
-	Data chan []byte
-}
-
 // New constructs and initializes a new Kafka Validator
 func New(cfg *Config, topics ...string) *Validator {
 	kv := &Validator{
