@@ -2,6 +2,8 @@ package validators
 
 import (
 	"time"
+
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 // Request is sent to the validation topic for each new payload
@@ -33,6 +35,11 @@ type Metadata struct {
 	AnsibleHost    string    `json:"ansible_host,omitempty"`
 	Reporter       string    `json:"reporter"`
 	StaleTimestamp time.Time `json:"stale_timestamp"`
+}
+
+type Transport struct {
+	Message []byte
+	Headers  []kafka.Header
 }
 
 // ServiceDescriptor is used to select a message topic

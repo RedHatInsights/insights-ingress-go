@@ -11,6 +11,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 var tdMapping map[string]string
@@ -23,7 +24,7 @@ func init() {
 
 // Validator posts requests to topics for validation
 type Validator struct {
-	ValidationProducerMapping map[string]chan []byte
+	ValidationProducerMapping map[string]chan validators.Transport
 	KafkaBrokers              []string
 	KafkaGroupID              string
 	Username                  string
@@ -48,7 +49,7 @@ type Config struct {
 // New constructs and initializes a new Kafka Validator
 func New(cfg *Config, topics ...string) *Validator {
 	kv := &Validator{
-		ValidationProducerMapping: make(map[string]chan []byte),
+		ValidationProducerMapping: make(map[string]chan validators.Transport),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
 	}
@@ -100,12 +101,19 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		realizedTopicName = topic
 	}
 	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
-	kv.ValidationProducerMapping[realizedTopicName] <- data
-	kv.ValidationProducerMapping[config.Get().AnnounceTopic] <- data
+	message := validators.Transport{
+		Message: data,
+		Headers: []kafka.Header{{
+			Key: "service",
+			Value: []byte(vr.Service),
+		}},
+	}
+	kv.ValidationProducerMapping[realizedTopicName] <- message
+	kv.ValidationProducerMapping[config.Get().AnnounceTopic] <- message
 }
 
 func (kv *Validator) addProducer(topic string) {
-	ch := make(chan []byte, 100)
+	ch := make(chan validators.Transport, 100)
 	go queue.Producer(ch, &queue.ProducerConfig{
 		Brokers:       kv.KafkaBrokers,
 		Topic:         topic,

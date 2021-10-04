@@ -1,10 +1,10 @@
 package queue
 
 import (
-	"encoding/json"
 	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
+	val "github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 
@@ -44,14 +44,10 @@ type ProducerConfig struct {
 	KafkaDeliveryReports bool
 }
 
-type ServiceDef struct {
-	Service string `json:"service,omitempty"`
-}
-
 // Producer consumes in and produces to the topic in config
 // Each message is sent to the writer via a goroutine so that the internal batch
 // buffer has an opportunity to fill.
-func Producer(in chan []byte, config *ProducerConfig) {
+func Producer(in chan val.Transport, config *ProducerConfig) {
 
 	var configMap kafka.ConfigMap
 
@@ -82,24 +78,19 @@ func Producer(in chan []byte, config *ProducerConfig) {
 	defer p.Close()
 
 	for v := range in {
-		go func(v []byte) {
-			var s ServiceDef
-			err := json.Unmarshal(v, &s)
-			if err != nil {
-				l.Log.WithFields(logrus.Fields{"error": err, "topic": config.Topic}).Error("unable to gather service name for headers")
-			}
+		go func(v val.Transport) {
 			delivery_chan := make(chan kafka.Event)
 			defer close(delivery_chan)
 			producerCount.Inc()
 			defer producerCount.Dec()
 			start := time.Now()
 			p.Produce(&kafka.Message{
-				Headers: []kafka.Header{{Key: "service", Value: []byte(s.Service)}},
+				Headers: v.Headers,
 				TopicPartition: kafka.TopicPartition{
 					Topic:     &config.Topic,
 					Partition: kafka.PartitionAny,
 				},
-				Value: v,
+				Value: v.Message,
 			}, delivery_chan)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
 
@@ -108,7 +99,7 @@ func Producer(in chan []byte, config *ProducerConfig) {
 
 			if m.TopicPartition.Error != nil {
 				l.Log.WithFields(logrus.Fields{"error": m.TopicPartition.Error}).Error("Error publishing to kafka")
-				in <- m.Value
+				in <- v
 				publishFailures.With(prom.Labels{"topic": config.Topic}).Inc()
 				return
 			} else {

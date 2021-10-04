@@ -6,12 +6,13 @@ import (
 
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
+	val "github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/sirupsen/logrus"
 )
 
 // Kafka is an announcer that broadcases on a kafka topic
 type Kafka struct {
-	In chan []byte
+	In chan val.Transport
 }
 
 type Announcer interface {
@@ -35,7 +36,7 @@ type Status struct {
 // NewStatusAnnouncer creates a new announcer and starts the producer
 func NewStatusAnnouncer(cfg *queue.ProducerConfig) *Kafka {
 	k := &Kafka{
-		In: make(chan []byte, 1000),
+		In: make(chan val.Transport, 1000),
 	}
 	go queue.Producer(k.In, cfg)
 	return k
@@ -54,7 +55,10 @@ func (k *Kafka) Status(vs *Status) {
 	defer func() {
 		l.Log.WithFields(logrus.Fields{"duration": time.Since(n)}).Debug("status announce")
 	}()
-	k.In <- data
+	message := val.Transport{
+		Message: data,
+	}
+	k.In <- message
 }
 
 // Stop the kafka input channel
