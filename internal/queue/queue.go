@@ -4,7 +4,7 @@ import (
 	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
-	val "github.com/redhatinsights/insights-ingress-go/internal/validators"
+	"github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 
@@ -47,7 +47,7 @@ type ProducerConfig struct {
 // Producer consumes in and produces to the topic in config
 // Each message is sent to the writer via a goroutine so that the internal batch
 // buffer has an opportunity to fill.
-func Producer(in chan val.Transport, config *ProducerConfig) {
+func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 
 	var configMap kafka.ConfigMap
 
@@ -78,14 +78,17 @@ func Producer(in chan val.Transport, config *ProducerConfig) {
 	defer p.Close()
 
 	for v := range in {
-		go func(v val.Transport) {
+		go func(v validators.ValidationMessage) {
 			delivery_chan := make(chan kafka.Event)
 			defer close(delivery_chan)
 			producerCount.Inc()
 			defer producerCount.Dec()
 			start := time.Now()
 			p.Produce(&kafka.Message{
-				Headers: v.Headers,
+				Headers: []kafka.Header{{
+					Key: v.Headers["Key"],
+					Value: []byte(v.Headers["Value"]),
+				}},
 				TopicPartition: kafka.TopicPartition{
 					Topic:     &config.Topic,
 					Partition: kafka.PartitionAny,

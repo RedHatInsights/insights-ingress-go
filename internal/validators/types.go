@@ -2,8 +2,6 @@ package validators
 
 import (
 	"time"
-
-	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 // Request is sent to the validation topic for each new payload
@@ -37,9 +35,9 @@ type Metadata struct {
 	StaleTimestamp time.Time `json:"stale_timestamp"`
 }
 
-type Transport struct {
-	Message []byte
-	Headers  []kafka.Header
+type ValidationMessage struct {
+	Message  []byte
+	Headers  map[string]string
 }
 
 // ServiceDescriptor is used to select a message topic
