@@ -57,8 +57,7 @@ func (k *Kafka) Status(vs *Status) {
 	}()
 	message := validators.ValidationMessage{
 		Headers: map[string]string{
-			"Key": "service",
-			"Value": vs.Service,
+			"service": vs.Service,
 		},
 		Message: data,
 	}

@@ -84,11 +84,17 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 			producerCount.Inc()
 			defer producerCount.Dec()
 			start := time.Now()
+			kafkaHeaders := make([]kafka.Header, len(v.Headers))
+			i := 0
+			for key, value := range v.Headers {
+				kafkaHeaders[i] = kafka.Header{
+					Key:   key,
+					Value: []byte(value),
+				}
+				i++
+			}
 			p.Produce(&kafka.Message{
-				Headers: []kafka.Header{{
-					Key: v.Headers["Key"],
-					Value: []byte(v.Headers["Value"]),
-				}},
+				Headers: kafkaHeaders,
 				TopicPartition: kafka.TopicPartition{
 					Topic:     &config.Topic,
 					Partition: kafka.PartitionAny,
