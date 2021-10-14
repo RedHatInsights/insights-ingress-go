@@ -56,10 +56,6 @@ func (k *Kafka) Status(vs *Status) {
 		l.Log.WithFields(logrus.Fields{"duration": time.Since(n)}).Debug("status announce")
 	}()
 	message := validators.ValidationMessage{
-		Headers: map[string]string{
-			"Key": "service",
-			"Value": vs.Service,
-		},
 		Message: data,
 	}
 	k.In <- message

@@ -103,8 +103,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	message := validators.ValidationMessage{
 		Message: data,
 		Headers: map[string]string{
-			"Key": "service",
-			"Value": vr.Service,
+			"service": vr.Service,
 		},
 	}
 	kv.ValidationProducerMapping[realizedTopicName] <- message
