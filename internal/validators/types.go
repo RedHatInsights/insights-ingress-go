@@ -35,6 +35,11 @@ type Metadata struct {
 	StaleTimestamp time.Time `json:"stale_timestamp"`
 }
 
+type ValidationMessage struct {
+	Message  []byte
+	Headers  map[string]string
+}
+
 // ServiceDescriptor is used to select a message topic
 type ServiceDescriptor struct {
 	Service  string

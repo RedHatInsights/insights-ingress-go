@@ -118,6 +118,9 @@ objects:
     - replicas: 3
       partitions: 3
       topicName: platform.upload.resource-optimization
+    - replicas: 3
+      partitions: 64
+      topicName: platform.upload.announce
 
 parameters:
 - name: INGRESS_STAGEBUCKET

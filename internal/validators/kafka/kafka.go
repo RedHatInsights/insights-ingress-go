@@ -23,7 +23,7 @@ func init() {
 
 // Validator posts requests to topics for validation
 type Validator struct {
-	ValidationProducerMapping map[string]chan []byte
+	ValidationProducerMapping map[string]chan validators.ValidationMessage
 	KafkaBrokers              []string
 	KafkaGroupID              string
 	Username                  string
@@ -48,7 +48,7 @@ type Config struct {
 // New constructs and initializes a new Kafka Validator
 func New(cfg *Config, topics ...string) *Validator {
 	kv := &Validator{
-		ValidationProducerMapping: make(map[string]chan []byte),
+		ValidationProducerMapping: make(map[string]chan validators.ValidationMessage),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
 	}
@@ -66,6 +66,9 @@ func New(cfg *Config, topics ...string) *Validator {
 		kv.SASLMechanism = cfg.SASLMechanism
 		kv.Protocol = cfg.Protocol
 	}
+
+	// ensure the announce topic is added and valid
+	topics = append(topics, "announce")
 
 	for _, topic := range topics {
 		var realizedTopicName string
@@ -97,11 +100,19 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		realizedTopicName = topic
 	}
 	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
-	kv.ValidationProducerMapping[realizedTopicName] <- data
+	message := validators.ValidationMessage{
+		Message: data,
+		Headers: map[string]string{
+			"Key": "service",
+			"Value": vr.Service,
+		},
+	}
+	kv.ValidationProducerMapping[realizedTopicName] <- message
+	kv.ValidationProducerMapping[config.Get().AnnounceTopic] <- message
 }
 
 func (kv *Validator) addProducer(topic string) {
-	ch := make(chan []byte, 100)
+	ch := make(chan validators.ValidationMessage, 100)
 	go queue.Producer(ch, &queue.ProducerConfig{
 		Brokers:       kv.KafkaBrokers,
 		Topic:         topic,
