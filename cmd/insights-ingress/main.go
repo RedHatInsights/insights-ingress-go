@@ -89,7 +89,7 @@ func main() {
 	if cfg.Protocol != "" {
 		kafkaCfg.Protocol = cfg.Protocol
 		producerCfg.Protocol = cfg.Protocol
-	}
+	} // bogus
 
 	validator := kafka.New(&kafkaCfg, cfg.ValidTopics...)
 
