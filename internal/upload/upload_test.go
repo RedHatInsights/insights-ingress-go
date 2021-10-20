@@ -305,6 +305,21 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
+		Context("with a valid Content-Type and no metadata", func() {
+			It("should parse to service and category (malware)", func() {
+				boiler(http.StatusAccepted, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.malware-detection.results"})
+				in := stager.Input
+				req := validator.In
+				Expect(in).To(Not(BeNil()))
+				Expect(req).To(Not(BeNil()))
+				Expect(req.Service).To(Equal("malware-detection"))
+				Expect(req.Category).To(Equal("results"))
+			})
+		})
+
 		Context("with legacy content type and no metadata", func() {
 			It("should validate and be processed", func() {
 				boiler(http.StatusCreated, &FilePart{
