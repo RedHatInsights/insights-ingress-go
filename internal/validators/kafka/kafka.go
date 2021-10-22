@@ -11,6 +11,8 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/sirupsen/logrus"
+
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
 
 var tdMapping map[string]string
@@ -73,7 +75,7 @@ func New(cfg *Config, topics ...string) *Validator {
 	for _, topic := range topics {
 		var realizedTopicName string
 		topic = fmt.Sprintf("platform.upload.%s", topic)
-		if config.Get().UseClowder {
+		if clowder.IsClowderEnabled() {
 			realizedTopicName = rhiconfig.KafkaTopics[topic].Name
 		} else {
 			realizedTopicName = topic
@@ -94,7 +96,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	topic := serviceToTopic(vr.Service)
 	topic = fmt.Sprintf("platform.upload.%s", topic)
 	var realizedTopicName string
-	if config.Get().UseClowder {
+	if clowder.IsClowderEnabled() {
 		realizedTopicName = rhiconfig.KafkaTopics[topic].Name
 	} else {
 		realizedTopicName = topic
@@ -107,7 +109,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		},
 	}
 	kv.ValidationProducerMapping[realizedTopicName] <- message
-	kv.ValidationProducerMapping[config.Get().AnnounceTopic] <- message
+	kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
 }
 
 func (kv *Validator) addProducer(topic string) {
@@ -127,12 +129,12 @@ func (kv *Validator) addProducer(topic string) {
 // ValidateService ensures that a service maps to a real topic
 func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) error {
 	topic := serviceToTopic(service.Service)
-	for _, validTopic := range config.Get().ValidTopics {
+	for _, validTopic := range config.Get().KafkaConfig.ValidTopics {
 		if validTopic == topic {
 			return nil
 		}
 	}
-	return errors.New("Validation topic is invalid")
+	return errors.New("Validation topic is invalid: " + topic)
 }
 
 func serviceToTopic(service string) string {

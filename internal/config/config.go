@@ -29,21 +29,24 @@ type IngressConfig struct {
 	LoggingConfig        LoggingCfg
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
-	UseClowder           bool
 }
 
 type KafkaCfg struct {
 	KafkaBrokers         []string
 	KafkaGroupID         string
 	KafkaTrackerTopic    string
-	KafkaCA              string
-	KafkaUsername        string
-	KafkaPassword        string
 	KafkaDeliveryReports bool
 	KafkaAnnounceTopic   string
-	SASLMechanism        string
-	Protocol             string
 	ValidTopics          []string
+	KafkaSSLConfig	     KafkaSSLCfg
+}
+
+type KafkaSSLCfg struct {
+	KafkaCA			  string
+	KafkaUsername	  string
+	KafkaPassword	  string
+	SASLMechanism	  string
+	Protocol		  string
 }
 
 type StorageCfg struct {
@@ -102,12 +105,12 @@ func Get() *IngressConfig {
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
 
-		sb := os.Getenv("INGERSS_STAGEBUCKET")
+		sb := os.Getenv("INGRESS_STAGEBUCKET")
 		bucket := clowder.ObjectBuckets[sb]
 		broker := cfg.Kafka.Brokers[0]
 
 		// Kafka
-		options.SetDefault("KafkaBrokers", strings.Join(clowder.KafkaServers, ","))
+		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
 		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name) 
 		// Kafka SSL Config
 		if broker.Authtype != nil {
@@ -132,16 +135,16 @@ func Get() *IngressConfig {
 		options.SetDefault("UseSSL", cfg.ObjectStore.Tls)
 		// Cloudwatch
 		options.SetDefault("logGroup", cfg.Logging.Cloudwatch.LogGroup)
-		options.SetDefault("cwRegion", cfg.Logging.Cloudwatch.Region)
-		options.SetDefault("cwAccessKey", cfg.Logging.Cloudwatch.AccessKeyId)
-		options.SetDefault("cwSecretKey", cfg.Logging.Cloudwatch.SecretAccessKey)
+		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
+		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
+		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
 	} else {
 		// Kafka
 		defaultBrokers := os.Getenv("INGRESS_KAFKA_BROKERS")
 		if len(defaultBrokers) == 0 {
 			defaultBrokers = "kafka:29092"
 		}
-		options.SetDefault("kafka.bootstrap.servers", []string{defaultBrokers})
+		options.SetDefault("KafkaBrokers", []string{defaultBrokers})
 		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 		// Ports
 		options.SetDefault("WebPort", 3000)
@@ -176,7 +179,7 @@ func Get() *IngressConfig {
 			KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
 			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
-			ValidTopics: 		options.GetStringSlice("ValidTopics"),
+			ValidTopics: 		  strings.Split(options.GetString("ValidTopics"), ","),
 		},
 		StorageConfig: StorageCfg{
 			StageBucket: options.GetString("StageBucket"),
@@ -195,11 +198,11 @@ func Get() *IngressConfig {
 	}
 
 	if options.IsSet("KafkaUsername") {
-		IngressCfg.KafkaConfig.KafkaUsername = options.GetString("KafkaUsername")
-		IngressCfg.KafkaConfig.KafkaPassword = options.GetString("KafkaPassword")
-		IngressCfg.KafkaConfig.SASLMechanism = options.GetString("SASLMechanism")
-		IngressCfg.KafkaConfig.Protocol = options.GetString("Protocol")
-		IngressCfg.KafkaConfig.KafkaCA = options.GetString("KafkaCA")
+		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaUsername = options.GetString("KafkaUsername")
+		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaPassword = options.GetString("KafkaPassword")
+		IngressCfg.KafkaConfig.KafkaSSLConfig.SASLMechanism = options.GetString("SASLMechanism")
+		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
+		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaCA = options.GetString("KafkaCA")
 	}
 
 	return IngressCfg

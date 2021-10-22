@@ -12,7 +12,6 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 // Log is an instance of the global logrus.Logger
@@ -89,19 +88,14 @@ func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 // InitLogger initializes the Entitlements API logger
-func InitLogger() *logrus.Logger {
-
-	cfg := config.Get()
-	logconfig := viper.New()
-	key := cfg.AwsAccessKeyId
-	secret := cfg.AwsSecretAccessKey
-	region := cfg.AwsRegion
-	group := cfg.LogGroup
+func InitLogger(cfg *config.IngressConfig) *logrus.Logger {
+	key := cfg.LoggingConfig.AwsAccessKeyId
+	secret := cfg.LoggingConfig.AwsSecretAccessKey
+	region := cfg.LoggingConfig.AwsRegion
+	group := cfg.LoggingConfig.LogGroup
 	stream := cfg.Hostname
-	logconfig.SetEnvPrefix("INGRESS")
-	logconfig.AutomaticEnv()
 
-	switch cfg.LogLevel {
+	switch cfg.LoggingConfig.LogLevel {
 	case "DEBUG":
 		logLevel = logrus.DebugLevel
 	case "ERROR":
