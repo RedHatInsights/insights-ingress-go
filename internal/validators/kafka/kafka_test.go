@@ -40,7 +40,7 @@ var _ = Describe("Kafka", func() {
 					Service:  "unknown",
 					Category: "test",
 				})
-				Expect(err.Error()).To(Equal("Validation topic is invalid"))
+				Expect(err.Error()).To(Equal("Validation topic is invalid: unknown"))
 			})
 		})
 	})

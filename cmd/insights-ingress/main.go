@@ -43,8 +43,8 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	l.InitLogger()
 	cfg := config.Get()
+	l.InitLogger(cfg)
 	r := chi.NewRouter()
 	mr := chi.NewRouter()
 	r.Use(
@@ -53,45 +53,37 @@ func main() {
 		middleware.Recoverer,
 	)
 
-	stager := s3compat.GetClient(&s3compat.Stager{
-		Bucket: cfg.StageBucket,
+	stager := s3compat.GetClient(cfg, &s3compat.Stager{
+		Bucket: cfg.StorageConfig.StageBucket,
 	})
 
 	kafkaCfg := kafka.Config{
-		Brokers: cfg.KafkaBrokers,
-		GroupID: cfg.KafkaGroupID,
+		Brokers: cfg.KafkaConfig.KafkaBrokers,
+		GroupID: cfg.KafkaConfig.KafkaGroupID,
 	}
 
 	producerCfg := queue.ProducerConfig{
-		Brokers:              cfg.KafkaBrokers,
-		Topic:                cfg.KafkaTrackerTopic,
+		Brokers:              cfg.KafkaConfig.KafkaBrokers,
+		Topic:                cfg.KafkaConfig.KafkaTrackerTopic,
 		Async:                true,
-		KafkaDeliveryReports: cfg.KafkaDeliveryReports,
+		KafkaDeliveryReports: cfg.KafkaConfig.KafkaDeliveryReports,
 	}
 
-	if cfg.KafkaCA != "" {
-		kafkaCfg.CA = cfg.KafkaCA
-		producerCfg.CA = cfg.KafkaCA
+	// Kafka SSL Config
+	if cfg.KafkaConfig.KafkaSSLConfig != (config.KafkaSSLCfg{}) {
+		kafkaCfg.CA = cfg.KafkaConfig.KafkaSSLConfig.KafkaCA
+		kafkaCfg.Username = cfg.KafkaConfig.KafkaSSLConfig.KafkaUsername
+		kafkaCfg.Password = cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword
+		kafkaCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
+		kafkaCfg.Protocol = cfg.KafkaConfig.KafkaSSLConfig.Protocol
+		producerCfg.CA = cfg.KafkaConfig.KafkaSSLConfig.KafkaCA
+		producerCfg.Username = cfg.KafkaConfig.KafkaSSLConfig.KafkaUsername
+		producerCfg.Password = cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword
+		producerCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
+		producerCfg.Protocol = cfg.KafkaConfig.KafkaSSLConfig.Protocol
 	}
 
-	if cfg.KafkaUsername != "" {
-		kafkaCfg.Username = cfg.KafkaUsername
-		producerCfg.Username = cfg.KafkaUsername
-		kafkaCfg.Password = cfg.KafkaPassword
-		producerCfg.Password = cfg.KafkaPassword
-	}
-
-	if cfg.SASLMechanism != "" {
-		kafkaCfg.SASLMechanism = cfg.SASLMechanism
-		producerCfg.SASLMechanism = cfg.SASLMechanism
-	}
-
-	if cfg.Protocol != "" {
-		kafkaCfg.Protocol = cfg.Protocol
-		producerCfg.Protocol = cfg.Protocol
-	}
-
-	validator := kafka.New(&kafkaCfg, cfg.ValidTopics...)
+	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidTopics...)
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
