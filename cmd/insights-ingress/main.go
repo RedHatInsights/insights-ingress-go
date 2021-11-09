@@ -10,6 +10,7 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	ff "github.com/redhatinsights/insights-ingress-go/internal/featureflags"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
@@ -81,6 +82,10 @@ func main() {
 		producerCfg.Password = cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword
 		producerCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
 		producerCfg.Protocol = cfg.KafkaConfig.KafkaSSLConfig.Protocol
+	}
+
+	if cfg.FeatureFlagsConfig != (config.FeatureFlagCfg{}) {
+		ff.InitFFClient(cfg)
 	}
 
 	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidTopics...)

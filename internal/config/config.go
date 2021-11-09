@@ -27,6 +27,7 @@ type IngressConfig struct {
 	PayloadTrackerURL    string
 	StorageConfig        StorageCfg
 	LoggingConfig        LoggingCfg
+	FeatureFlagsConfig   FeatureFlagCfg
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
 }
@@ -47,6 +48,13 @@ type KafkaSSLCfg struct {
 	KafkaPassword	  string
 	SASLMechanism	  string
 	Protocol		  string
+}
+
+type FeatureFlagCfg struct {
+	FFHostname string
+	FFPort     int
+	FFToken    string
+	FFScheme   string
 }
 
 type StorageCfg struct {
@@ -138,6 +146,11 @@ func Get() *IngressConfig {
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
+		// FeatureFlags
+		options.SetDefault("FFHostname", cfg.FeatureFlags.Hostname)
+		options.SetDefault("FFPort", cfg.FeatureFlags.Port)
+		options.SetDefault("FFScheme", cfg.FeatureFlags.Scheme)
+		options.SetDefault("FFToken", cfg.FeatureFlags.ClientAccessToken)
 	} else {
 		// Kafka
 		defaultBrokers := os.Getenv("INGRESS_KAFKA_BROKERS")
@@ -194,6 +207,12 @@ func Get() *IngressConfig {
 			AwsRegion: options.GetString("AwsRegion"),
 			AwsAccessKeyId: options.GetString("AwsAccessKeyId"),
 			AwsSecretAccessKey: options.GetString("AwsSecretAccessKey"),
+		},
+		FeatureFlagsConfig: FeatureFlagCfg{
+			FFHostname: options.GetString("FFHostname"),
+			FFPort: options.GetInt("FFPort"),
+			FFToken: options.GetString("FFToken"),
+			FFScheme: options.GetString("FFScheme"),
 		},
 	}
 
