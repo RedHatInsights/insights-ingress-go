@@ -16,6 +16,7 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	ff "github.com/redhatinsights/insights-ingress-go/internal/featureflags"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
@@ -27,6 +28,7 @@ import (
 type responseBody struct {
 	RequestID string     `json:"request_id"`
 	Upload    uploadData `json:"upload,omitempty"`
+	Date      string  `json:"time,omitempty"`
 }
 
 type uploadData struct {
@@ -269,6 +271,9 @@ func NewHandler(
 
 		upload := uploadData{Account: vr.Account}
 		response := responseBody{RequestID: vr.RequestID, Upload: upload}
+		if cfg.FeatureFlagsConfig.FFHostname != "" && ff.Client.IsEnabled("ingress_send-date_default") {
+			response.Date = time.Now().Format(time.RFC1123)
+		}
 		jsonBody, err := json.Marshal(response)
 		if err != nil {
 			logerr("Unable to marshal JSON response body", err)
