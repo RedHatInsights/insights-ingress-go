@@ -15,7 +15,7 @@ objects:
     optionalDependencies:
     - puptoo
     - storage-broker
-    featureFlags: true
+      #featureFlags: true
     deployments:
     - name: service
       minReplicas: ${{MIN_REPLICAS}}
