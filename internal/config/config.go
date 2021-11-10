@@ -147,12 +147,10 @@ func Get() *IngressConfig {
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
 		// FeatureFlags
-		if cfg.FeatureFlags.Hostname != "" {
-			options.SetDefault("FFHostname", cfg.FeatureFlags.Hostname)
-			options.SetDefault("FFPort", cfg.FeatureFlags.Port)
-			options.SetDefault("FFScheme", cfg.FeatureFlags.Scheme)
-			options.SetDefault("FFToken", cfg.FeatureFlags.ClientAccessToken)
-		}
+		options.SetDefault("FFHostname", cfg.FeatureFlags.Hostname)
+		options.SetDefault("FFPort", cfg.FeatureFlags.Port)
+		options.SetDefault("FFScheme", cfg.FeatureFlags.Scheme)
+		options.SetDefault("FFToken", cfg.FeatureFlags.ClientAccessToken)
 	} else {
 		// Kafka
 		defaultBrokers := os.Getenv("INGRESS_KAFKA_BROKERS")
@@ -210,12 +208,6 @@ func Get() *IngressConfig {
 			AwsAccessKeyId: options.GetString("AwsAccessKeyId"),
 			AwsSecretAccessKey: options.GetString("AwsSecretAccessKey"),
 		},
-		FeatureFlagsConfig: FeatureFlagCfg{
-			FFHostname: options.GetString("FFHostname"),
-			FFPort: options.GetInt("FFPort"),
-			FFToken: options.GetString("FFToken"),
-			FFScheme: options.GetString("FFScheme"),
-		},
 	}
 
 	if options.IsSet("KafkaUsername") {
@@ -224,6 +216,13 @@ func Get() *IngressConfig {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.SASLMechanism = options.GetString("SASLMechanism")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaCA = options.GetString("KafkaCA")
+	}
+	
+	if options.IsSet("FFHostname") {
+		IngressCfg.FeatureFlagsConfig.FFHostname = options.GetString("FFHostname")
+		IngressCfg.FeatureFlagsConfig.FFToken = options.GetString("FFToken")
+		IngressCfg.FeatureFlagsConfig.FFPort = options.GetInt("FFPort")
+		IngressCfg.FeatureFlagsConfig.FFScheme = options.GetString("FFScheme")
 	}
 
 	return IngressCfg
