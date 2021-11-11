@@ -2,7 +2,6 @@ package featureflags
 
 import (
 	"fmt"
-	"net/http"
 	"errors"
 
 	unleash "github.com/Unleash/unleash-client-go/v3"
