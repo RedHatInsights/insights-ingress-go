@@ -91,6 +91,8 @@ func main() {
 	featureFlags, err := featureflags.NewFeatureFlagClient("unleash", cfg)
 	if err != nil {
 		l.Log.Error(err)
+		// intialize the fake one if the real one fails
+		featureFlags, _ = featureflags.NewFeatureFlagClient("fake", cfg)
 	}
 	featureFlags.InitializeClient()
 
