@@ -88,11 +88,16 @@ func main() {
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
-	featureFlags, err := featureflags.NewFeatureFlagClient("unleash", cfg)
-	if err != nil {
-		l.Log.Error(err)
-		// intialize the fake one if the real one fails
-		featureFlags, _ = featureflags.NewFeatureFlagClient("fake", cfg)
+	var featureFlags featureflags.FeatureFlagClient
+	var err error
+
+	if cfg.FeatureFlagsConfig != (config.FeatureFlagCfg{}) {
+		featureFlags, err = featureflags.NewFeatureFlagClient("unleash", cfg)
+		if err != nil {
+			l.Log.Error(err)
+		}
+	} else {
+		featureFlags, err = featureflags.NewFeatureFlagClient("fake", cfg)
 	}
 	featureFlags.InitializeClient()
 
