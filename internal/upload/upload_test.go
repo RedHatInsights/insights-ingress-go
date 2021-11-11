@@ -20,6 +20,7 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	"github.com/redhatinsights/insights-ingress-go/internal/featureflags"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	. "github.com/redhatinsights/insights-ingress-go/internal/upload"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
@@ -144,9 +145,10 @@ var _ = Describe("Upload", func() {
 		stager = &stage.Fake{ShouldError: false}
 		validator = &validators.Fake{}
 		tracker = &announcers.Fake{}
+		ffclient, _ := featureflags.NewFeatureFlagClient("fake", config.Get())
 
 		rr = httptest.NewRecorder()
-		handler = NewHandler(stager, validator, tracker, *config.Get())
+		handler = NewHandler(stager, validator, tracker, ffclient, *config.Get())
 		timeNow = setTime()
 	})
 
@@ -348,7 +350,8 @@ var _ = Describe("Upload", func() {
 			It("should return 413", func() {
 				cfg := config.Get()
 				cfg.DefaultMaxSize = 1
-				handler = NewHandler(stager, validator, tracker, *cfg)
+				ffclient, _ := featureflags.NewFeatureFlagClient("fake", config.Get())
+				handler = NewHandler(stager, validator, tracker, ffclient, *cfg)
 				boiler(http.StatusRequestEntityTooLarge, &FilePart{
 					Name:        "file",
 					Content:     "testing",
@@ -364,7 +367,8 @@ var _ = Describe("Upload", func() {
 				cfg := config.Get()
 				cfg.DefaultMaxSize = 1
 				cfg.MaxSizeMap = TypeMap
-				handler = NewHandler(stager, validator, tracker, *cfg)
+				ffclient, _ := featureflags.NewFeatureFlagClient("fake", config.Get())
+				handler = NewHandler(stager, validator, tracker, ffclient, *cfg)
 				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
@@ -376,7 +380,8 @@ var _ = Describe("Upload", func() {
 		Context("when the payload fails to stage", func() {
 			It("should return 413", func() {
 				stager = &stage.Fake{ShouldError: true}
-				handler = NewHandler(stager, validator, tracker, *config.Get())
+				ffclient, _ := featureflags.NewFeatureFlagClient("fake", config.Get())
+				handler = NewHandler(stager, validator, tracker, ffclient, *config.Get())
 				boiler(http.StatusInternalServerError, &FilePart{
 					Name:        "file",
 					Content:     "testing",

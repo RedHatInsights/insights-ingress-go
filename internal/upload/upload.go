@@ -16,7 +16,7 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
-	ff "github.com/redhatinsights/insights-ingress-go/internal/featureflags"
+	"github.com/redhatinsights/insights-ingress-go/internal/featureflags"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
@@ -118,6 +118,7 @@ func NewHandler(
 	stager stage.Stager,
 	validator validators.Validator,
 	tracker announcers.Announcer,
+	featureFlags featureflags.FeatureFlagClient,
 	cfg config.IngressConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
@@ -271,7 +272,7 @@ func NewHandler(
 
 		upload := uploadData{Account: vr.Account}
 		response := responseBody{RequestID: vr.RequestID, Upload: upload}
-		if cfg.FeatureFlagsConfig.FFHostname != "" && ff.Client.IsEnabled("ingress_send-date_default") {
+		if featureFlags.CheckFlag("ingress_send-date_default") {
 			response.Date = time.Now().Format(time.RFC1123)
 		}
 		jsonBody, err := json.Marshal(response)

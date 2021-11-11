@@ -1,26 +1,78 @@
 package featureflags
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
+	"errors"
 
 	unleash "github.com/Unleash/unleash-client-go/v3"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 )
 
-var Client *unleash.Client
+type FeatureFlagClient interface {
+	InitializeClient() error
+	CheckFlag(flag string) bool
+}
 
-func InitFFClient(cfg *config.IngressConfig) *unleash.Client {
-	Client, err := unleash.NewClient(
+func NewFeatureFlagClient(impl string, cfg *config.IngressConfig) (FeatureFlagClient, error) {
+
+	switch impl {
+	case "fake":
+		configuredClient := FakeFeatureFlagClient{
+		}
+
+		return &configuredClient, nil
+	case "unleash":
+		configuredClient := UnleashFeatureFlagClient{
+			Config: cfg,
+		}
+			
+		return &configuredClient, nil
+	default:
+		return nil, errors.New("Invalid Feature Flag Client impl requested")
+	}
+}
+
+type UnleashFeatureFlagClient struct {
+	Config *config.IngressConfig
+	Client *unleash.Client
+}
+
+func (ufc *UnleashFeatureFlagClient) InitializeClient() error {
+	url := fmt.Sprintf("%s://%s:%v",
+				ufc.Config.FeatureFlagsConfig.FFScheme,
+				ufc.Config.FeatureFlagsConfig.FFHostname,
+				ufc.Config.FeatureFlagsConfig.FFPort,
+			   )
+	unleashClient, err := unleash.NewClient(
 		unleash.WithAppName("insights-ingress"),
-		unleash.WithUrl(cfg.FeatureFlagsConfig.FFHostname + ":" + strconv.Itoa(cfg.FeatureFlagsConfig.FFPort) + "/api/"),
-		unleash.WithCustomHeaders(http.Header{"Authorization": {cfg.FeatureFlagsConfig.FFToken}}),
+		unleash.WithUrl(url +  "/api/"),
+		unleash.WithCustomHeaders(http.Header{"Authorization": {ufc.Config.FeatureFlagsConfig.FFToken}}),
 	)
-
 	if err != nil {
 		l.Log.Errorf("Error initializing feature flags client: %v", err)
+		return err
 	}
+	ufc.Client = unleashClient
+	return nil
 
-	return Client
 }
+
+func (ufc *UnleashFeatureFlagClient) CheckFlag(flag string) bool {
+	result := ufc.Client.IsEnabled(flag)
+	return result
+}
+
+type FakeFeatureFlagClient struct {
+}
+
+func (ffc *FakeFeatureFlagClient) InitializeClient() error {
+	l.Log.Info("Initialized fake client")
+	return nil
+}
+
+func (ffc *FakeFeatureFlagClient) CheckFlag(flag string) bool {
+	return false
+}
+

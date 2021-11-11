@@ -147,12 +147,10 @@ func Get() *IngressConfig {
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
 		// FeatureFlags
-		if (cfg.FeatureFlags != &clowder.FeatureFlagsConfig{}) {
-			options.SetDefault("FFHostname", cfg.FeatureFlags.Hostname)
-			options.SetDefault("FFPort", cfg.FeatureFlags.Port)
-			options.SetDefault("FFScheme", cfg.FeatureFlags.Scheme)
-			options.SetDefault("FFToken", cfg.FeatureFlags.ClientAccessToken)
-		}
+		options.SetDefault("FFHostname", cfg.FeatureFlags.Hostname)
+		options.SetDefault("FFPort", cfg.FeatureFlags.Port)
+		options.SetDefault("FFScheme", cfg.FeatureFlags.Scheme)
+     	options.SetDefault("FFToken", cfg.FeatureFlags.ClientAccessToken)
 	} else {
 		// Kafka
 		defaultBrokers := os.Getenv("INGRESS_KAFKA_BROKERS")
