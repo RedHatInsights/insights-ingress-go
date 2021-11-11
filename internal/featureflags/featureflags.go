@@ -44,11 +44,11 @@ func (ufc *UnleashFeatureFlagClient) InitializeClient() error {
 				ufc.Config.FeatureFlagsConfig.FFScheme,
 				ufc.Config.FeatureFlagsConfig.FFHostname,
 				ufc.Config.FeatureFlagsConfig.FFPort,
-			   )
+			   )	
 	unleashClient, err := unleash.NewClient(
 		unleash.WithAppName("insights-ingress"),
 		unleash.WithUrl(url +  "/api/"),
-		unleash.WithCustomHeaders(http.Header{"Authorization": {ufc.Config.FeatureFlagsConfig.FFToken}}),
+	//	unleash.WithCustomHeaders(http.Header{"Authorization": {ufc.Config.FeatureFlagsConfig.FFToken}}),
 	)
 	if err != nil {
 		l.Log.Errorf("Error initializing feature flags client: %v", err)

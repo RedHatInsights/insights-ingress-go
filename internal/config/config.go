@@ -150,7 +150,6 @@ func Get() *IngressConfig {
 		options.SetDefault("FFHostname", cfg.FeatureFlags.Hostname)
 		options.SetDefault("FFPort", cfg.FeatureFlags.Port)
 		options.SetDefault("FFScheme", cfg.FeatureFlags.Scheme)
-     	options.SetDefault("FFToken", cfg.FeatureFlags.ClientAccessToken)
 	} else {
 		// Kafka
 		defaultBrokers := os.Getenv("INGRESS_KAFKA_BROKERS")
