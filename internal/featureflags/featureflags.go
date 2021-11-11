@@ -47,6 +47,7 @@ func (ufc *UnleashFeatureFlagClient) InitializeClient() error {
 	unleashClient, err := unleash.NewClient(
 		unleash.WithAppName("insights-ingress"),
 		unleash.WithUrl(url +  "/api/"),
+		unleash.WithListener(&unleash.DebugListener{}),
 	//	unleash.WithCustomHeaders(http.Header{"Authorization": {ufc.Config.FeatureFlagsConfig.FFToken}}),
 	)
 	if err != nil {
