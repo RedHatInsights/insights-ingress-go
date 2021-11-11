@@ -26,6 +26,12 @@
         },
         "type": "null"
     },
+    "featureFlags": {
+        "hostname": "potato.example.com",
+        "port": 4242,
+        "scheme": "http",
+        "clientAccessToken": "12314234234"
+    },
     "metricsPath": "/metrics",
     "metricsPort": 9000,
     "objectStore": {
