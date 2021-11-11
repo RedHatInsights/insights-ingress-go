@@ -10,8 +10,8 @@ import (
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	"github.com/redhatinsights/insights-ingress-go/internal/featureflags"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
-	ff "github.com/redhatinsights/insights-ingress-go/internal/featureflags"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
 	"github.com/redhatinsights/insights-ingress-go/internal/track"
@@ -46,7 +46,6 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 func main() {
 	cfg := config.Get()
 	l.InitLogger(cfg)
-	ff.InitFFClient(cfg)
 	r := chi.NewRouter()
 	mr := chi.NewRouter()
 	r.Use(
@@ -89,8 +88,14 @@ func main() {
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
+	featureFlags, err := featureflags.NewFeatureFlagClient("unleash", cfg)
+	if err != nil {
+		l.Log.Error(err)
+	}
+	featureFlags.InitializeClient()
+
 	handler := upload.NewHandler(
-		stager, validator, tracker,  *cfg,
+		stager, validator, tracker, featureFlags, *cfg,
 	)
 
 	trackEndpoint := track.NewHandler(
