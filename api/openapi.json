@@ -118,8 +118,10 @@
             "default": 0,
             "minimum": 0,
             "maximum": 2
-        }
-      ]
+          }
+        ]
+      }
+    }
   },
   "components": {
     "schemas": {
