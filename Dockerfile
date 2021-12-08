@@ -16,7 +16,7 @@ FROM registry.redhat.io/ubi8/ubi-minimal
 WORKDIR /
 
 COPY --from=builder /go/src/app/insights-ingress-go ./insights-ingress-go
-COPY --from=builder /go/src/app/api/openapi.json /var/tmp
+COPY --from=builder /go/src/app/internal/api/openapi.json /var/tmp
 
 USER 1001
 
