@@ -9,7 +9,7 @@ RUN go get -d ./... && \
     go build -o insights-ingress-go cmd/insights-ingress/main.go
 
 RUN cp /go/src/app/insights-ingress-go /usr/bin/ && \
-    cp /go/src/app/api/openapi.json /var/tmp/
+    cp /go/src/app/internal/api/openapi.json /var/tmp/
 
 FROM registry.redhat.io/ubi8/ubi-minimal
 
