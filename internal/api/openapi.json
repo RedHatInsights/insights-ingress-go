@@ -159,61 +159,61 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "ValidationResponse": {
-        "type": "object",
-        "properties": {
-          "account": {
-            "type": "string"
+              }
+            }
           },
-          "request_id": {
-            "type": "string"
-          },
-          "service": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "principal": {
-            "type": "string"
-          },
-          "b64_identity": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "validation": {
-            "type": "string",
-            "enum": [
-              "success",
-              "failure"
-            ]
-          },
-          "extras": {
+          "ValidationResponse": {
             "type": "object",
             "properties": {
+              "account": {
+                "type": "string"
+              },
+              "request_id": {
+                "type": "string"
+              },
+              "service": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "principal": {
+                "type": "string"
+              },
+              "b64_identity": {
+                "type": "string"
+              },
               "id": {
                 "type": "string"
               },
-              "satellite_managed": {
-                "type": "boolean"
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "validation": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure"
+                ]
+              },
+              "extras": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "satellite_managed": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
               }
-            },
-            "additionalProperties": {
-              "type": "string"
             }
           }
         }
       }
     }
-  }
-}
