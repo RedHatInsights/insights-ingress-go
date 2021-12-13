@@ -12,9 +12,8 @@ trap "teardown_container" EXIT SIGINT SIGTERM
 
 # Do tests
 TEST_CONTAINER_ID=$(docker run -d \
-    -v $(pwd):/cdapp \
-    -e ACG_CONFIG="/cdapp/cdappconfig.json" \
-    $IMAGE:$IMAGE_TAG \
+    registry.redhat.io/ubi8/go-toolset:1.16.7 \
+    -v $(pwd):/go/src/app \
     /bin/bash -c 'sleep infinity' || echo "0")
 
 if [[ "$TEST_CONTAINER_ID" ==  "0" ]]; then
@@ -30,11 +29,11 @@ echo '=============================='
 echo '====   Running Go Tests   ===='
 echo '=============================='
 set +e
-docker exec $TEST_CONTAINER_ID /bin/bash -c 'go test -v race -coverprofile=coverage.txt -covermode=atomic ./...'
+docker exec $TEST_CONTAINER_ID /bin/bash -c 'go test -v race -coverprofile=coverage.txt -covermode=atomic /go/src/app/...'
 TEST_RESULT=$?
 set -e
 # Copy test reports
-docker cp $TEST_CONTAINER_ID:/coverage.txt $ARTIFACTS_DIR/junit-coverage.txt
+docker cp $TEST_CONTAINER_ID:/go/src/app/coverage.txt $ARTIFACTS_DIR/junit-coverage.txt
 if [ $TEST_RESULT -ne 0 ]; then
 	echo '====================================='
 	echo '====   ✖ ERROR: GO TEST FAILED  ===='
