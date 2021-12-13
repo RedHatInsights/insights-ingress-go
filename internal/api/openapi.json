@@ -108,7 +108,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Payload responses"
+                        "description": "Payload responses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrackResponse"
+                                }
+                            }
+                        }
                     },
                     "403": {
                         "description": "Authentication failure for specific request_id"
@@ -131,13 +138,33 @@
                     "upload": {
                         "type": "object",
                         "properties": {
-                          "account": {
-                          "type": "string"
-                          }
+                            "account": {
+                                "type": "string"
+                            }
                         }
                     }
-                  }
-             }
-         }
+                }
+            },
+            "TrackResponse": {
+                "type": "object",
+                "properties": {
+                    "status_msg": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "inventory_id": {
+                        "type": "string"
+                    },
+                    "service": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
     }
 }
