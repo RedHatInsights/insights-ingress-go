@@ -128,11 +128,16 @@
                     "request_id": {
                         "type": "string"
                     },
-                    "account": {
-                        "type": "string"
+                    "upload": {
+                        "type": "object",
+                        "properties": {
+                          "account": {
+                          "type": "string"
+                          }
+                        }
                     }
-                }
-            }
-        }
+                  }
+             }
+         }
     }
 }
