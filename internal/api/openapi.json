@@ -1,219 +1,138 @@
 {
-  "openapi": "3.0.0",
-  "info": {
-    "title": "Ingress",
-    "description": "Payload Ingress Service",
-    "version": "1.0.0"
-  },
-  "servers": [
-    {
-      "url": "https://cloud.redhat.com/api/ingress/v1",
-      "description": "Production"
-    }
-  ],
-  "paths": {
-    "/upload": {
-      "post": {
-        "summary": "Accepts a payload",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "metadata": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Ingress",
+        "description": "Payload Ingress Service",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://cloud.redhat.com/api/ingress/v1",
+            "description": "Production"
+        }
+    ],
+    "paths": {
+        "/upload": {
+            "post": {
+                "summary": "Accepts a payload",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "metadata": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Advisor content type with no metadata accepted for processing",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadResponse"
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "Payload was accepted for processing.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication missing from request"
+                    },
+                    "413": {
+                        "description": "Payload too large"
+                    },
+                    "415": {
+                        "description": "Content type of payload is unsupported."
+                    }
                 }
-              }
             }
-          }
         },
-        "responses": {
-          "201": {
-            "description": "Advisor content type with no metadata accepted for processing",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "request_id": {
-                    "type": "string"
-                  }
+        "/version": {
+            "get": {
+                "summary": "Returns version information",
+                "responses": {
+                    "200": {
+                        "description": "Version information"
+                    },
+                    "401": {
+                        "description": "Authentication missing from request"
+                    }
                 }
-              }
             }
-          },
-          "202": {
-            "description": "Payload was accepted for processing.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "request_id": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication missing from request"
-          },
-          "413": {
-            "description": "Payload too large"
-          },
-          "415": {
-            "description": "Content type of payload is unsupported."
-          }
-        }
-      }
-    },
-    "/version": {
-      "get": {
-        "summary": "Returns version information",
-        "responses": {
-          "200": {
-            "description": "Version information"
-          },
-          "401": {
-            "description": "Authentication missing from request"
-          }
-        }
-      }
-    },
-    "/track/{request_id}": {
-      "get": {
-        "summary": "Find status of a specific request",
-        "responses": {
-          "200": {
-            "description": "Payload responses"
-          },
-          "403": {
-            "description": "Authentication failure for specific request_id"
-          },
-          "404": {
-            "description": "Request_id not found"
-          }
         },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "request_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "verbosity",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "maximum": 2
-          }
-        ]
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "ValidationRequest": {
-        "type": "object",
-        "properties": {
-          "account": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
-          "service": {
-            "type": "string"
-          },
-          "request_id": {
-            "type": "string"
-          },
-          "principal": {
-            "type": "string"
-          },
-          "size": {
-            "type": "integer"
-          },
-          "url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "id": {
-            "type": "string"
-          },
-          "b64_identity": {
-            "type": "string"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-              }
+        "/track/{request_id}": {
+            "get": {
+                "summary": "Find status of a specific request",
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "verbosity",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0,
+                            "maximum": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payload responses"
+                    },
+                    "403": {
+                        "description": "Authentication failure for specific request_id"
+                    },
+                    "404": {
+                        "description": "Request_id not found"
+                    }
+                }
             }
-          },
-          "ValidationResponse": {
-            "type": "object",
-            "properties": {
-              "account": {
-                "type": "string"
-              },
-              "request_id": {
-                "type": "string"
-              },
-              "service": {
-                "type": "string"
-              },
-              "url": {
-                "type": "string",
-                "format": "uri"
-              },
-              "principal": {
-                "type": "string"
-              },
-              "b64_identity": {
-                "type": "string"
-              },
-              "id": {
-                "type": "string"
-              },
-              "timestamp": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "validation": {
-                "type": "string",
-                "enum": [
-                  "success",
-                  "failure"
-                ]
-              },
-              "extras": {
+        }
+    },
+    "components": {
+        "schemas": {
+            "UploadResponse": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "type": "string"
-                  },
-                  "satellite_managed": {
-                    "type": "boolean"
-                  }
-                },
-                "additionalProperties": {
-                  "type": "string"
+                    "request_id": {
+                        "type": "string"
+                    },
+                    "account": {
+                        "type": "string"
+                    }
                 }
-              }
             }
-          }
         }
-      }
     }
+}
