@@ -5,4 +5,4 @@ import (
 )
 
 //go:embed openapi.json
-var Api []byte
+var ApiSpec []byte
