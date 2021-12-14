@@ -1,0 +1,27 @@
+---
+name: PR Check
+
+on:
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Install Openapi-spec-validator
+        run: |
+            python -m pip install --upgrade openapi-spec-validator
+        
+      - name: Run Openapi Validation
+        run: |
+            python -m openapi-spec-validator internal/api/openapi.json
+
