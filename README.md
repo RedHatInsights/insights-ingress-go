@@ -56,6 +56,7 @@ Validation Messages:
        {
            "account": <account number>,
            "category": <currently translates to filename>,
+           "content_type": <full content type string from the client>,
            "request_id": <uuid for the payload>,
            "principal": <currently the org ID>,
            "service": <service the upload goes to>,

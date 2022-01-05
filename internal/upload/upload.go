@@ -191,6 +191,7 @@ func NewHandler(
 			Service:     serviceDescriptor.Service,
 			Category:    serviceDescriptor.Category,
 			B64Identity: b64Identity,
+			ContentType: contentType,
 		}
 
 		var exceedsSizeLimit bool
