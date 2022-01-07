@@ -8,6 +8,7 @@ import (
 type Request struct {
 	Account     string    `json:"account"`
 	Category    string    `json:"category"`
+	ContentType string    `json:"content_type"`
 	Metadata    Metadata  `json:"metadata"`
 	RequestID   string    `json:"request_id"`
 	Principal   string    `json:"principal"`
