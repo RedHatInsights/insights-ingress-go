@@ -1,7 +1,3 @@
-To ensure full and complete PR descriptions, please use the following template:
-
-Template based on [this article](https://www.pullrequest.com/blog/writing-a-great-pull-request-description/)
-
 ## What?
 Explain what the change is linking any relevant JIRAs or Issues.
 
@@ -13,7 +9,6 @@ Describe how the change is implemented. Any noteable new libaries, APIs, or feat
 
 ## Testing
 Did you add any tests for the change?
-
 
 ## Anything Else?
 Any other notes about the PR that would be useful for the reviewer. 
