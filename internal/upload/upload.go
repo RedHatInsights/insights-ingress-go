@@ -231,7 +231,7 @@ func NewHandler(
 			Account:   vr.Account,
 			RequestID: reqID,
 			Status:    "received",
-			StatusMsg: "Payload recived by ingress",
+			StatusMsg: "Payload received by ingress",
 		}
 		requestLogger.Info("Payload received")
 		tracker.Status(ps)
