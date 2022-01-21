@@ -17,7 +17,7 @@ objects:
     - storage-broker
     - host-inventory
     - advisor
-    - payload-tracker
+    - payload-tracker-go
     deployments:
     - name: service
       minReplicas: ${{MIN_REPLICAS}}
