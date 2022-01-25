@@ -16,7 +16,6 @@ objects:
     - puptoo
     - storage-broker
     - host-inventory
-    - advisor-backend
     - payload-tracker-go
     deployments:
     - name: service
