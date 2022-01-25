@@ -12,6 +12,7 @@ IQE_MARKER_EXPRESSION="smoke"
 IQE_FILTER_EXPRESSION=""
 IQE_CJI_TIMEOUT="30m"
 
+EXTRA_DEPLOY_ARGS="advisor"
 
 # Install bonfire repo/initialize
 CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
