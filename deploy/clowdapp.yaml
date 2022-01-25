@@ -15,6 +15,9 @@ objects:
     optionalDependencies:
     - puptoo
     - storage-broker
+    - host-inventory
+    - advisor-backend
+    - payload-tracker-go
     deployments:
     - name: service
       minReplicas: ${{MIN_REPLICAS}}
