@@ -12,6 +12,7 @@ IQE_MARKER_EXPRESSION="smoke"
 IQE_FILTER_EXPRESSION=""
 IQE_CJI_TIMEOUT="30m"
 
+EXTRA_DEPLOY_ARGS="advisor"
 
 # Install bonfire repo/initialize
 CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
@@ -20,8 +21,5 @@ curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 source $CICD_ROOT/build.sh
 source $APP_ROOT/unit_test.sh
 source $CICD_ROOT/deploy_ephemeral_env.sh
-
-bonfire deploy advisor --source=appsre --ref-env insights-stage -n $NAMESPACE
-
 source $CICD_ROOT/cji_smoke_test.sh
 
