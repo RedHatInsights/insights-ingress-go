@@ -64,8 +64,8 @@ objects:
             cpu: ${CPU_LIMIT}
             memory: ${MEMORY_LIMIT}
           requests:
-            cpu: 200m
-            memory: 256Mi
+            cpu: ${CPU_REQUESTS}
+            memory: ${MEMORY_REQUESTS}
         volumes:
         - emptyDir: {}
           name: tmpdir
@@ -146,6 +146,12 @@ parameters:
 - description: memory limit of service
   name: MEMORY_LIMIT
   value: 512Mi
+- description: cpu request for service
+  name: CPU_REQUESTS
+  value: 200m
+- description: memory request for service
+  name: MEMORY_REQUESTS
+  value: 256Mi
 - name: MIN_REPLICAS
   value: '1'
 - description: Image tag
