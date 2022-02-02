@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi8/go-toolset:1.16.7 as builder
+FROM registry.redhat.io/ubi8/go-toolset:latest as builder
 
 WORKDIR /go/src/app
 COPY . .
