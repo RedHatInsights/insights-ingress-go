@@ -214,7 +214,7 @@ var _ = Describe("Upload", func() {
 					},
 					&FilePart{
 						Name:        "metadata",
-						Content:     `{"account": "012345"}`,
+						Content:     `{"account": "012345", "custom_metadata": {"foo": "bar"}}`,
 						ContentType: "text/plain",
 					},
 				)
@@ -223,7 +223,7 @@ var _ = Describe("Upload", func() {
 				vin := validator.In
 				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", StaleTimestamp: timeNow}))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", CustomMetadata: map[string]string{"foo": "bar"}, StaleTimestamp: timeNow}))
 			})
 		})
 
