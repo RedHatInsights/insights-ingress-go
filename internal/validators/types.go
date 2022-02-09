@@ -32,7 +32,7 @@ type Metadata struct {
 	BiosUUID       string            `json:"bios_uuid,omitempty"`
 	DisplayName    string            `json:"display_name,omitempty"`
 	AnsibleHost    string            `json:"ansible_host,omitempty"`
-	CCXData        map[string]string `json:"ccx_data,omitempty"`
+	CustomMetadata map[string]string `json:"custom_metadata,omitempty"`
 	Reporter       string            `json:"reporter"`
 	StaleTimestamp time.Time         `json:"stale_timestamp"`
 }
