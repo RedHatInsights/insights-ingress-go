@@ -24,8 +24,8 @@ services:
     image: minio/minio
     command: server /data
     volumes:
-      - '/mnt/config:/data:z'
-      - '/mnt/data:/root/.minio:z'
+      - './minio-conf:/data:z'
+      - './minio-data:/root/.minio:z'
     ports:
       - 9000:9000
     environment:
