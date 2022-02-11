@@ -31,9 +31,24 @@ services:
     environment:
       - MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
       - MINIO_SECRET_KEY=$MINIO_SECRET_KEY
+  minio-buckets:
+    image: minio/mc
+    restart: on-failure
+    entrypoint: [""]
+    command:
+      - /bin/sh 
+      - -c 
+      - |
+        mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}
+        mc mb myminio/insights-upload-perma
+        mc policy set public myminio/insights-upload-perma
+    environment:
+      - MINIO_SECRET_KEY=$MINIO_SECRET_KEY
+      - MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
+    depends_on:
+      - minio
   ingress:
-    #image: quay.io/cloudservices/insights-ingress:latest
-    image: ingress:latest
+    image: quay.io/cloudservices/insights-ingress:latest
     ports:
       - 8080:3000
     mem_limit: 512M
