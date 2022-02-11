@@ -133,11 +133,11 @@ Note, that your service name needs to be in the `INGRESS_VALIDTOPICS` variable i
 
 For testing, the following base64 identity can be used:
 
-    eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMDAwMDAwMSIsICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fX0=
+    eyJpZGVudGl0eSI6IHsidHlwZSI6ICJBc3NvY2lhdGUiLCAiYWNjb3VudF9udW1iZXIiOiAiMDAwMDAwMSIsICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fX0=
 
 This decodes to:
 
-    {"identity": {"account_number": "0000001", "internal": {"org_id": "000001"}}}
+    {"identity": {"type": "Associate", "account_number": "0000001", "internal": {"org_id": "000001"}}}
 
 #### Testing
 
