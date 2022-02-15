@@ -12,9 +12,10 @@ objects:
     envName: ${ENV_NAME}
     testing:
       iqePlugin: ingress
-    optionalDependencies:
+    dependencies:
     - puptoo
     - storage-broker
+    optionalDependencies:
     - host-inventory
     - payload-tracker-go
     deployments:
