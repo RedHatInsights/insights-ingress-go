@@ -11,6 +11,7 @@ type Request struct {
 	ContentType string    `json:"content_type"`
 	Metadata    Metadata  `json:"metadata"`
 	RequestID   string    `json:"request_id"`
+	OrgID       string    `json:"org_id"`
 	Principal   string    `json:"principal"`
 	Service     string    `json:"service"`
 	Size        int64     `json:"size"`

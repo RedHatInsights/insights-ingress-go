@@ -187,6 +187,7 @@ func NewHandler(
 
 		vr := &validators.Request{
 			RequestID:   reqID,
+			OrgID:       id.Identity.Internal.OrgID,
 			Size:        fileHeader.Size,
 			Service:     serviceDescriptor.Service,
 			Category:    serviceDescriptor.Category,
