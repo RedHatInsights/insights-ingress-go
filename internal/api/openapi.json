@@ -140,6 +140,9 @@
                         "properties": {
                             "account": {
                                 "type": "string"
+                            },
+                            "org_id": {
+                                "type": "string"
                             }
                         }
                     }
