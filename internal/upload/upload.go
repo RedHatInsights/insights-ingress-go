@@ -31,6 +31,7 @@ type responseBody struct {
 
 type uploadData struct {
 	Account string `json:"account_number,omitempty"`
+	OrgID   string `json:"org_id,omitempty"`
 }
 
 // GetFile verifies that the proper upload field is in place and returns the file
@@ -111,6 +112,14 @@ func isTestRequest(r *http.Request) bool {
 	return false
 }
 
+func createUploadRequest(vr *validators.Request) ([]byte, error) {
+	upload := uploadData{Account: vr.Account, OrgID: vr.OrgID}
+	response := responseBody{RequestID: vr.RequestID, Upload: upload}
+	jsonBody, err := json.Marshal(response)
+
+	return jsonBody, err
+}
+
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(
 	stager stage.Stager,
@@ -141,7 +150,20 @@ func NewHandler(
 		}
 
 		if isTestRequest(r) {
+			mockVr := &validators.Request{
+				RequestID: reqID,
+				Account:   id.Identity.AccountNumber,
+				OrgID:     id.Identity.OrgID,
+			}
 			w.WriteHeader(http.StatusOK)
+			jsonBody, err := createUploadRequest(mockVr)
+			if err != nil {
+				logerr("Unable to marshal JSON response body", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			w.Write(jsonBody)
 			return
 		}
 
@@ -216,8 +238,9 @@ func NewHandler(
 
 		if cfg.Auth == true {
 			vr.Account = id.Identity.AccountNumber
-			vr.Principal = id.Identity.Internal.OrgID
-			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.Principal})
+			vr.Principal = id.Identity.OrgID
+			vr.OrgID = id.Identity.OrgID
+			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.OrgID})
 		}
 
 		md, err := GetMetadata(r)
@@ -240,7 +263,7 @@ func NewHandler(
 			Payload: file,
 			Key:     reqID,
 			Account: vr.Account,
-			OrgId:   vr.Principal,
+			OrgId:   vr.OrgID,
 			Size:    size,
 		}
 
@@ -268,9 +291,7 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		upload := uploadData{Account: vr.Account}
-		response := responseBody{RequestID: vr.RequestID, Upload: upload}
-		jsonBody, err := json.Marshal(response)
+		jsonBody, err := createUploadRequest(vr)
 		if err != nil {
 			logerr("Unable to marshal JSON response body", err)
 			w.WriteHeader(http.StatusInternalServerError)
