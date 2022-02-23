@@ -145,6 +145,10 @@ func NewHandler(
 			return
 		}
 
+		if id.Identity.OrgID == "" && id.Identity.Internal.OrgID != "" {
+			id.Identity.OrgID = id.Identity.Internal.OrgID
+		}
+
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r, cfg.MaxUploadMem)
 		if err != nil {
