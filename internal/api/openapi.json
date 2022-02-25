@@ -143,7 +143,7 @@
                             },
                             "org_id": {
                                 "type": "string",
-                                "description": "Oracle account number which is a unique identifier for a customer account"
+                                "description": "Tennant customer identifier used by front office systems (SSO, RHSM, Customer Portal)"
                             }
                         }
                     }
