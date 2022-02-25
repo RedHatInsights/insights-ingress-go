@@ -112,12 +112,29 @@ func isTestRequest(r *http.Request) bool {
 	return false
 }
 
-func createUploadRequest(vr *validators.Request) ([]byte, error) {
+func createUploadResponse(vr *validators.Request) ([]byte, error) {
 	upload := uploadData{Account: vr.Account, OrgID: vr.OrgID}
 	response := responseBody{RequestID: vr.RequestID, Upload: upload}
 	jsonBody, err := json.Marshal(response)
 
 	return jsonBody, err
+}
+
+func handleTestRequest(reqID string, identity identity.Identity, w http.ResponseWriter, logerr func(msg string, err error)) {
+	mockVr := &validators.Request{
+		RequestID: reqID,
+		Account:   identity.AccountNumber,
+		OrgID:     identity.OrgID,
+	}
+	w.WriteHeader(http.StatusOK)
+	jsonBody, err := createUploadResponse(mockVr)
+	if err != nil {
+		logerr("Unable to marshal JSON response body", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(jsonBody)
 }
 
 // NewHandler returns a http handler configured with a Pipeline
@@ -150,20 +167,7 @@ func NewHandler(
 		}
 
 		if isTestRequest(r) {
-			mockVr := &validators.Request{
-				RequestID: reqID,
-				Account:   id.Identity.AccountNumber,
-				OrgID:     id.Identity.OrgID,
-			}
-			w.WriteHeader(http.StatusOK)
-			jsonBody, err := createUploadRequest(mockVr)
-			if err != nil {
-				logerr("Unable to marshal JSON response body", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			w.Write(jsonBody)
+			handleTestRequest(reqID, id.Identity, w, logerr)
 			return
 		}
 
@@ -291,7 +295,7 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		jsonBody, err := createUploadRequest(vr)
+		jsonBody, err := createUploadResponse(vr)
 		if err != nil {
 			logerr("Unable to marshal JSON response body", err)
 			w.WriteHeader(http.StatusInternalServerError)
