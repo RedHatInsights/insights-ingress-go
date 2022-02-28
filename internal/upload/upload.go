@@ -225,6 +225,7 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Debug("Failed to read metadata")
 		} else {
 			vr.Metadata = *md
+			requestLogger = requestLogger.WithFields(logrus.Fields{"metadata": vr.Metadata})
 		}
 
 		ps := &announcers.Status{
