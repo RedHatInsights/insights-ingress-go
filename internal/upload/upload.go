@@ -171,13 +171,17 @@ func NewHandler(
 			return
 		}
 
+		if id.Identity.OrgID == "" && id.Identity.Internal.OrgID != "" {
+			id.Identity.OrgID = id.Identity.Internal.OrgID
+		}
+
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r, cfg.MaxUploadMem)
 		if err != nil {
 			errString := "File or upload field not found"
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(errString))
-			requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusBadRequest, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID}).Info(errString)
+			requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusBadRequest, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info(errString)
 			logerr("Invalid upload payload", err)
 			return
 		}
@@ -191,7 +195,7 @@ func NewHandler(
 
 		observeSize(userAgent, size)
 
-		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID})
+		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID})
 
 		requestLogger.Debug("ContentType received from client")
 		serviceDescriptor, validationErr := getServiceDescriptor(contentType)
@@ -213,6 +217,7 @@ func NewHandler(
 
 		vr := &validators.Request{
 			RequestID:   reqID,
+			OrgID:       id.Identity.OrgID,
 			Size:        fileHeader.Size,
 			Service:     serviceDescriptor.Service,
 			Category:    serviceDescriptor.Category,
