@@ -140,6 +140,10 @@
                         "properties": {
                             "account": {
                                 "type": "string"
+                            },
+                            "org_id": {
+                                "type": "string",
+                                "description": "Tennant customer identifier used by front office systems (SSO, RHSM, Customer Portal)"
                             }
                         }
                     }

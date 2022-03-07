@@ -13,6 +13,7 @@ type Request struct {
 	RequestID   string    `json:"request_id"`
 	OrgID       string    `json:"org_id"`
 	Principal   string    `json:"principal"`
+	OrgID       string    `json:"org_id"`
 	Service     string    `json:"service"`
 	Size        int64     `json:"size"`
 	URL         string    `json:"url"`

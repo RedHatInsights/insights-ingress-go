@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/request_id"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -38,6 +39,7 @@ func setTime() time.Time {
 func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
+	requestId := "e6b06142-9589-4213-9a5e-1e2f513c448b"
 	for _, filePart := range parts {
 		h := make(textproto.MIMEHeader)
 		h.Set("Content-Disposition",
@@ -69,13 +71,14 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
 		Identity: identity.Identity{
 			AccountNumber: "540155",
+			OrgID:         "12345",
 			Internal: identity.Internal{
 				OrgID: "12345",
 			},
 		},
 	})
 
-	req = req.WithContext(ctx)
+	req = req.WithContext(context.WithValue(ctx, request_id.RequestIDKey, requestId))
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	return req, nil
@@ -85,6 +88,8 @@ func makeTestRequest(uri string, testType string, body string) (*http.Request, e
 
 	var req *http.Request
 	var err error
+
+	requestId := "e6b06142-9589-4213-9a5e-1e2f513c448b"
 
 	if testType == "new" {
 		formData := url.Values{"test": {"test"}}
@@ -109,14 +114,14 @@ func makeTestRequest(uri string, testType string, body string) (*http.Request, e
 	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
 		Identity: identity.Identity{
 			AccountNumber: "540155",
+			OrgID:         "12345",
 			Internal: identity.Internal{
 				OrgID: "12345",
 			},
 		},
 	})
 
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(ctx, request_id.RequestIDKey, requestId))
 	return req, nil
 
 }
@@ -129,6 +134,8 @@ var _ = Describe("Upload", func() {
 		handler   http.Handler
 		rr        *httptest.ResponseRecorder
 		timeNow   time.Time
+
+		goodJsonBody = `{"request_id":"e6b06142-9589-4213-9a5e-1e2f513c448b","upload":{"account_number":"540155","org_id":"12345"}}`
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
@@ -157,7 +164,7 @@ var _ = Describe("Upload", func() {
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
-				Expect(rr.Body).ToNot(BeNil())
+				Expect(rr.Body.String()).To(Equal(goodJsonBody))
 			})
 		})
 
@@ -167,7 +174,7 @@ var _ = Describe("Upload", func() {
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
-				Expect(rr.Body).ToNot(BeNil())
+				Expect(rr.Body.String()).To(Equal(goodJsonBody))
 			})
 		})
 
