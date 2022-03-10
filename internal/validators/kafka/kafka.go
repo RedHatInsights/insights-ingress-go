@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 
 	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -11,6 +12,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
@@ -34,6 +36,12 @@ type Validator struct {
 	SASLMechanism             string
 	Protocol                  string
 }
+
+// HealthChecker checks the health of the Kafka connection
+type HealthChecker struct {
+	KafkaConsumer *kafka.Consumer
+}
+
 
 // Config configures a new Kafka Validator
 type Config struct {
@@ -136,6 +144,60 @@ func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) erro
 	}
 	return errors.New("Validation topic is invalid: " + topic)
 }
+
+func KafkaChecker(cfg *Config) *HealthChecker {
+
+	var configMap kafka.ConfigMap
+
+	if cfg.SASLMechanism != "" {
+		configMap = kafka.ConfigMap{
+			"bootstrap.servers":   cfg.Brokers[0],
+			"group.id":			   cfg.GroupID,
+			"security.protocol":   cfg.Protocol,
+			"sasl.mechanism":      cfg.SASLMechanism,
+			"ssl.ca.location":     cfg.CA,
+			"sasl.username":       cfg.Username,
+			"sasl.password":       cfg.Password,
+		}
+	} else {
+		configMap = kafka.ConfigMap{
+			"bootstrap.servers":   cfg.Brokers[0],
+			"group.id":			   cfg.GroupID,
+		}
+	}
+
+	c, err := kafka.NewConsumer(&configMap)
+	
+	if err != nil {
+	l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to create consumer")
+	return nil
+	}
+
+	err = c.SubscribeTopics([]string{"platform.inventory.events"}, nil)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to subscribe to topic")
+		return nil
+	}
+
+	healthChecker := &HealthChecker{
+		KafkaConsumer: c,
+	}
+
+	return healthChecker
+}
+
+func (hc *HealthChecker) Check(w http.ResponseWriter, r *http.Request) {
+
+	_, err := hc.KafkaConsumer.ReadMessage(-1)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to read message from healthcheck topic")
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+}
+
 
 func serviceToTopic(service string) string {
 	topic := tdMapping[service]

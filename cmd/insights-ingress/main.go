@@ -80,6 +80,7 @@ func main() {
 	}
 
 	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidTopics...)
+	healthChecker := kafka.KafkaChecker(&kafkaCfg)
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
@@ -106,6 +107,7 @@ func main() {
 	r.Mount("/api/ingress/v1", sub)
 	r.Mount("/r/insights/platform/ingress/v1", sub)
 	r.Get("/", lubDub)
+	r.Get("/healthz", healthChecker.Check)
 	mr.Get("/", lubDub)
 	mr.Handle("/metrics", promhttp.Handler())
 
