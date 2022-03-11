@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/api"
@@ -85,7 +86,7 @@ func main() {
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
 	handler := upload.NewHandler(
-		stager, validator, tracker, *cfg, *healthChecker,
+		stager, validator, tracker, healthChecker, *cfg,
 	)
 
 	trackEndpoint := track.NewHandler(
@@ -107,7 +108,6 @@ func main() {
 	r.Mount("/api/ingress/v1", sub)
 	r.Mount("/r/insights/platform/ingress/v1", sub)
 	r.Get("/", lubDub)
-	r.Get("/healthz", healthChecker.Check)
 	mr.Get("/", lubDub)
 	mr.Handle("/metrics", promhttp.Handler())
 
@@ -128,6 +128,13 @@ func main() {
 		Addr:    fmt.Sprintf(":%d", cfg.MetricsPort),
 		Handler: mr,
 	}
+
+	go func() {
+		for {
+			healthChecker.Check()
+			time.Sleep(10 * time.Second)
+		}
+	}()
 
 	idleConnsClosed := make(chan struct{})
 	go func() {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 
 	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -182,24 +181,22 @@ func KafkaChecker(cfg *Config) *HealthChecker {
 
 	healthChecker := &HealthChecker{
 		KafkaConsumer: c,
+		// Defaulting to true so we come up properly
+		IsHealthy: true,
 	}
 
 	return healthChecker
 }
 
-func (hc *HealthChecker) Check(w http.ResponseWriter, r *http.Request) {
+func (hc *HealthChecker) Check() {
 
 	var checkTopic string = "platform.inventory.events"
 
 	_, err := hc.KafkaConsumer.GetMetadata(&checkTopic, false, 10000)
 	if err != nil {
-		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to get metadata from kafka broker")
 		hc.IsHealthy = false
-		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		hc.IsHealthy = true
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
 	}
 
 }

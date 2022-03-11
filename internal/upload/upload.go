@@ -143,8 +143,9 @@ func NewHandler(
 	stager stage.Stager,
 	validator validators.Validator,
 	tracker announcers.Announcer,
+	healthChecker *kafka.HealthChecker,
 	cfg config.IngressConfig,
-	healthChecker kafka.HealthChecker) http.HandlerFunc {
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
@@ -309,7 +310,6 @@ func NewHandler(
 			return
 		}
 
-		// TODO: this doesn't work properly.
 		if !healthChecker.IsHealthy {
 			l.Log.Errorf("Health check failed, returning 503", healthChecker.IsHealthy)
 			w.WriteHeader(http.StatusServiceUnavailable)
