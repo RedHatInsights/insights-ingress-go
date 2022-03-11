@@ -24,6 +24,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	. "github.com/redhatinsights/insights-ingress-go/internal/upload"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
+	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
 )
 
 type FilePart struct {
@@ -132,6 +133,7 @@ var _ = Describe("Upload", func() {
 		tracker   announcers.Announcer
 		validator *validators.Fake
 		handler   http.Handler
+		healthChecker *kafka.HealthChecker
 		rr        *httptest.ResponseRecorder
 		timeNow   time.Time
 
@@ -151,9 +153,11 @@ var _ = Describe("Upload", func() {
 		stager = &stage.Fake{ShouldError: false}
 		validator = &validators.Fake{}
 		tracker = &announcers.Fake{}
-
+		healthChecker = &kafka.HealthChecker{
+			IsHealthy: true,
+		}
 		rr = httptest.NewRecorder()
-		handler = NewHandler(stager, validator, tracker, *config.Get())
+		handler = NewHandler(stager, validator, tracker, healthChecker, *config.Get())
 		timeNow = setTime()
 	})
 
@@ -355,7 +359,7 @@ var _ = Describe("Upload", func() {
 			It("should return 413", func() {
 				cfg := config.Get()
 				cfg.DefaultMaxSize = 1
-				handler = NewHandler(stager, validator, tracker, *cfg)
+				handler = NewHandler(stager, validator, tracker, healthChecker, *cfg)
 				boiler(http.StatusRequestEntityTooLarge, &FilePart{
 					Name:        "file",
 					Content:     "testing",
@@ -371,7 +375,7 @@ var _ = Describe("Upload", func() {
 				cfg := config.Get()
 				cfg.DefaultMaxSize = 1
 				cfg.MaxSizeMap = TypeMap
-				handler = NewHandler(stager, validator, tracker, *cfg)
+				handler = NewHandler(stager, validator, tracker, healthChecker, *cfg)
 				boiler(http.StatusAccepted, &FilePart{
 					Name:        "file",
 					Content:     "testing",
@@ -383,8 +387,20 @@ var _ = Describe("Upload", func() {
 		Context("when the payload fails to stage", func() {
 			It("should return 413", func() {
 				stager = &stage.Fake{ShouldError: true}
-				handler = NewHandler(stager, validator, tracker, *config.Get())
+				handler = NewHandler(stager, validator, tracker, healthChecker, *config.Get())
 				boiler(http.StatusInternalServerError, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test",
+				})
+			})
+		})
+		
+		Context("when the kafka connection is unhealthy", func() {
+			It("should return a 503", func() {
+				healthChecker = &kafka.HealthChecker{IsHealthy: false}
+				handler = NewHandler(stager, validator, tracker, healthChecker, *config.Get())
+				boiler(http.StatusServiceUnavailable, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
