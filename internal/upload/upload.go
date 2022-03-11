@@ -19,6 +19,7 @@ import (
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
+	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"github.com/sirupsen/logrus"
@@ -142,7 +143,8 @@ func NewHandler(
 	stager stage.Stager,
 	validator validators.Validator,
 	tracker announcers.Announcer,
-	cfg config.IngressConfig) http.HandlerFunc {
+	cfg config.IngressConfig,
+	healthChecker kafka.HealthChecker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
@@ -305,6 +307,12 @@ func NewHandler(
 			logerr("Unable to marshal JSON response body", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+
+		// TODO: this doesn't work properly.
+		if !healthChecker.IsHealthy {
+			l.Log.Errorf("Health check failed, returning 503", healthChecker.IsHealthy)
+			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 
 		metadata, err := readMetadataPart(r)

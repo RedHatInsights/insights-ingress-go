@@ -40,6 +40,7 @@ type Validator struct {
 // HealthChecker checks the health of the Kafka connection
 type HealthChecker struct {
 	KafkaConsumer *kafka.Consumer
+	IsHealthy 	  bool
 }
 
 
@@ -188,12 +189,17 @@ func KafkaChecker(cfg *Config) *HealthChecker {
 
 func (hc *HealthChecker) Check(w http.ResponseWriter, r *http.Request) {
 
-	_, err := hc.KafkaConsumer.ReadMessage(-1)
+	var checkTopic string = "platform.inventory.events"
+
+	_, err := hc.KafkaConsumer.GetMetadata(&checkTopic, false, 10000)
 	if err != nil {
-		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to read message from healthcheck topic")
+		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to get metadata from kafka broker")
+		hc.IsHealthy = false
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
+		hc.IsHealthy = true
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
 	}
 
 }

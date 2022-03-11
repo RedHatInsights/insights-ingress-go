@@ -85,7 +85,7 @@ func main() {
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
 	handler := upload.NewHandler(
-		stager, validator, tracker, *cfg,
+		stager, validator, tracker, *cfg, *healthChecker,
 	)
 
 	trackEndpoint := track.NewHandler(
