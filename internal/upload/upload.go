@@ -156,6 +156,11 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
 		}
 
+		if !healthChecker.IsHealthy {
+			requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusServiceUnavailable, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Error("Kafka health check failed. Rejecting payloads until Kafka connectivity is restored")
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
 		if cfg.Auth == true {
 			id = identity.Get(r.Context())
 		}
@@ -308,11 +313,6 @@ func NewHandler(
 			logerr("Unable to marshal JSON response body", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		}
-
-		if !healthChecker.IsHealthy {
-			l.Log.Errorf("Health check failed, returning 503", healthChecker.IsHealthy)
-			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 
 		metadata, err := readMetadataPart(r)
