@@ -122,7 +122,7 @@ func (kv *Validator) Validate(vr *validators.Request) bool {
 	// then we can send the proper status code that our buffer is full.
 	select {
 	case <- kv.Load(message, realizedTopicName):
-		l.Log.WithFields(logrus.Fields{"topic": realizedTopicName}).Debug("Message loaded to buffer for publishing")
+		l.Log.WithFields(logrus.Fields{"topic": realizedTopicName, "request_id": vr.RequestID}).Debug("Message loaded to buffer for publishing")
 		return true
 	case <- time.After(time.Duration(config.Get().KafkaConfig.KafkaLoadWaitTime) * time.Second):
 		l.Log.WithFields(logrus.Fields{"topic": realizedTopicName, "request_id": vr.RequestID}).Error("Buffer is full, waiting for space")
