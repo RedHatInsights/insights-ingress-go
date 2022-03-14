@@ -39,6 +39,7 @@ type KafkaCfg struct {
 	KafkaAnnounceTopic   string
 	ValidTopics          []string
 	KafkaSSLConfig	     KafkaSSLCfg
+	KafkaLoadWaitTime	 int
 }
 
 type KafkaSSLCfg struct {
@@ -84,6 +85,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaDeliveryReports", true)
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafakAnnounceTopic", "platform.upload.announce")
+	options.SetDefault("KafkaLoadWaitTime", 1)
 
 	// Global defaults
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
@@ -179,7 +181,8 @@ func Get() *IngressConfig {
 			KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
 			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
-			ValidTopics: 		  strings.Split(options.GetString("ValidTopics"), ","),
+			ValidTopics: 		  strings.Split(options.GetString("ValidTopics"), ","), 
+			KafkaLoadWaitTime:    options.GetInt("KafkaLoadWaitTime"),
 		},
 		StorageConfig: StorageCfg{
 			StageBucket: options.GetString("StageBucket"),

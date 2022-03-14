@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -33,6 +34,7 @@ type Validator struct {
 	CA                        string
 	SASLMechanism             string
 	Protocol                  string
+	BufferResponse			  chan bool 
 }
 
 // Config configures a new Kafka Validator
@@ -86,12 +88,20 @@ func New(cfg *Config, topics ...string) *Validator {
 	return kv
 }
 
+// Load messages puts the incoming message on the kafka topics
+func (kv *Validator) Load(message validators.ValidationMessage, realizedTopicName string) <- chan bool {
+	kv.ValidationProducerMapping[realizedTopicName] <- message
+	kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+	kv.BufferResponse <- true
+	return kv.BufferResponse
+}
+
 // Validate validates a ValidationRequest
-func (kv *Validator) Validate(vr *validators.Request) {
+func (kv *Validator) Validate(vr *validators.Request) bool {
 	data, err := json.Marshal(vr)
 	if err != nil {
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to marshal json")
-		return
+		return false
 	}
 	topic := serviceToTopic(vr.Service)
 	topic = fmt.Sprintf("platform.upload.%s", topic)
@@ -108,8 +118,16 @@ func (kv *Validator) Validate(vr *validators.Request) {
 			"service": vr.Service,
 		},
 	}
-	kv.ValidationProducerMapping[realizedTopicName] <- message
-	kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+	// Load the message into the buffer and set a timeout. If the timeout finishes before we're loaded into the buffer,
+	// then we can send the proper status code that our buffer is full.
+	select {
+	case <- kv.Load(message, realizedTopicName):
+		l.Log.WithFields(logrus.Fields{"topic": realizedTopicName}).Debug("Message loaded to buffer for publishing")
+		return true
+	case <- time.After(time.Duration(config.Get().KafkaConfig.KafkaLoadWaitTime) * time.Second):
+		l.Log.WithFields(logrus.Fields{"topic": realizedTopicName, "request_id": vr.RequestID}).Error("Buffer is full, waiting for space")
+		return false
+	}
 }
 
 func (kv *Validator) addProducer(topic string) {

@@ -298,7 +298,9 @@ func NewHandler(
 		requestLogger.WithFields(logrus.Fields{"service": vr.Service}).Info("Payload sent to validation service")
 		tracker.Status(ps)
 
-		validator.Validate(vr)
+		if !validator.Validate(vr) {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
 
 		jsonBody, err := createUploadResponse(vr)
 		if err != nil {

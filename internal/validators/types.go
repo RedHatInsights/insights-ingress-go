@@ -51,6 +51,6 @@ type ServiceDescriptor struct {
 
 // Validator validates requests
 type Validator interface {
-	Validate(req *Request)
+	Validate(req *Request) bool
 	ValidateService(service *ServiceDescriptor) error
 }
