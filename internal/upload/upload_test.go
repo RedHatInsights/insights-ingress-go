@@ -149,7 +149,7 @@ var _ = Describe("Upload", func() {
 	BeforeEach(func() {
 
 		stager = &stage.Fake{ShouldError: false}
-		validator = &validators.Fake{}
+		validator = &validators.Fake{BufferResponse: true}
 		tracker = &announcers.Fake{}
 
 		rr = httptest.NewRecorder()
@@ -385,6 +385,18 @@ var _ = Describe("Upload", func() {
 				stager = &stage.Fake{ShouldError: true}
 				handler = NewHandler(stager, validator, tracker, *config.Get())
 				boiler(http.StatusInternalServerError, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test",
+				})
+			})
+		})
+		
+		Context("when we fail to write to the bufferr", func() {
+			It("should return a 503", func() {
+				validator = &validators.Fake{BufferResponse: false}
+				handler = NewHandler(stager, validator, tracker, *config.Get())
+				boiler(http.StatusServiceUnavailable, &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",

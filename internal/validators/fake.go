@@ -8,11 +8,13 @@ import (
 type Fake struct {
 	In     *Request
 	Called bool
+	BufferResponse bool
 }
 
-func (v *Fake) Validate(in *Request) {
+func (v *Fake) Validate(in *Request) bool {
 	v.Called = true
 	v.In = in
+	return v.BufferResponse
 }
 
 // ValidateService allows for testing service validations
