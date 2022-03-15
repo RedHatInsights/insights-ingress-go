@@ -5,14 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/sirupsen/logrus"
-
-	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
 
 var tdMapping map[string]string
@@ -73,14 +70,8 @@ func New(cfg *Config, topics ...string) *Validator {
 	topics = append(topics, "announce")
 
 	for _, topic := range topics {
-		var realizedTopicName string
-		topic = fmt.Sprintf("platform.upload.%s", topic)
-		if clowder.IsClowderEnabled() {
-			realizedTopicName = rhiconfig.KafkaTopics[topic].Name
-		} else {
-			realizedTopicName = topic
-		}
-		kv.addProducer(realizedTopicName)
+		topic = config.GetTopic(fmt.Sprintf("platform.upload.%s", topic))
+		kv.addProducer(topic)
 	}
 
 	return kv
@@ -95,12 +86,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	}
 	topic := serviceToTopic(vr.Service)
 	topic = fmt.Sprintf("platform.upload.%s", topic)
-	var realizedTopicName string
-	if clowder.IsClowderEnabled() {
-		realizedTopicName = rhiconfig.KafkaTopics[topic].Name
-	} else {
-		realizedTopicName = topic
-	}
+	realizedTopicName := config.GetTopic(topic)
 	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
 	message := validators.ValidationMessage{
 		Message: data,

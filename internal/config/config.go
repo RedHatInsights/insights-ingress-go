@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
+	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
 
 	"github.com/spf13/viper"
 )
@@ -18,7 +19,7 @@ type IngressConfig struct {
 	MaxSizeMap           map[string]string
 	MaxUploadMem         int64
 	Auth                 bool
-    KafkaConfig          KafkaCfg
+	KafkaConfig          KafkaCfg
 	WebPort              int
 	MetricsPort          int
 	Profile              bool
@@ -38,15 +39,15 @@ type KafkaCfg struct {
 	KafkaDeliveryReports bool
 	KafkaAnnounceTopic   string
 	ValidTopics          []string
-	KafkaSSLConfig	     KafkaSSLCfg
+	KafkaSSLConfig       KafkaSSLCfg
 }
 
 type KafkaSSLCfg struct {
-	KafkaCA			  string
-	KafkaUsername	  string
-	KafkaPassword	  string
-	SASLMechanism	  string
-	Protocol		  string
+	KafkaCA       string
+	KafkaUsername string
+	KafkaPassword string
+	SASLMechanism string
+	Protocol      string
 }
 
 type StorageCfg struct {
@@ -63,6 +64,13 @@ type LoggingCfg struct {
 	AwsRegion          string
 	AwsAccessKeyId     string
 	AwsSecretAccessKey string
+}
+
+func GetTopic(topic string) string {
+	if clowder.IsClowderEnabled() {
+		return rhiconfig.KafkaTopics[topic].Name
+	}
+	return topic
 }
 
 // Get provides the IngressConfig
@@ -111,7 +119,7 @@ func Get() *IngressConfig {
 
 		// Kafka
 		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
-		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name) 
+		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 		// Kafka SSL Config
 		if broker.Authtype != nil {
 			options.Set("KafkaUsername", *broker.Sasl.Username)
@@ -160,39 +168,39 @@ func Get() *IngressConfig {
 	}
 
 	IngressCfg := &IngressConfig{
-		Hostname: options.GetString("Hostname"),
-		DefaultMaxSize: options.GetInt64("DefaultMaxSize"),
-		MaxSizeMap: options.GetStringMapString("MaxSizeMap"),
-		MaxUploadMem: options.GetInt64("MaxUploadMem"),
-		Auth: options.GetBool("Auth"),
-		WebPort: options.GetInt("WebPort"),
-		MetricsPort: options.GetInt("MetricsPort"),
+		Hostname:             options.GetString("Hostname"),
+		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
+		MaxSizeMap:           options.GetStringMapString("MaxSizeMap"),
+		MaxUploadMem:         options.GetInt64("MaxUploadMem"),
+		Auth:                 options.GetBool("Auth"),
+		WebPort:              options.GetInt("WebPort"),
+		MetricsPort:          options.GetInt("MetricsPort"),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
-		Version: os.Getenv("1.0.8"),
-		PayloadTrackerURL: options.GetString("PayloadTrackerURL"),
-		Profile: options.GetBool("Profile"),
-		Debug: options.GetBool("Debug"),
-		DebugUserAgent: regexp.MustCompile(options.GetString("DebugUserAgent")),
+		Version:              os.Getenv("1.0.8"),
+		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
+		Profile:              options.GetBool("Profile"),
+		Debug:                options.GetBool("Debug"),
+		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
 			KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
 			KafkaGroupID:         options.GetString("KafkaGroupID"),
 			KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
 			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
-			ValidTopics: 		  strings.Split(options.GetString("ValidTopics"), ","),
+			ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		},
 		StorageConfig: StorageCfg{
-			StageBucket: options.GetString("StageBucket"),
-			StorageEndpoint: options.GetString("MinioEndpoint"),
+			StageBucket:      options.GetString("StageBucket"),
+			StorageEndpoint:  options.GetString("MinioEndpoint"),
 			StorageAccessKey: options.GetString("MinioAccessKey"),
 			StorageSecretKey: options.GetString("MinioSecretKey"),
-			UseSSL: options.GetBool("UseSSL"),
+			UseSSL:           options.GetBool("UseSSL"),
 		},
 		LoggingConfig: LoggingCfg{
-			LogGroup: options.GetString("logGroup"),
-			LogLevel: options.GetString("logLevel"),
-			AwsRegion: options.GetString("AwsRegion"),
-			AwsAccessKeyId: options.GetString("AwsAccessKeyId"),
+			LogGroup:           options.GetString("logGroup"),
+			LogLevel:           options.GetString("logLevel"),
+			AwsRegion:          options.GetString("AwsRegion"),
+			AwsAccessKeyId:     options.GetString("AwsAccessKeyId"),
 			AwsSecretAccessKey: options.GetString("AwsSecretAccessKey"),
 		},
 	}
