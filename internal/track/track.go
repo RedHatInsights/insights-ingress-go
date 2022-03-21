@@ -88,7 +88,7 @@ func NewHandler(
 		}
 
 		// Response with minimal status data by default
-		latestStatus := pt.Data[len(pt.Data)-1]
+		latestStatus := pt.Data[0]
 		ms := MinimalStatus{
 			Status:      latestStatus.Status,
 			Date:        latestStatus.Date,
