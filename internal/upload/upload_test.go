@@ -391,6 +391,18 @@ var _ = Describe("Upload", func() {
 				})
 			})
 		})
+
+		Context("when the buffer is full", func() {
+			It("should return a 500", func() {
+				validator = &validators.Fake{BufferFull: true}
+				handler = NewHandler(stager, validator, tracker, *config.Get())
+				boiler(http.StatusInternalServerError, &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.unit.test",
+				})
+			})
+		})
 	})
 })
 

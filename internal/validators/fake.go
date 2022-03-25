@@ -8,11 +8,16 @@ import (
 type Fake struct {
 	In     *Request
 	Called bool
+	BufferFull bool
 }
 
-func (v *Fake) Validate(in *Request) {
+func (v *Fake) LoadBuffer(in *Request) error {
 	v.Called = true
 	v.In = in
+	if v.BufferFull {
+		return errors.New("buffer full")
+	}
+	return nil
 }
 
 // ValidateService allows for testing service validations
