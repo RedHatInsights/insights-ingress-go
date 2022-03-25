@@ -298,7 +298,12 @@ func NewHandler(
 		requestLogger.WithFields(logrus.Fields{"service": vr.Service}).Info("Payload sent to validation service")
 		tracker.Status(ps)
 
-		validator.Validate(vr)
+		err = validator.LoadBuffer(vr)
+		if err != nil {
+			logerr("Failed to load message into buffer", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		jsonBody, err := createUploadResponse(vr)
 		if err != nil {

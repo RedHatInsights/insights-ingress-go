@@ -71,35 +71,17 @@ func New(cfg *Config, topics ...string) *Validator {
 
 	for _, topic := range topics {
 		topic = config.GetTopic(fmt.Sprintf("platform.upload.%s", topic))
-		kv.addProducer(topic)
+		kv.createBuffer(topic)
 	}
 
 	return kv
 }
 
-// Validate validates a ValidationRequest
-func (kv *Validator) Validate(vr *validators.Request) {
-	data, err := json.Marshal(vr)
-	if err != nil {
-		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to marshal json")
-		return
-	}
-	topic := serviceToTopic(vr.Service)
-	topic = fmt.Sprintf("platform.upload.%s", topic)
-	realizedTopicName := config.GetTopic(topic)
-	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
-	message := validators.ValidationMessage{
-		Message: data,
-		Headers: map[string]string{
-			"service": vr.Service,
-		},
-	}
-	kv.ValidationProducerMapping[realizedTopicName] <- message
-	kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
-}
 
-func (kv *Validator) addProducer(topic string) {
+func (kv *Validator) createBuffer(topic string) {
 	ch := make(chan validators.ValidationMessage, 100)
+	kv.ValidationProducerMapping[topic] = ch
+
 	go queue.Producer(ch, &queue.ProducerConfig{
 		Brokers:       kv.KafkaBrokers,
 		Topic:         topic,
@@ -109,7 +91,7 @@ func (kv *Validator) addProducer(topic string) {
 		Protocol:      kv.Protocol,
 		SASLMechanism: kv.SASLMechanism,
 	})
-	kv.ValidationProducerMapping[topic] = ch
+
 }
 
 // ValidateService ensures that a service maps to a real topic
@@ -121,6 +103,35 @@ func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) erro
 		}
 	}
 	return errors.New("Validation topic is invalid: " + topic)
+}
+
+func (kv *Validator) LoadBuffer(vr *validators.Request) error {
+	data, err := json.Marshal(vr)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to marshal json")
+		return err
+	}
+	topic := serviceToTopic(vr.Service)
+	topic = fmt.Sprintf("platform.upload.%s", topic)
+	realizedTopicName := config.GetTopic(topic)
+	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
+	message := validators.ValidationMessage{
+		Message: data,
+		Headers: map[string]string{
+			"service": vr.Service,
+		},
+	}
+
+	select {
+		// This feels stupid. I'm assuming if we can load the main channel, we can load the other.
+		// It would be better if we could check both.
+		case kv.ValidationProducerMapping[realizedTopicName] <- message:
+		default:
+			return errors.New(fmt.Sprintf("Failed to load buffer for topic %s", realizedTopicName))
+	}
+	kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+
+	return nil
 }
 
 func serviceToTopic(service string) string {
