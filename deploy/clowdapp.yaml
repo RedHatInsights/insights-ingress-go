@@ -12,9 +12,10 @@ objects:
     envName: ${ENV_NAME}
     testing:
       iqePlugin: ingress
-    optionalDependencies:
+    dependencies:
     - puptoo
     - storage-broker
+    optionalDependencies:
     - host-inventory
     - payload-tracker-go
     deployments:
@@ -100,6 +101,9 @@ objects:
       partitions: 3
       topicName: platform.upload.leapp-reporting
     - replicas: 3
+      partitions: 3
+      topicName: platform.upload.pinakes
+    - replicas: 3
       partitions: 2
       topicName: platform.upload.topological-inventory
     - replicas: 3
@@ -131,7 +135,7 @@ parameters:
 - name: INGRESS_STAGEBUCKET
   value: insights-upload-perma
 - name: INGRESS_VALIDTOPICS
-  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,topological-inventory,buckit,xavier,mkt,catalog,playbook,playbook-sat,resource-optimization,malware-detection
+  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,topological-inventory,buckit,xavier,mkt,catalog,playbook,playbook-sat,resource-optimization,malware-detection,pinakes
 - name: INGRESS_DEFAULTMAXSIZE
   value: '104857600'
 - name: INGRESS_MAXSIZEMAP

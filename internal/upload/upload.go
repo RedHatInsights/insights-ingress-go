@@ -31,6 +31,7 @@ type responseBody struct {
 
 type uploadData struct {
 	Account string `json:"account_number,omitempty"`
+	OrgID   string `json:"org_id,omitempty"`
 }
 
 // GetFile verifies that the proper upload field is in place and returns the file
@@ -111,6 +112,31 @@ func isTestRequest(r *http.Request) bool {
 	return false
 }
 
+func createUploadResponse(vr *validators.Request) ([]byte, error) {
+	upload := uploadData{Account: vr.Account, OrgID: vr.OrgID}
+	response := responseBody{RequestID: vr.RequestID, Upload: upload}
+	jsonBody, err := json.Marshal(response)
+
+	return jsonBody, err
+}
+
+func handleTestRequest(reqID string, identity identity.Identity, w http.ResponseWriter, logerr func(msg string, err error)) {
+	mockVr := &validators.Request{
+		RequestID: reqID,
+		Account:   identity.AccountNumber,
+		OrgID:     identity.OrgID,
+	}
+	w.WriteHeader(http.StatusOK)
+	jsonBody, err := createUploadResponse(mockVr)
+	if err != nil {
+		logerr("Unable to marshal JSON response body", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(jsonBody)
+}
+
 // NewHandler returns a http handler configured with a Pipeline
 func NewHandler(
 	stager stage.Stager,
@@ -141,8 +167,12 @@ func NewHandler(
 		}
 
 		if isTestRequest(r) {
-			w.WriteHeader(http.StatusOK)
+			handleTestRequest(reqID, id.Identity, w, logerr)
 			return
+		}
+
+		if id.Identity.OrgID == "" && id.Identity.Internal.OrgID != "" {
+			id.Identity.OrgID = id.Identity.Internal.OrgID
 		}
 
 		incRequests(userAgent)
@@ -151,7 +181,7 @@ func NewHandler(
 			errString := "File or upload field not found"
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(errString))
-			requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusBadRequest, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID}).Info(errString)
+			requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusBadRequest, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info(errString)
 			logerr("Invalid upload payload", err)
 			return
 		}
@@ -165,7 +195,7 @@ func NewHandler(
 
 		observeSize(userAgent, size)
 
-		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.Internal.OrgID})
+		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID})
 
 		requestLogger.Debug("ContentType received from client")
 		serviceDescriptor, validationErr := getServiceDescriptor(contentType)
@@ -187,6 +217,7 @@ func NewHandler(
 
 		vr := &validators.Request{
 			RequestID:   reqID,
+			OrgID:       id.Identity.OrgID,
 			Size:        fileHeader.Size,
 			Service:     serviceDescriptor.Service,
 			Category:    serviceDescriptor.Category,
@@ -216,8 +247,9 @@ func NewHandler(
 
 		if cfg.Auth == true {
 			vr.Account = id.Identity.AccountNumber
-			vr.Principal = id.Identity.Internal.OrgID
-			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.Principal})
+			vr.Principal = id.Identity.OrgID
+			vr.OrgID = id.Identity.OrgID
+			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.OrgID})
 		}
 
 		md, err := GetMetadata(r)
@@ -240,7 +272,7 @@ func NewHandler(
 			Payload: file,
 			Key:     reqID,
 			Account: vr.Account,
-			OrgId:   vr.Principal,
+			OrgId:   vr.OrgID,
 			Size:    size,
 		}
 
@@ -268,9 +300,7 @@ func NewHandler(
 
 		validator.Validate(vr)
 
-		upload := uploadData{Account: vr.Account}
-		response := responseBody{RequestID: vr.RequestID, Upload: upload}
-		jsonBody, err := json.Marshal(response)
+		jsonBody, err := createUploadResponse(vr)
 		if err != nil {
 			logerr("Unable to marshal JSON response body", err)
 			w.WriteHeader(http.StatusInternalServerError)

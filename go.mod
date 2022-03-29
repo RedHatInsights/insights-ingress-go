@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.17.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/redhatinsights/app-common-go v1.6.0
-	github.com/redhatinsights/platform-go-middlewares v0.10.0
+	github.com/redhatinsights/platform-go-middlewares v0.12.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.9.0
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.7.0
