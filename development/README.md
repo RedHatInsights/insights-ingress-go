@@ -30,7 +30,7 @@ Once the local environment is running, you must setup the buckets in Minio so th
 
 ## Building and Running Ingress from Source
 
-In the root of the insights-ingress-go repo, execute the following commands:
+Ensure you are in the following directory: [/cmd/insights-ingress-go]([../cmd/insights-ingress-go/.](https://github.com/RedHatInsights/insights-ingress-go/tree/master/cmd/insights-ingress)), and execute the following commands:
 
     $> go get ./...
     $> go build
@@ -38,7 +38,7 @@ In the root of the insights-ingress-go repo, execute the following commands:
 There should now be an executable in the directory. You need to supply some env vars for the application to work
 properly. Here is an example:
 
-    $> INGRESS_STAGEBUCKET=insights-upload-perma INGRESS_VALIDTOPICS=advisor OPENSHIFT_BUILD_COMMIT=somestring INGRESS_MINIODEV=true INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY INGRESS_KAFKA_BROKERS=localhost:9092 INGRESS_MINIOENDPOINT=localhost:9000 ./insights-ingress-go
+    $> INGRESS_STAGEBUCKET=insights-upload-perma INGRESS_VALIDTOPICS=advisor OPENSHIFT_BUILD_COMMIT=somestring INGRESS_MINIODEV=true INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY INGRESS_KAFKA_BROKERS=localhost:9092 INGRESS_MINIOENDPOINT=localhost:9000 ./insights-ingress
 
 ## Running from Podman
 
