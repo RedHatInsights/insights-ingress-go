@@ -25,6 +25,7 @@ type Status struct {
 	CreatedAt   string `json:"created_at,omitempty"`
 	RequestID   string `json:"request_id,omitempty"`
 	Account     string `json:"account,omitempty"`
+	OrgID       string `json:"org_id,omitempty"`
 	InventoryID string `json:"inventory_id,omitempty"`
 	Service     string `json:"service,omitempty"`
 	Status      string `json:"status,omitempty"`
