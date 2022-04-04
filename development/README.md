@@ -24,16 +24,20 @@ Once the local environment is running, you must setup the buckets in Minio so th
    + username = `MINIO_ACCESS_KEY`, password = `MINIO_SECRET_KEY`
 2. Click the `Create Bucket +` sign in the top right corner
 3. Create a bucket called `insights-upload-perma`
-4. Once created, over over the name in the left navigation menu and click the 3 dots.
+4. Once created, hover over the name in the left navigation menu and click the 3 dots.
 5. Click "edit policy"
 6. Change the dropdown box to "Read and Write"
 
 ## Building and Running Ingress from Source
 
-Ensure you are in the following directory: [/cmd/insights-ingress-go]([../cmd/insights-ingress-go/.](https://github.com/RedHatInsights/insights-ingress-go/tree/master/cmd/insights-ingress)), and execute the following commands:
+Ensure you are in the following directory: [/cmd/insights-ingress](../cmd/insights-ingress/.), and execute the following commands:
 
     $> go get ./...
     $> go build
+
+Alternatively, you can leverage [Makefile](../Makefile) from the root of the repo and run:
+
+    $> make build
 
 There should now be an executable in the directory. You need to supply some env vars for the application to work
 properly. Here is an example:
