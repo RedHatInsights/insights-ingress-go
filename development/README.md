@@ -18,24 +18,31 @@ In order to run the local development stack, execute the following command. Subs
 Once the local environment is running, you must setup the buckets in Minio so that ingress has something to write to.
 
 1. Login to localhost:9000 using the creds found in `.env`
-2. Click the plus sign in the bottom right corner
-3. Click create bucket
-4. Create a bucket called `insights-upload-perma`
-5. Once created, over over the name in the left navigation menu and click the 3 dots.
-6. Click "edit policy"
-7. Change the dropdown box to "Read and Write"
+   + Note: accessing localhost:9000 will forward you to minio console which runs on a dynamic port. Access the api by referencing the ip of minio directly, shown on app startup. Example: 
+     + > podman start -a development_minio_1 <br> API: http://10.89.0.12:9000  http://127.0.0.1:9000
+     + for more info see: [Minio Static vs Dynamic Port Assignment](https://docs.min.io/minio/baremetal/console/minio-console.html#static-vs-dynamic-port-assignment)
+   + username = `MINIO_ACCESS_KEY`, password = `MINIO_SECRET_KEY`
+2. Click the `Create Bucket +` sign in the top right corner
+3. Create a bucket called `insights-upload-perma`
+4. Once created, hover over the name in the left navigation menu and click the 3 dots.
+5. Click "edit policy"
+6. Change the dropdown box to "Read and Write"
 
 ## Building and Running Ingress from Source
 
-In the root of the insights-ingress-go repo, execute the following commands:
+Ensure you are in the following directory: [/cmd/insights-ingress](../cmd/insights-ingress/.), and execute the following commands:
 
     $> go get ./...
     $> go build
 
+Alternatively, you can leverage [Makefile](../Makefile) from the root of the repo and run:
+
+    $> make build
+
 There should now be an executable in the directory. You need to supply some env vars for the application to work
 properly. Here is an example:
 
-    $> INGRESS_STAGEBUCKET=insights-upload-perma INGRESS_VALIDTOPICS=advisor OPENSHIFT_BUILD_COMMIT=somestring INGRESS_MINIODEV=true INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY INGRESS_KAFKA_BROKERS=localhost:9092 INGRESS_MINIOENDPOINT=localhost:9000 ./insights-ingress-go
+    $> INGRESS_STAGEBUCKET=insights-upload-perma INGRESS_VALIDTOPICS=advisor OPENSHIFT_BUILD_COMMIT=somestring INGRESS_MINIODEV=true INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY INGRESS_KAFKA_BROKERS=localhost:9092 INGRESS_MINIOENDPOINT=localhost:9000 ./insights-ingress
 
 ## Running from Podman
 
