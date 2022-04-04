@@ -261,6 +261,7 @@ func NewHandler(
 
 		ps := &announcers.Status{
 			Account:   vr.Account,
+			OrgID:     vr.OrgID,
 			RequestID: reqID,
 			Status:    "received",
 			StatusMsg: "Payload received by ingress",
@@ -291,6 +292,7 @@ func NewHandler(
 
 		ps = &announcers.Status{
 			Account:   vr.Account,
+			OrgID:     vr.OrgID,
 			RequestID: vr.RequestID,
 			Status:    "success",
 			StatusMsg: fmt.Sprintf("Sent to validation service: %s", vr.Service),

@@ -55,6 +55,7 @@ about the upload. They will contain the following structure:
 
     {
      "account": "<account number>",
+     "org_id": "<org_id>",
      "category": "<currently translates to filename>",
      "request_id": "<uuid for the payload>",
      "principal": "<currently the org ID>",
