@@ -6,7 +6,7 @@ import (
 
 // Request is sent to the validation topic for each new payload
 type Request struct {
-	Account     string    `json:"account,omitempty"`
+	Account     string    `json:"account"`
 	Category    string    `json:"category"`
 	ContentType string    `json:"content_type"`
 	Metadata    Metadata  `json:"metadata"`

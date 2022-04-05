@@ -24,7 +24,7 @@ type Announcer interface {
 type Status struct {
 	Service     string    `json:"service"`
 	Source      string    `json:"source,omitempty"`
-	Account     string    `json:"account,omitempty"`
+	Account     string    `json:"account"`
 	OrgID       string    `json:"org_id"`
 	RequestID   string    `json:"request_id"`
 	InventoryID string    `json:"inventory_id,omitempty"`
