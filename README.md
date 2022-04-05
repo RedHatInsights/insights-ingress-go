@@ -17,20 +17,33 @@ The service runs inside Openshift Dedicated.
 
 ## How It Works
 
-![UML](http://www.plantuml.com/plantuml/png/ZL8zRzj03DtrAmXrQO4ubIKv2JGO6JiL7Jpr0mPzefo3xqCzKWQS8F-zTvRaE4EBQX8V7n_9ntjamI23DQ3TFX1priTOAzsZ4r16avDtKCKA3Rs3vif8rNA2tg1qFjZReJSUsrkcSDIA75hAMXJS8HDmrLEmw9Bys6Mn7gMRgCTw_oIy61FGuoa9PMD-iPxw_Pqu4QwOwedK0Jfj25W_qmrCGq6SAaQMMeqWfvuoD3ApKPiXK0RnkoZECtxPRBu12yh0e7nByB5ULf_hvUfJHePfak11gLZsln9bKSPozxRfkDT4ZTMzTqoNzNvys9c1Vgsll6nWD7ss0iH7gzyC-STj6h2yJ_mZ6jsYn9hPfUoh5uAGl0RVmSNLbnoLyeEJl86yIDyol_dfSeL2UnzE2UwyFsEM1DFr8_Roce10lmTYsUesqNPbLH-wdUEZQGzjToxfWtRfYPb4y66Vg0cVfehe_BjD2umv_PmIPL4_f708vappbhPSRLEOuDrT7SN6zthkZanNq9Obn2NFLD6MMD3sYHSFL2oAQb6iDikxPdNVbAlRX-LTNTxVrwll-Mls6AytMFC7 "Ingress Processing Flow")
+![UML](https://www.plantuml.com/plantuml/png/ZPDBZzem4CVl-HIZS6cbXOOam8e3scDFLG-SoY8qSIR1me_KTf1On7UlJHwxAvMgEU7__EOnVviNwz2uLWhWgZPaRTJuCsUyGUM02KxAVP8oor3G9sd8z2Xt5sW4kaeREMiReR6SMJ9dpaYXf4S8AgLRnIWgqM61bi1c3Hc9AhJlffXkkjPhty_o-kZij0j0WvTG9UhYqqq_psEm1pwGx4Zi11KNlZD_eoVeXmQ5qfyabHp1NHgAKBY1HYvQGn7uRwmupFXzk_q9tblNMc2w9FYIpxDl-NpnDI9XgIzXMyPysl-MI9FKfwltJRkzUjHdDrfP6jVRJGhHqdupUXdGpl712d3QM_rko3_kRWtIre4_e-0bEfypkZG1GJMoYo_hZj4FxGXCS1vq1QF7rnWPqwroyHhY97pp-EbLnGmTrTfSWbnfVTSaEGnlmMlNMn0C_Mx9kWCl0rQaMNwg2cNFeZoLrJsbCLo51oa2e4qTqA3tCtfr-7a8wtGn_XO2QP8_XsDhn1tJaWusEuHZa8jbxejrJpV4mmFz81siywthE-guz5EYR0BdhokP9jaqMMpdo_LYjKuNi-VvCazNgtpnAxuzjdtuFuoU3yBW-2EFTqV2aepTm_KlYyDzyTkhsabFOqrxc5Wl0Lh0Gfzf4hsGAbif_W00 "Ingress Processing Flow")
 
 The Ingress workflow is as follows:
 
   - The source client sends a payload of a specific content type to cloud.redhat.com
   - Ingress discovers a validating service from the content type, uploads the file to
-  cloud storage, and puts a message on a kafka topic for that service.
+  cloud storage, and puts a message on the announcement topic while applying a header
+  to identify the destination service.
 
-### Kafka Topics
+### Kafka Topics (Legacy)
 
 Ingress produces to topics to alert services of a new upload. The first topic an
 upload is advertised to is the one gathered from the content type.
 
     - Produce to topic derived from content type: `platform.upload.service-name`
+
+### Announcement Topic
+
+Ingress produces a message on the `platform.upload.announce` topic to signal services
+that an upload has arrived. The announce message contains a header that specifies which
+content-type the message contains. For example:
+
+    - {"service": "advisor"}
+
+These kafka headers allow the consumer to filter out the messages that do not belong
+to them without having to extract the full JSON of the incoming message. No performance
+impact has been observed relating to this method of filtering.
 
 ### Content Type
 
@@ -38,11 +51,15 @@ Uploads coming into Ingress should have the following content type:
 
 `application/vnd.redhat.<service-name>.filename+tgz`
 
-The filename and file type may vary. The portion to note is the service name as 
-this is where Ingress discovers the proper validating service and what topic to 
-place the message on. 
+The filename and file type may vary. The portion to note is the service name as
+this is where Ingress discovers the proper validating service and what header value
+to apply to the `service` header.
 
 Example:
+
+  `application/vnd.redhat.advisor.example+tgz` => `{"service": "advisor"}`
+
+In the case of the legacy operation, the service name tells ingress what topic to use:
 
   `application/vnd.redhat.advisor.example+tgz` => `platform.upload.advisor`
 
@@ -55,7 +72,7 @@ Validation Messages:
 
        {
            "account": <account number>,
-           "org_id": <org id>
+           "org_id": <org id>,
            "category": <currently translates to filename>,
            "content_type": <full content type string from the client>,
            "request_id": <uuid for the payload>,
@@ -74,11 +91,21 @@ received in addition to a `validation` key that contains `success` or `failure`
 depending on whether the payload passed validation. This data should be sent to 
 the `platform.upload.validation` topic.
 
+The `platform.upload.validation` topic is consumed and handled by [Storage Broker](https://www.github.com/redhatinsights/insights-storage-broker).
+
+If the app needs to relay a failure back to the customer via the notification
+service, they can do so by supplying additional data as noted below:
+
 Expected Validation Message:
     
     {
         ...all data received by validating app
         "validation": <"success"/"failure">
+        ## additional notification data below ##
+        "reason": "some error message",
+        "system_id": <if available>,
+        "hostname": <if available>,
+        "reporter": "name of reporting app",
     }
 
 ## Errors

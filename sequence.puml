@@ -3,6 +3,7 @@ participant client
 participant 3scale
 participant ingress
 entity platform.upload.servicename
+entity platform.upload.announce
 database s3permanent
 client->3scale: insights-client payload
 3scale->ingress: insights-client payload
@@ -16,4 +17,6 @@ end
 ingress-[#blue]>s3permanent: upload payload to s3
 ingress->platform.upload.servicename: msg to validating service
 Note right of ingress: {"account": "000001",\n"category": "foo",\n"metadata": {},\n"request_id": "b234kfbnsvldkdf",\n"principal": "org_id",\n"service": "service_name",\n"size": 2048,\n"url": "some_s3_url",\n"b64_identity": "base64_identity_string",\n"timestamp": "2020-03-05T16:57:25.816427745Z"}
+ingress->platform.upload.announce: msg to announce topic
+Note right of ingress: [headers] {"service": "service name"}\n[message] #same as above#
 @enduml
