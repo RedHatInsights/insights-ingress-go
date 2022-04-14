@@ -112,7 +112,14 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/TrackResponse"
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/TrackResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TrackResponseFull"
+                                        }
+                                    ]
                                 }
                             }
                         }
@@ -166,6 +173,58 @@
                     },
                     "status": {
                         "type": "string"
+                    }
+                }
+            },
+            "TrackResponseFull": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "service": {
+                                    "type": "string"
+                                },
+                                "source": {
+                                    "type": "string"
+                                },
+                                "account": {
+                                    "type": "string"
+                                },
+                                "org_id": {
+                                    "type": "string"
+                                },
+                                "request_id": {
+                                    "type": "string"
+                                },
+                                "inventory_id": {
+                                    "type": "string"
+                                },
+                                "system_id": {
+                                    "type": "string"
+                                },
+                                "created_at": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "status_msg": {
+                                    "type": "string"
+                                },
+                                "date": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "duration": {
+                        "type": "object"
                     }
                 }
             }
