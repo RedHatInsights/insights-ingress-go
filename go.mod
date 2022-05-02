@@ -3,7 +3,7 @@ module github.com/redhatinsights/insights-ingress-go
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.44.3
+	github.com/aws/aws-sdk-go v1.44.5
 	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
@@ -25,6 +25,6 @@ require (
 	github.com/spf13/viper v1.11.0
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
-	golang.org/x/sys v0.0.0-20220429121018-84afa8d3f7b3 // indirect
+	golang.org/x/sys v0.0.0-20220502124256-b6088ccd6cba // indirect
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.8.2
 )
