@@ -94,8 +94,13 @@ func (kv *Validator) Validate(vr *validators.Request) {
 			"service": vr.Service,
 		},
 	}
-	kv.ValidationProducerMapping[realizedTopicName] <- message
-	kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+	switch account := vr.Account; account {
+	case "":
+		kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+	default:
+		kv.ValidationProducerMapping[realizedTopicName] <- message
+		kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+	}
 }
 
 func (kv *Validator) addProducer(topic string) {

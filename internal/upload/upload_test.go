@@ -84,7 +84,7 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 	return req, nil
 }
 
-func makeTestRequest(uri string, testType string, body string) (*http.Request, error) {
+func makeTestRequest(uri string, testType string, tenant string, body string) (*http.Request, error) {
 
 	var req *http.Request
 	var err error
@@ -111,15 +111,26 @@ func makeTestRequest(uri string, testType string, body string) (*http.Request, e
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
-		Identity: identity.Identity{
-			AccountNumber: "540155",
-			OrgID:         "12345",
-			Internal: identity.Internal{
+	if tenant == "anemic" {
+		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+			Identity: identity.Identity{
 				OrgID: "12345",
+				Internal: identity.Internal{
+					OrgID: "12345",
+				},
 			},
-		},
-	})
+		})
+	} else {
+		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+			Identity: identity.Identity{
+				AccountNumber: "540155",
+				OrgID:         "12345",
+				Internal: identity.Internal{
+					OrgID: "12345",
+				},
+			},
+		})
+	}
 
 	req = req.WithContext(context.WithValue(ctx, request_id.RequestIDKey, requestId))
 	return req, nil
@@ -135,7 +146,8 @@ var _ = Describe("Upload", func() {
 		rr        *httptest.ResponseRecorder
 		timeNow   time.Time
 
-		goodJsonBody = `{"request_id":"e6b06142-9589-4213-9a5e-1e2f513c448b","upload":{"account_number":"540155","org_id":"12345"}}`
+		goodJsonBody       = `{"request_id":"e6b06142-9589-4213-9a5e-1e2f513c448b","upload":{"account_number":"540155","org_id":"12345"}}`
+		goodAnemicJsonBody = `{"request_id":"e6b06142-9589-4213-9a5e-1e2f513c448b","upload":{"org_id":"12345"}}`
 	)
 
 	var boiler = func(code int, parts ...*FilePart) {
@@ -160,7 +172,7 @@ var _ = Describe("Upload", func() {
 	Describe("Post to endpoint", func() {
 		Context("with test data for test-connection", func() {
 			It("should return HTTP 200", func() {
-				req, err := makeTestRequest("/api/ingress/v1/upload", "new", "")
+				req, err := makeTestRequest("/api/ingress/v1/upload", "new", "", "")
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
@@ -168,9 +180,19 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
+		Context("with missing account number in identity header", func() {
+			It("should return HTTP 200", func() {
+				req, err := makeTestRequest("/api/ingress/v1/upload", "new", "anemic", "")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body.String()).To(Equal(goodAnemicJsonBody))
+			})
+		})
+
 		Context("with test data for legacy test-connection", func() {
 			It("should return HTTP 200", func() {
-				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", `{"test":"test"}`)
+				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", "", `{"test":"test"}`)
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
@@ -180,7 +202,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with bad test data for a legacy test connection", func() {
 			It("should return a 400", func() {
-				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", `{"some": "garbage"}`)
+				req, err := makeTestRequest("/api/ingress/v1/upload", "legacy", "", `{"some": "garbage"}`)
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(400))
