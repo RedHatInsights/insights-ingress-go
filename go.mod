@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.34.0 // indirect
 	github.com/redhatinsights/app-common-go v1.6.1
-	github.com/redhatinsights/platform-go-middlewares v0.14.0
+	github.com/redhatinsights/platform-go-middlewares v0.15.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.11.0
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
