@@ -41,6 +41,15 @@ func makeTestRequest(uri string, request_id string, account string, account_type
 				Type: "Associate",
 			},
 		})
+	case "x509":
+		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+			Identity: identity.Identity{
+				X509: identity.X509{
+					SubjectDN: "/DC=com/DC=redhat/CN=insightspipelineqe",
+					IssuerDN: "CN=redhat",
+				},
+			},
+		})
 	default:
 		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
 			Identity: identity.Identity{
@@ -124,6 +133,18 @@ var _ = Describe("Track", func() {
 			It("should return HTTP 200", func() {
 				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
 				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710", "associate")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+				Expect(rr.Body.String()).To(Equal(minimalJsonBody))
+			})
+		})
+
+		Context("with a qe test account", func() {
+			It("should return HTTP 200", func() {
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710", "x509")
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
