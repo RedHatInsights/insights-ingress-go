@@ -2,9 +2,11 @@ package track
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -81,7 +83,14 @@ func NewHandler(
 			return
 		}
 
-		if id.Identity.Type != "Associate" {
+		var subjectDN string
+		if id.Identity.X509.SubjectDN != "" {
+			subjectSplit := strings.Split(id.Identity.X509.SubjectDN, "=")
+			subjectDN = subjectSplit[len(subjectSplit)-1]
+		}
+		fmt.Print(id.Identity.Type)
+		fmt.Print(subjectDN)
+		if id.Identity.Type != "Associate" && subjectDN != "insightspipelineqe" {
 			if pt.Data[0].Account != id.Identity.AccountNumber {
 				w.WriteHeader(http.StatusForbidden)
 				return
