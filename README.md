@@ -159,7 +159,7 @@ See [instructions](https://github.com/RedHatInsights/insights-ingress-go/blob/ma
 Ingress expects to be behind a 3Scale gateway that provides some mandatory headers.
 You can provide these headers manually with a curl command
 
-        $> curl -F "file=@somefile.tar.gz;type=application/vnd.redhat.<service-name>.somefile+tgz" -H "x-rh-identity: <base64 string>" -H "x-rh-request_id: testtesttest" \
+        $> curl -F "file=@somefile.tar.gz;type=application/vnd.redhat.<service-name>.somefile+tgz" -H "x-rh-identity: <base64 string>" -H "x-rh-insights-request-id: <uuid>" \
         http://localhost:3000/api/ingress/v1/upload
 
 Note, that your service name needs to be in the `INGRESS_VALIDTOPICS` variable inside of the `.env` file.
