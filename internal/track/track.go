@@ -91,7 +91,7 @@ func NewHandler(
 		fmt.Print(id.Identity.Type)
 		fmt.Print(subjectDN)
 		if id.Identity.Type != "Associate" && subjectDN != "insightspipelineqe" {
-			if pt.Data[0].Account != id.Identity.AccountNumber {
+			if !isIdAuthorized(id.Identity, pt.Data[0].Account, pt.Data[0].OrgID) {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
@@ -120,4 +120,8 @@ func NewHandler(
 			w.Write(responseBody)
 		}
 	}
+}
+
+func isIdAuthorized(identity identity.Identity, accountNumber string, orgID string) bool {
+	return identity.AccountNumber == accountNumber || identity.OrgID == orgID
 }
