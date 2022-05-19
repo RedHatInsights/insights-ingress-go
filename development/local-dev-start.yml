@@ -22,21 +22,23 @@ services:
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
   minio:
     image: minio/minio
-    command: server /data
+    # command: server /data
+    command: server /data --console-address ":10000"
     volumes:
       - '/mnt/config:/data:z'
       - '/mnt/data:/root/.minio:z'
     ports:
       - 9000:9000
+      - 10000:10000
     environment:
       - MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
       - MINIO_SECRET_KEY=$MINIO_SECRET_KEY
   ingress:
-    #image: quay.io/cloudservices/insights-ingress:latest
-    image: ingress:latest
+    image: quay.io/cloudservices/insights-ingress:latest
+    #image: ingress:latest
     ports:
       - 8080:3000
-    mem_limit: 512M
+#    mem_limit: 512M
     environment:
       - INGRESS_STAGEBUCKET=insights-upload-perma
         # VALIDTOPICS is required. This is derived from content type. ex: vnd.redhat.advisor.thing+tgz
