@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.44.5
-	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/jarcoal/httpmock v1.0.8
@@ -19,7 +18,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.0 // indirect
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.34.0 // indirect
-	github.com/redhatinsights/app-common-go v1.6.1
+	github.com/redhatinsights/app-common-go v1.6.3-0.20220524114951-d700ed08bcc7
 	github.com/redhatinsights/platform-go-middlewares v0.17.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.11.0

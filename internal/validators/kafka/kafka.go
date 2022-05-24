@@ -23,47 +23,20 @@ func init() {
 // Validator posts requests to topics for validation
 type Validator struct {
 	ValidationProducerMapping map[string]chan validators.ValidationMessage
-	KafkaBrokers              []string
 	KafkaGroupID              string
-	Username                  string
-	Password                  string
-	CA                        string
-	SASLMechanism             string
-	Protocol                  string
 }
 
 // Config configures a new Kafka Validator
 type Config struct {
-	Brokers         []string
 	GroupID         string
 	ValidationTopic string
-	Username        string
-	Password        string
-	CA              string
-	Protocol        string
-	SASLMechanism   string
 }
 
 // New constructs and initializes a new Kafka Validator
 func New(cfg *Config, topics ...string) *Validator {
 	kv := &Validator{
 		ValidationProducerMapping: make(map[string]chan validators.ValidationMessage),
-		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
-	}
-
-	if cfg.CA != "" {
-		kv.CA = cfg.CA
-	}
-
-	if cfg.Username != "" {
-		kv.Username = cfg.Username
-		kv.Password = cfg.Password
-	}
-
-	if cfg.SASLMechanism != "" {
-		kv.SASLMechanism = cfg.SASLMechanism
-		kv.Protocol = cfg.Protocol
 	}
 
 	// ensure the announce topic is added and valid
@@ -106,13 +79,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 func (kv *Validator) addProducer(topic string) {
 	ch := make(chan validators.ValidationMessage, 100)
 	go queue.Producer(ch, &queue.ProducerConfig{
-		Brokers:       kv.KafkaBrokers,
-		Topic:         topic,
-		CA:            kv.CA,
-		Username:      kv.Username,
-		Password:      kv.Password,
-		Protocol:      kv.Protocol,
-		SASLMechanism: kv.SASLMechanism,
+		Topic: topic,
 	})
 	kv.ValidationProducerMapping[topic] = ch
 }

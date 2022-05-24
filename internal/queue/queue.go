@@ -10,6 +10,7 @@ import (
 
 	prom "github.com/prometheus/client_golang/prometheus"
 	pa "github.com/prometheus/client_golang/prometheus/promauto"
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
 
 var (
@@ -34,13 +35,7 @@ var (
 // ProducerConfig configures a producer
 type ProducerConfig struct {
 	Topic                string
-	Brokers              []string
 	Async                bool
-	Username             string
-	Password             string
-	CA                   string
-	Protocol             string
-	SASLMechanism        string
 	KafkaDeliveryReports bool
 }
 
@@ -49,26 +44,7 @@ type ProducerConfig struct {
 // buffer has an opportunity to fill.
 func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 
-	var configMap kafka.ConfigMap
-
-	if config.SASLMechanism != "" {
-		configMap = kafka.ConfigMap{
-			"bootstrap.servers":   config.Brokers[0],
-			"security.protocol":   config.Protocol,
-			"sasl.mechanism":      config.SASLMechanism,
-			"ssl.ca.location":     config.CA,
-			"sasl.username":       config.Username,
-			"sasl.password":       config.Password,
-			"go.delivery.reports": config.KafkaDeliveryReports,
-		}
-	} else {
-		configMap = kafka.ConfigMap{
-			"bootstrap.servers":   config.Brokers[0],
-			"go.delivery.reports": config.KafkaDeliveryReports,
-		}
-	}
-
-	p, err := kafka.NewProducer(&configMap)
+	p, err := clowder.NewDefaultKafkaProducer()
 
 	if err != nil {
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("Error creating kafka producer")

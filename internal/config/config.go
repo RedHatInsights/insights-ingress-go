@@ -33,21 +33,11 @@ type IngressConfig struct {
 }
 
 type KafkaCfg struct {
-	KafkaBrokers         []string
 	KafkaGroupID         string
 	KafkaTrackerTopic    string
 	KafkaDeliveryReports bool
 	KafkaAnnounceTopic   string
 	ValidTopics          []string
-	KafkaSSLConfig       KafkaSSLCfg
-}
-
-type KafkaSSLCfg struct {
-	KafkaCA       string
-	KafkaUsername string
-	KafkaPassword string
-	SASLMechanism string
-	Protocol      string
 }
 
 type StorageCfg struct {
@@ -182,7 +172,6 @@ func Get() *IngressConfig {
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
-			KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
 			KafkaGroupID:         options.GetString("KafkaGroupID"),
 			KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
 			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
@@ -203,14 +192,6 @@ func Get() *IngressConfig {
 			AwsAccessKeyId:     options.GetString("AwsAccessKeyId"),
 			AwsSecretAccessKey: options.GetString("AwsSecretAccessKey"),
 		},
-	}
-
-	if options.IsSet("KafkaUsername") {
-		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaUsername = options.GetString("KafkaUsername")
-		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaPassword = options.GetString("KafkaPassword")
-		IngressCfg.KafkaConfig.KafkaSSLConfig.SASLMechanism = options.GetString("SASLMechanism")
-		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
-		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaCA = options.GetString("KafkaCA")
 	}
 
 	return IngressCfg
