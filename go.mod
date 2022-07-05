@@ -19,7 +19,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.0 // indirect
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.34.0 // indirect
-	github.com/redhatinsights/app-common-go v1.6.1
+	github.com/redhatinsights/app-common-go v1.6.2
 	github.com/redhatinsights/platform-go-middlewares v0.17.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.11.0

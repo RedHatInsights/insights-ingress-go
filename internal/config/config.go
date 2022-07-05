@@ -124,8 +124,8 @@ func Get() *IngressConfig {
 		if broker.Authtype != nil {
 			options.Set("KafkaUsername", *broker.Sasl.Username)
 			options.Set("KafkaPassword", *broker.Sasl.Password)
-			options.Set("SASLMechanism", "SCRAM-SHA-512")
-			options.Set("Protocol", "sasl_ssl")
+			options.Set("SASLMechanism", *broker.Sasl.SaslMechanism)
+			options.Set("Protocol", *broker.Sasl.SecurityProtocol)
 			caPath, err := cfg.KafkaCa(broker)
 			if err != nil {
 				panic("Kafka CA failed to write")
