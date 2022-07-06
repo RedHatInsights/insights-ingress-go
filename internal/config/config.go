@@ -120,6 +120,7 @@ func Get() *IngressConfig {
 		// Kafka
 		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
 		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
+		options.SetDefault("KafkaAnnounceTopic", clowder.KafkaTopics["platform.upload.announce"].Name)
 		// Kafka SSL Config
 		if broker.Authtype != nil {
 			options.Set("KafkaUsername", *broker.Sasl.Username)
