@@ -42,6 +42,7 @@ type ProducerConfig struct {
 	Protocol             string
 	SASLMechanism        string
 	KafkaDeliveryReports bool
+	Debug				 bool
 }
 
 // Producer consumes in and produces to the topic in config
@@ -66,6 +67,10 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 			"bootstrap.servers":   config.Brokers[0],
 			"go.delivery.reports": config.KafkaDeliveryReports,
 		}
+	}
+
+	if config.Debug {
+		configMap.SetKey("debug", "protocol,broker,topic")
 	}
 
 	p, err := kafka.NewProducer(&configMap)

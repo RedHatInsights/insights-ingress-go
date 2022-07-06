@@ -42,6 +42,7 @@ type Config struct {
 	CA              string
 	Protocol        string
 	SASLMechanism   string
+	Debug		    bool
 }
 
 // New constructs and initializes a new Kafka Validator

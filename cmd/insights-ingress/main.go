@@ -63,6 +63,7 @@ func main() {
 		Topic:                cfg.KafkaConfig.KafkaTrackerTopic,
 		Async:                true,
 		KafkaDeliveryReports: cfg.KafkaConfig.KafkaDeliveryReports,
+		Debug: 				  cfg.Debug,
 	}
 
 	// Kafka SSL Config
