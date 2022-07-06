@@ -126,6 +126,8 @@ func Get() *IngressConfig {
 			options.Set("KafkaPassword", *broker.Sasl.Password)
 			options.Set("SASLMechanism", *broker.Sasl.SaslMechanism)
 			options.Set("Protocol", *broker.Sasl.SecurityProtocol)
+		}
+		if broker.Cacert != nil {
 			caPath, err := cfg.KafkaCa(broker)
 			if err != nil {
 				panic("Kafka CA failed to write")
