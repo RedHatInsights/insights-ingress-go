@@ -87,6 +87,7 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	}
 	topic := serviceToTopic(vr.Service)
 	topic = fmt.Sprintf("platform.upload.%s", topic)
+	announceTopic := config.Get().KafkaConfig.KafkaAnnounceTopic
 	realizedTopicName := config.GetTopic(topic)
 	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
 	message := validators.ValidationMessage{
@@ -97,10 +98,10 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	}
 	switch account := vr.Account; account {
 	case "":
-		kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+		kv.ValidationProducerMapping[config.GetTopic(announceTopic)] <- message
 	default:
 		kv.ValidationProducerMapping[realizedTopicName] <- message
-		kv.ValidationProducerMapping[config.Get().KafkaConfig.KafkaAnnounceTopic] <- message
+		kv.ValidationProducerMapping[config.GetTopic(announceTopic)] <- message
 	}
 }
 
