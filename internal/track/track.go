@@ -13,6 +13,7 @@ import (
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -55,6 +56,12 @@ func NewHandler(
 
 		if cfg.Auth {
 			id = identity.Get(r.Context())
+		}
+
+		if !isValidUUID(reqID) {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("request id is not an uuid"))
+			return
 		}
 
 		verbosity, _ := strconv.Atoi(r.URL.Query().Get("verbosity"))
@@ -124,4 +131,9 @@ func NewHandler(
 
 func isIdAuthorized(identity identity.Identity, accountNumber string, orgID string) bool {
 	return identity.AccountNumber == accountNumber || identity.OrgID == orgID
+}
+
+func isValidUUID(s string) bool {
+	_, err := uuid.Parse(s)
+	return err == nil
 }

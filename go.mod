@@ -7,6 +7,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/google/uuid v1.3.0
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
