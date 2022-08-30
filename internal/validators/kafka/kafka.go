@@ -96,6 +96,9 @@ func (kv *Validator) Validate(vr *validators.Request) {
 			"service": vr.Service,
 		},
 	}
+	if vr.ClusterID != "" {
+		message.Key = []byte(vr.ClusterID)
+	}
 	switch account := vr.Account; account {
 	case "":
 		kv.ValidationProducerMapping[config.GetTopic(announceTopic)] <- message
