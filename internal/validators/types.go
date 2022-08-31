@@ -37,7 +37,7 @@ type Metadata struct {
 	CustomMetadata map[string]string `json:"custom_metadata,omitempty"`
 	Reporter       string            `json:"reporter"`
 	StaleTimestamp time.Time         `json:"stale_timestamp"`
-	QueueKey	   string            `json:"queue_key,omitempty"`
+	QueueKey       string            `json:"queue_key,omitempty"`
 }
 
 type ValidationMessage struct {
