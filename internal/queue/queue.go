@@ -42,7 +42,7 @@ type ProducerConfig struct {
 	Protocol             string
 	SASLMechanism        string
 	KafkaDeliveryReports bool
-	Debug				 bool
+	Debug                bool
 }
 
 // Producer consumes in and produces to the topic in config

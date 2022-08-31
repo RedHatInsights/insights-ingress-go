@@ -19,7 +19,7 @@ type Request struct {
 	ID          string    `json:"id,omitempty"`
 	B64Identity string    `json:"b64_identity"`
 	Timestamp   time.Time `json:"timestamp"`
-	ClusterID   string	  `json:"cluster_id"`
+	ClusterID   string    `json:"cluster_id"`
 }
 
 // Metadata is the expected data from a client
@@ -43,7 +43,7 @@ type Metadata struct {
 type ValidationMessage struct {
 	Message []byte
 	Headers map[string]string
-	Key	    []byte 
+	Key     []byte
 }
 
 // ServiceDescriptor is used to select a message topic
