@@ -96,8 +96,8 @@ func (kv *Validator) Validate(vr *validators.Request) {
 			"service": vr.Service,
 		},
 	}
-	if vr.ClusterID != "" {
-		message.Key = []byte(vr.ClusterID)
+	if vr.Metadata.QueueKey != "" {
+		message.Key = []byte(vr.Metadata.QueueKey)
 	}
 	switch account := vr.Account; account {
 	case "":

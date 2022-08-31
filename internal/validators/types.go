@@ -19,7 +19,6 @@ type Request struct {
 	ID          string    `json:"id,omitempty"`
 	B64Identity string    `json:"b64_identity"`
 	Timestamp   time.Time `json:"timestamp"`
-	ClusterID   string    `json:"cluster_id"`
 }
 
 // Metadata is the expected data from a client
@@ -38,6 +37,7 @@ type Metadata struct {
 	CustomMetadata map[string]string `json:"custom_metadata,omitempty"`
 	Reporter       string            `json:"reporter"`
 	StaleTimestamp time.Time         `json:"stale_timestamp"`
+	QueueKey	   string            `json:"queue_key,omitempty"`
 }
 
 type ValidationMessage struct {

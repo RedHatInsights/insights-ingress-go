@@ -249,7 +249,6 @@ func NewHandler(
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.OrgID
 			vr.OrgID = id.Identity.OrgID
-			vr.ClusterID = id.Identity.System.ClusterId
 			requestLogger = requestLogger.WithFields(logrus.Fields{"account": vr.Account, "orgid": vr.OrgID})
 		}
 
