@@ -42,6 +42,7 @@ type ProducerConfig struct {
 	Protocol             string
 	SASLMechanism        string
 	KafkaDeliveryReports bool
+	KafkaProduceMaxMessages int
 	Debug				 bool
 }
 
