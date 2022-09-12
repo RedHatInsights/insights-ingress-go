@@ -61,11 +61,13 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 			"sasl.username":       config.Username,
 			"sasl.password":       config.Password,
 			"go.delivery.reports": config.KafkaDeliveryReports,
+			"queue.buffering.max.messages": config.KafkaProduceMaxMessages,
 		}
 	} else {
 		configMap = kafka.ConfigMap{
 			"bootstrap.servers":   config.Brokers[0],
 			"go.delivery.reports": config.KafkaDeliveryReports,
+			"queue.buffering.max.messages": config.KafkaProduceMaxMessages,
 		}
 	}
 
@@ -80,6 +82,7 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 		return
 	}
 
+	defer p.Flush(5000)
 	defer p.Close()
 
 	for v := range in {
