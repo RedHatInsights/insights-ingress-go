@@ -86,13 +86,10 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 		return
 	}
 
-	defer p.Flush(5000)
 	defer p.Close()
 
 	for v := range in {
 		go func(v validators.ValidationMessage) {
-			delivery_chan := make(chan kafka.Event)
-			defer close(delivery_chan)
 			producerCount.Inc()
 			defer producerCount.Dec()
 			start := time.Now()
@@ -112,10 +109,10 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 					Partition: kafka.PartitionAny,
 				},
 				Value: v.Message,
-			}, delivery_chan)
+			}, nil)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
 
-			e := <-delivery_chan
+			e := <-p.Events()
 			m := e.(*kafka.Message)
 
 			if m.TopicPartition.Error != nil {
