@@ -39,6 +39,7 @@ type KafkaCfg struct {
 	KafkaDeliveryReports bool
 	KafkaAnnounceTopic   string
 	KafkaProduceMaxMessages int
+	KafkaQueueMaxKBytes int
 	ValidTopics          []string
 	KafkaSSLConfig       KafkaSSLCfg
 }
@@ -94,6 +95,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafakAnnounceTopic", "platform.upload.announce")
 	options.SetDefault("KafkaProduceMaxMessages", 10000)
+	options.SetDefault("KafkaQueueMaxKBytes", 1048576)
 
 	// Global defaults
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
@@ -193,6 +195,7 @@ func Get() *IngressConfig {
 			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
 			KafkaProduceMaxMessages: options.GetInt("KafkaProduceMaxMessages"),
+			KafkaQueueMaxKBytes:     options.GetInt("KafkaQueueMaxKBytes"),
 			ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
 		},
 		StorageConfig: StorageCfg{

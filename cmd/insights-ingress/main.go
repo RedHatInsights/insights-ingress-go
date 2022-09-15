@@ -56,7 +56,8 @@ func main() {
 	kafkaCfg := kafka.Config{
 		Brokers: cfg.KafkaConfig.KafkaBrokers,
 		GroupID: cfg.KafkaConfig.KafkaGroupID,
-		KafakProduceMaxMessages: cfg.KafkaConfig.KafkaProduceMaxMessages,
+		KafkaProduceMaxMessages: cfg.KafkaConfig.KafkaProduceMaxMessages,
+		KafkaQueueMaxKBytes: cfg.KafkaConfig.KafkaQueueMaxKBytes,
 	}
 
 	producerCfg := queue.ProducerConfig{
@@ -65,6 +66,7 @@ func main() {
 		Async:                true,
 		KafkaDeliveryReports: cfg.KafkaConfig.KafkaDeliveryReports,
 		KafkaProduceMaxMessages: cfg.KafkaConfig.KafkaProduceMaxMessages,
+		KafkaQueueMaxKBytes: cfg.KafkaConfig.KafkaQueueMaxKBytes,
 		Debug: 				  cfg.Debug,
 	}
 

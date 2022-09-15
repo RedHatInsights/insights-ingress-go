@@ -43,6 +43,7 @@ type ProducerConfig struct {
 	SASLMechanism        string
 	KafkaDeliveryReports bool
 	KafkaProduceMaxMessages int
+	KafkaQueueMaxKBytes int
 	Debug				 bool
 }
 
@@ -63,12 +64,14 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 			"sasl.password":       config.Password,
 			"go.delivery.reports": config.KafkaDeliveryReports,
 			"queue.buffering.max.messages": config.KafkaProduceMaxMessages,
+			"queue.buffering.max.kbytes": config.KafkaQueueMaxKBytes,	
 		}
 	} else {
 		configMap = kafka.ConfigMap{
 			"bootstrap.servers":   config.Brokers[0],
 			"go.delivery.reports": config.KafkaDeliveryReports,
 			"queue.buffering.max.messages": config.KafkaProduceMaxMessages,
+			"queue.buffering.max.kbytes": config.KafkaQueueMaxKBytes,	
 		}
 	}
 

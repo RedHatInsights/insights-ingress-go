@@ -31,6 +31,7 @@ type Validator struct {
 	SASLMechanism             string
 	Protocol                  string
 	KafkaProduceMaxMessages   int
+	KafkaQueueMaxKBytes	   int
 }
 
 // Config configures a new Kafka Validator
@@ -44,7 +45,8 @@ type Config struct {
 	Protocol        string
 	SASLMechanism   string
 	Debug		    bool
-	KafakProduceMaxMessages int
+	KafkaProduceMaxMessages int
+	KafkaQueueMaxKBytes int
 }
 
 // New constructs and initializes a new Kafka Validator
@@ -53,7 +55,8 @@ func New(cfg *Config, topics ...string) *Validator {
 		ValidationProducerMapping: make(map[string]chan validators.ValidationMessage),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
-		KafkaProduceMaxMessages:   cfg.KafakProduceMaxMessages,
+		KafkaProduceMaxMessages:   cfg.KafkaProduceMaxMessages,
+		KafkaQueueMaxKBytes:	   cfg.KafkaQueueMaxKBytes,
 	}
 
 	if cfg.CA != "" {
@@ -120,6 +123,7 @@ func (kv *Validator) addProducer(topic string) {
 		Protocol:      kv.Protocol,
 		SASLMechanism: kv.SASLMechanism,
 		KafkaProduceMaxMessages: kv.KafkaProduceMaxMessages,
+		KafkaQueueMaxKBytes: kv.KafkaQueueMaxKBytes,
 	})
 	kv.ValidationProducerMapping[topic] = ch
 }
