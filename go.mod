@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.44.5
-	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
+	github.com/confluentinc/confluent-kafka-go v1.9.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/uuid v1.3.0
