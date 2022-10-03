@@ -243,7 +243,7 @@ var _ = Describe("Upload", func() {
 					},
 					&FilePart{
 						Name:        "metadata",
-						Content:     `{"account": "012345", "custom_metadata": {"foo": "bar"}}`,
+            Content:     `{"account": "012345", "custom_metadata": {"foo": "bar"}}`,
 						ContentType: "text/plain",
 					},
 				)
@@ -252,9 +252,32 @@ var _ = Describe("Upload", func() {
 				vin := validator.In
 				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", CustomMetadata: map[string]string{"foo": "bar"}, StaleTimestamp: timeNow}))
+        Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", CustomMetadata: map[string]string{"foo": "bar"}, StaleTimestamp: timeNow}))
 			})
 		})
+
+    Context("with a metadata part containing a queue key", func() {
+      It("should return HTTP 202", func() {
+        boiler(http.StatusAccepted,
+          &FilePart{
+            Name:        "file",
+            Content:     "testing",
+            ContentType: "application/vnd.redhat.unit.test",
+          },
+          &FilePart{
+            Name:        "metadata",
+            Content:     `{"queue_key": "12345"}`,
+            ContentType: "text/plain",
+          },
+        )
+        in := stager.Input
+        Expect(in).To(Not(BeNil()))
+        vin := validator.In
+        vin.Metadata.StaleTimestamp = timeNow
+        Expect(vin).To(Not(BeNil()))
+        Expect(vin.Metadata).To(Equal(validators.Metadata{Reporter: "ingress", QueueKey: "12345", StaleTimestamp: timeNow}))
+      })
+    })
 
 		Context("with an invalid metadata part", func() {
 			It("will still return HTTP 202", func() {
