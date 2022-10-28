@@ -138,7 +138,7 @@ Compile the source code into a go binary:
 
 Launch the application
 
-    $> ./insights-ingress
+    $> ./insights-ingress-go
 
 The server should now be available on TCP port 3000.
 

@@ -1,6 +1,6 @@
 build:
 
-	go build -o insights-ingress cmd/insights-ingress/main.go
+	go build -o insights-ingress-go cmd/insights-ingress/main.go
 
 test:
 
