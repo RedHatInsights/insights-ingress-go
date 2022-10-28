@@ -42,7 +42,7 @@ type ProducerConfig struct {
 	Protocol             string
 	SASLMechanism        string
 	KafkaDeliveryReports bool
-	Debug				 bool
+	Debug                bool
 }
 
 // Producer consumes in and produces to the topic in config
@@ -105,6 +105,7 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 					Partition: kafka.PartitionAny,
 				},
 				Value: v.Message,
+				Key:   v.Key,
 			}, delivery_chan)
 			messagePublishElapsed.With(prom.Labels{"topic": config.Topic}).Observe(time.Since(start).Seconds())
 

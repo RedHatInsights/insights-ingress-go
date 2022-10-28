@@ -42,7 +42,7 @@ type Config struct {
 	CA              string
 	Protocol        string
 	SASLMechanism   string
-	Debug		    bool
+	Debug           bool
 }
 
 // New constructs and initializes a new Kafka Validator
@@ -95,6 +95,9 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		Headers: map[string]string{
 			"service": vr.Service,
 		},
+	}
+	if vr.Metadata.QueueKey != "" {
+		message.Key = []byte(vr.Metadata.QueueKey)
 	}
 	switch account := vr.Account; account {
 	case "":
