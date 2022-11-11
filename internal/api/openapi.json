@@ -5,6 +5,12 @@
         "description": "Payload Ingress Service",
         "version": "1.0.0"
     },
+    "tags": [
+        {
+            "name": "ingress",
+            "description": "ingress API endpoint"
+        }
+    ],
     "servers": [
         {
             "url": "https://cloud.redhat.com/api/ingress/v1",
@@ -14,6 +20,9 @@
     "paths": {
         "/upload": {
             "post": {
+                "tags": [
+                    "ingress"
+                ],
                 "summary": "Accepts a payload",
                 "requestBody": {
                     "content": {
@@ -71,6 +80,9 @@
         },
         "/version": {
             "get": {
+                "tags": [
+                    "ingress"
+                ],
                 "summary": "Returns version information",
                 "responses": {
                     "200": {
@@ -84,6 +96,9 @@
         },
         "/track/{request_id}": {
             "get": {
+                "tags": [
+                    "ingress"
+                ],
                 "summary": "Find status of a specific request",
                 "parameters": [
                     {
