@@ -12,6 +12,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/request_id"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -99,6 +100,19 @@ func NewHandler(
 		fmt.Print(subjectDN)
 		if id.Identity.Type != "Associate" && subjectDN != "insightspipelineqe" {
 			if !isIdAuthorized(id.Identity, pt.Data[0].Account, pt.Data[0].OrgID) {
+
+				incomingRequestID := request_id.GetReqID(r.Context())
+
+				requestLogger.WithFields(logrus.Fields{"requestID": reqID,
+					"incomingRequestID":         incomingRequestID,
+					"pt.Data[0].Account":        pt.Data[0].Account,
+					"pt.Data[0].OrgID":          pt.Data[0].OrgID,
+					"id.Identity.AccountNumber": id.Identity.AccountNumber,
+					"id.Identity.OrgID":         id.Identity.OrgID,
+					"id.Identity.Type":          id.Identity.Type,
+					"id.Identity.AuthType":      id.Identity.AuthType,
+				}).Info("Returning a 403 while retrieving a payload from payload-tracker")
+
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
