@@ -8,6 +8,8 @@ objects:
   kind: ClowdApp
   metadata:
     name: ingress
+    annotations:
+      service.beta.openshift.io/serving-cert-secret-name: ingress-cert
   spec:
     envName: ${ENV_NAME}
     testing:
