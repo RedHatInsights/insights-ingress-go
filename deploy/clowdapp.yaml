@@ -104,9 +104,6 @@ objects:
       partitions: 3
       topicName: platform.upload.pinakes
     - replicas: 3
-      partitions: 2
-      topicName: platform.upload.topological-inventory
-    - replicas: 3
       partitions: 3
       topicName: platform.upload.buckit
     - replicas: 3
