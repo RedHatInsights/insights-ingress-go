@@ -52,25 +52,24 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 
 	var configMap kafka.ConfigMap
 
-	if config.SASLMechanism != "" {
-		configMap = kafka.ConfigMap{
-			"bootstrap.servers":   config.Brokers[0],
-			"security.protocol":   config.Protocol,
-			"sasl.mechanism":      config.SASLMechanism,
-			"ssl.ca.location":     config.CA,
-			"sasl.username":       config.Username,
-			"sasl.password":       config.Password,
-			"go.delivery.reports": config.KafkaDeliveryReports,
-		}
-	} else {
-		configMap = kafka.ConfigMap{
-			"bootstrap.servers":   config.Brokers[0],
-			"go.delivery.reports": config.KafkaDeliveryReports,
+	configMap = kafka.ConfigMap{
+		"bootstrap.servers": config.Brokers[0],
+		"go.delivery.reports": config.KafkaDeliveryReports,
+	}
+
+	if config.CA != "" {
+		_ = configMap.SetKey("security.protocol", config.Protocol)
+		_ = configMap.SetKey("ssl.ca.location", config.CA)
+
+		if config.SASLMechanism != "" {
+			_ = configMap.SetKey("sasl.mechanism", config.SASLMechanism)
+			_ = configMap.SetKey("sasl.username", config.Username)
+			_ = configMap.SetKey("sasl.password", config.Password)
 		}
 	}
 
 	if config.Debug {
-		configMap.SetKey("debug", "protocol,broker,topic")
+		_ = configMap.SetKey("debug", "protocol,broker,topic")
 	}
 
 	p, err := kafka.NewProducer(&configMap)
