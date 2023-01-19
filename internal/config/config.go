@@ -28,6 +28,7 @@ type IngressConfig struct {
 	PayloadTrackerURL    string
 	StorageConfig        StorageCfg
 	LoggingConfig        LoggingCfg
+	DenyList             []string
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
 }
@@ -102,6 +103,7 @@ func Get() *IngressConfig {
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("ValidTopics", "unit,announce")
 	options.SetDefault("Profile", false)
+	options.SetDefault("DenyList", []string{})
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetEnvPrefix("INGRESS")
@@ -182,6 +184,7 @@ func Get() *IngressConfig {
 		Version:              os.Getenv("1.0.8"),
 		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
 		Profile:              options.GetBool("Profile"),
+		DenyList:             strings.Split(",", options.GetString("DenyList")),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
