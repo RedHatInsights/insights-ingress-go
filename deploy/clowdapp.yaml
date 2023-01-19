@@ -60,6 +60,8 @@ objects:
           value: ${INGRESS_MAXSIZEMAP}
         - name: CLOWDER_ENABLED
           value: ${CLOWDER_ENABLED}
+        - name: INGRESS_BLACK_LISTED_ORGIDS
+          value: ${INGRESS_BLACK_LISTED_ORGIDS}
         resources:
           limits:
             cpu: ${CPU_LIMIT}
@@ -168,3 +170,5 @@ parameters:
   name: ENV_NAME
   value: "insights-ingress"
   required: true
+- name: INGRESS_BLACK_LISTED_ORGIDS
+  value: ""
