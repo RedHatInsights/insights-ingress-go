@@ -184,7 +184,7 @@ func Get() *IngressConfig {
 		Version:              os.Getenv("1.0.8"),
 		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
 		Profile:              options.GetBool("Profile"),
-		DenyList:             strings.Split(",", options.GetString("DenyList")),
+		DenyList:             strings.Split(options.GetString("DenyList"), ","),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
