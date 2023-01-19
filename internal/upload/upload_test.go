@@ -437,11 +437,11 @@ var _ = Describe("Upload", func() {
 			})
 		})
 		Context("with a denied orgID", func() {
-			It("should return 401", func() {
+			It("should return 403", func() {
 				cfg := config.Get()
 				cfg.DenyList = []string{"12345"} 
 				handler = NewHandler(stager, validator, tracker, *cfg)
-				boiler(http.StatusUnauthorized, &FilePart{
+				boiler(http.StatusForbidden, &FilePart{
 					Name: "file",
 					Content: "testing",
 					ContentType: "application/vnd.redhat.unit.test",
