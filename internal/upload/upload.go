@@ -143,6 +143,9 @@ func NewHandler(
 	validator validators.Validator,
 	tracker announcers.Announcer,
 	cfg config.IngressConfig) http.HandlerFunc {
+
+	isCustomerBlackListed := isRequestFromBlackListedOrgID(cfg)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
@@ -175,7 +178,7 @@ func NewHandler(
 			id.Identity.OrgID = id.Identity.Internal.OrgID
 		}
 
-		if denyRequestBasedOnIdentity(cfg, id) {
+		if isCustomerBlackListed(id) {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("Upload denied. Please contact Red Hat Support."))
 			return
@@ -326,13 +329,15 @@ func NewHandler(
 	}
 }
 
-func denyRequestBasedOnIdentity(cfg config.IngressConfig, id identity.XRHID) bool {
+func isRequestFromBlackListedOrgID(cfg config.IngressConfig) func(identity.XRHID) bool {
 
-	for _, orgID := range cfg.DenyList {
-		if orgID == id.Identity.OrgID {
-			return true
-		}
+	blackListedOrgIDs := make(map[string]bool)
+	for _, orgID := range cfg.BlackListedOrgIDs {
+		blackListedOrgIDs[orgID] = true
 	}
 
-	return false
+	return func(id identity.XRHID) bool {
+		_, blackListed := blackListedOrgIDs[id.Identity.OrgID]
+		return blackListed
+	}
 }
