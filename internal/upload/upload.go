@@ -175,11 +175,10 @@ func NewHandler(
 			id.Identity.OrgID = id.Identity.Internal.OrgID
 		}
 
-		for _, orgID := range cfg.DenyList {
-			if orgID == id.Identity.OrgID {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Upload denied. Please contact Red Hat Support."))
-			}
+		if denyRequestBasedOnIdentity(cfg, id) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("Upload denied. Please contact Red Hat Support."))
+			return
 		}
 
 		incRequests(userAgent)
@@ -325,4 +324,15 @@ func NewHandler(
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonBody)
 	}
+}
+
+func denyRequestBasedOnIdentity(cfg config.IngressConfig, id identity.XRHID) bool {
+
+	for _, orgID := range cfg.DenyList {
+		if orgID == id.Identity.OrgID {
+			return true
+		}
+	}
+
+	return false
 }
