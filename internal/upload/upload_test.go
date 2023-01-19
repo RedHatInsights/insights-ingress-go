@@ -436,6 +436,19 @@ var _ = Describe("Upload", func() {
 				})
 			})
 		})
+		Context("with a denied orgID", func() {
+			It("should return 403", func() {
+				DenyList := []string{"12345"}
+				cfg := config.Get()
+				cfg.DenyList = DenyList
+				handler = NewHandler(stager, validator, tracker, *cfg)
+				boiler(http.StatusUnauthorized, &FilePart{
+					Name: "file",
+					Content: "testing",
+					ContentType: "application/vnd.redhat.unit.test",
+				})
+			})
+		})
 	})
 })
 

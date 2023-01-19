@@ -175,6 +175,13 @@ func NewHandler(
 			id.Identity.OrgID = id.Identity.Internal.OrgID
 		}
 
+		for _, orgID := range cfg.DenyList {
+			if orgID == id.Identity.OrgID {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Upload denied. Please contact Red Hat Support."))
+			}
+		}
+
 		incRequests(userAgent)
 		file, fileHeader, err := GetFile(r, cfg.MaxUploadMem)
 		if err != nil {
