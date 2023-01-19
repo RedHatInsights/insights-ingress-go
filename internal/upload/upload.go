@@ -181,6 +181,7 @@ func NewHandler(
 		if isCustomerBlackListed(id) {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("Upload denied. Please contact Red Hat Support."))
+			requestLogger.WithFields(logrus.Fields{"account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info("Upload rejected due to customer being blacklisted")
 			return
 		}
 
