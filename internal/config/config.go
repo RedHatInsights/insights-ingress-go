@@ -216,6 +216,9 @@ func Get() *IngressConfig {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaPassword = options.GetString("KafkaPassword")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.SASLMechanism = options.GetString("SASLMechanism")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
+	}
+
+	if options.IsSet("KafkaCA") {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaCA = options.GetString("KafkaCA")
 	}
 
