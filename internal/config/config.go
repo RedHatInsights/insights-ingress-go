@@ -199,7 +199,7 @@ func Get() *IngressConfig {
 			KafkaDeliveryReports:  options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:    options.GetString("KafakAnnounceTopic"),
 			ValidTopics:           strings.Split(options.GetString("ValidTopics"), ","),
-			KafkaSecurityProtocol: options.GetString("Protocol"),
+			KafkaSecurityProtocol: options.GetString("KafkaSecurityProtocol"),
 		},
 		StorageConfig: StorageCfg{
 			StageBucket:      options.GetString("StageBucket"),
