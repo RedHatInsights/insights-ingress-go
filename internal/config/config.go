@@ -40,6 +40,7 @@ type KafkaCfg struct {
 	KafkaDeliveryReports bool
 	KafkaAnnounceTopic   string
 	ValidTopics          []string
+	SecurityProtocol     string
 	KafkaSSLConfig       KafkaSSLCfg
 }
 
@@ -48,7 +49,6 @@ type KafkaSSLCfg struct {
 	KafkaUsername string
 	KafkaPassword string
 	SASLMechanism string
-	Protocol      string
 }
 
 type StorageCfg struct {
@@ -93,6 +93,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaDeliveryReports", true)
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafakAnnounceTopic", "platform.upload.announce")
+	options.SetDefault("Protocol", "PLAINTEXT")
 
 	// Global defaults
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
@@ -123,6 +124,11 @@ func Get() *IngressConfig {
 		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
 		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 		options.SetDefault("KafkaAnnounceTopic", clowder.KafkaTopics["platform.upload.announce"].Name)
+
+		if broker.SecurityProtocol != nil {
+			options.Set("Protocol", *broker.SecurityProtocol)
+		}
+
 		// Kafka SSL Config
 		if broker.Authtype != nil {
 			options.Set("KafkaUsername", *broker.Sasl.Username)
@@ -135,7 +141,6 @@ func Get() *IngressConfig {
 				panic("Kafka CA failed to write")
 			}
 			options.Set("KafkaCA", caPath)
-			options.Set("Protocol", *broker.SecurityProtocol)
 		}
 		// Ports
 		options.SetDefault("WebPort", cfg.PublicPort)
@@ -194,6 +199,7 @@ func Get() *IngressConfig {
 			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
 			ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
+			SecurityProtocol:     options.GetString("Protocol"),
 		},
 		StorageConfig: StorageCfg{
 			StageBucket:      options.GetString("StageBucket"),
@@ -219,7 +225,6 @@ func Get() *IngressConfig {
 
 	if options.IsSet("KafkaCA") {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaCA = options.GetString("KafkaCA")
-		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
 	}
 
 	return IngressCfg
