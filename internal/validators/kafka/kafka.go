@@ -117,7 +117,7 @@ func (kv *Validator) addProducer(topic string) {
 		CA:            kv.CA,
 		Username:      kv.Username,
 		Password:      kv.Password,
-		Protocol:      kv.Protocol,
+		KafkaSecurityProtocol:      kv.KafkaSecurityProtocol,
 		SASLMechanism: kv.SASLMechanism,
 	})
 	kv.ValidationProducerMapping[topic] = ch
