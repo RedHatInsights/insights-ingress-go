@@ -51,7 +51,7 @@ func New(cfg *Config, topics ...string) *Validator {
 		ValidationProducerMapping: make(map[string]chan validators.ValidationMessage),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
-		KafkaSecurityProtocol:     cfg.KafkaSecurityProtocol
+		KafkaSecurityProtocol:     cfg.KafkaSecurityProtocol,
 	}
 
 	if cfg.CA != "" {
