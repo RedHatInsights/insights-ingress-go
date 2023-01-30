@@ -39,7 +39,7 @@ type ProducerConfig struct {
 	Username             string
 	Password             string
 	CA                   string
-	Protocol             string
+	KafkaSecurityProtocol             string
 	SASLMechanism        string
 	KafkaDeliveryReports bool
 	Debug                bool
@@ -59,7 +59,7 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 
 	if config.CA != "" {
 		_ = configMap.SetKey("ssl.ca.location", config.CA)
-		_ = configMap.SetKey("security.protocol", config.Protocol)
+		_ = configMap.SetKey("security.protocol", config.KafkaSecurityProtocol)
 
 		if config.SASLMechanism != "" {
 			_ = configMap.SetKey("sasl.mechanism", config.SASLMechanism)

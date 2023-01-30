@@ -40,7 +40,7 @@ type KafkaCfg struct {
 	KafkaDeliveryReports bool
 	KafkaAnnounceTopic   string
 	ValidTopics          []string
-	SecurityProtocol     string
+	KafkaSecurityProtocol     string
 	KafkaSSLConfig       KafkaSSLCfg
 }
 
@@ -93,7 +93,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaDeliveryReports", true)
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafakAnnounceTopic", "platform.upload.announce")
-	options.SetDefault("Protocol", "PLAINTEXT")
+	options.SetDefault("KafkaSecurityProtocol", "PLAINTEXT")
 
 	// Global defaults
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
@@ -126,7 +126,7 @@ func Get() *IngressConfig {
 		options.SetDefault("KafkaAnnounceTopic", clowder.KafkaTopics["platform.upload.announce"].Name)
 
 		if broker.SecurityProtocol != nil {
-			options.Set("Protocol", *broker.SecurityProtocol)
+			options.Set("KafkaSecurityProtocol", *broker.SecurityProtocol)
 		}
 
 		// Kafka SSL Config
@@ -199,7 +199,7 @@ func Get() *IngressConfig {
 			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
 			ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
-			SecurityProtocol:     options.GetString("Protocol"),
+			KafkaSecurityProtocol:     options.GetString("Protocol"),
 		},
 		StorageConfig: StorageCfg{
 			StageBucket:      options.GetString("StageBucket"),

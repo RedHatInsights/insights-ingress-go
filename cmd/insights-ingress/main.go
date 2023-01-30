@@ -56,7 +56,7 @@ func main() {
 	kafkaCfg := kafka.Config{
 		Brokers: cfg.KafkaConfig.KafkaBrokers,
 		GroupID: cfg.KafkaConfig.KafkaGroupID,
-		Protocol: cfg.KafkaConfig.SecurityProtocol,
+		KafkaSecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
 	}
 
 	producerCfg := queue.ProducerConfig{
@@ -64,7 +64,7 @@ func main() {
 		Topic:                cfg.KafkaConfig.KafkaTrackerTopic,
 		Async:                true,
 		KafkaDeliveryReports: cfg.KafkaConfig.KafkaDeliveryReports,
-		Protocol:             cfg.KafkaConfig.SecurityProtocol,
+		KafkaSecurityProtocol:             cfg.KafkaConfig.KafkaSecurityProtocol,
 		Debug: 		      cfg.Debug,
 	}
 
