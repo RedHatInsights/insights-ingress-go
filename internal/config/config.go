@@ -128,7 +128,6 @@ func Get() *IngressConfig {
 			options.Set("KafkaUsername", *broker.Sasl.Username)
 			options.Set("KafkaPassword", *broker.Sasl.Password)
 			options.Set("SASLMechanism", *broker.Sasl.SaslMechanism)
-			options.Set("Protocol", *broker.Sasl.SecurityProtocol)
 		}
 		if broker.Cacert != nil {
 			caPath, err := cfg.KafkaCa(broker)
@@ -136,6 +135,7 @@ func Get() *IngressConfig {
 				panic("Kafka CA failed to write")
 			}
 			options.Set("KafkaCA", caPath)
+			options.Set("Protocol", *broker.SecurityProtocol)
 		}
 		// Ports
 		options.SetDefault("WebPort", cfg.PublicPort)
@@ -215,11 +215,11 @@ func Get() *IngressConfig {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaUsername = options.GetString("KafkaUsername")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaPassword = options.GetString("KafkaPassword")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.SASLMechanism = options.GetString("SASLMechanism")
-		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
 	}
 
 	if options.IsSet("KafkaCA") {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaCA = options.GetString("KafkaCA")
+		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
 	}
 
 	return IngressCfg
