@@ -54,18 +54,18 @@ func main() {
 	})
 
 	kafkaCfg := kafka.Config{
-		Brokers: cfg.KafkaConfig.KafkaBrokers,
-		GroupID: cfg.KafkaConfig.KafkaGroupID,
+		Brokers:               cfg.KafkaConfig.KafkaBrokers,
+		GroupID:               cfg.KafkaConfig.KafkaGroupID,
 		KafkaSecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
 	}
 
 	producerCfg := queue.ProducerConfig{
-		Brokers:              cfg.KafkaConfig.KafkaBrokers,
-		Topic:                cfg.KafkaConfig.KafkaTrackerTopic,
-		Async:                true,
-		KafkaDeliveryReports: cfg.KafkaConfig.KafkaDeliveryReports,
-		KafkaSecurityProtocol:             cfg.KafkaConfig.KafkaSecurityProtocol,
-		Debug: 		      cfg.Debug,
+		Brokers:               cfg.KafkaConfig.KafkaBrokers,
+		Topic:                 cfg.KafkaConfig.KafkaTrackerTopic,
+		Async:                 true,
+		KafkaDeliveryReports:  cfg.KafkaConfig.KafkaDeliveryReports,
+		KafkaSecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
+		Debug:                 cfg.Debug,
 	}
 
 	// Kafka SSL Config

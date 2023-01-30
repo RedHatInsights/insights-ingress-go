@@ -34,14 +34,14 @@ type IngressConfig struct {
 }
 
 type KafkaCfg struct {
-	KafkaBrokers         []string
-	KafkaGroupID         string
-	KafkaTrackerTopic    string
-	KafkaDeliveryReports bool
-	KafkaAnnounceTopic   string
-	ValidTopics          []string
-	KafkaSecurityProtocol     string
-	KafkaSSLConfig       KafkaSSLCfg
+	KafkaBrokers          []string
+	KafkaGroupID          string
+	KafkaTrackerTopic     string
+	KafkaDeliveryReports  bool
+	KafkaAnnounceTopic    string
+	ValidTopics           []string
+	KafkaSecurityProtocol string
+	KafkaSSLConfig        KafkaSSLCfg
 }
 
 type KafkaSSLCfg struct {
@@ -193,13 +193,13 @@ func Get() *IngressConfig {
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
-			KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
-			KafkaGroupID:         options.GetString("KafkaGroupID"),
-			KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
-			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
-			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
-			ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
-			KafkaSecurityProtocol:     options.GetString("Protocol"),
+			KafkaBrokers:          options.GetStringSlice("KafkaBrokers"),
+			KafkaGroupID:          options.GetString("KafkaGroupID"),
+			KafkaTrackerTopic:     options.GetString("KafkaTrackerTopic"),
+			KafkaDeliveryReports:  options.GetBool("KafkaDeliveryReports"),
+			KafkaAnnounceTopic:    options.GetString("KafakAnnounceTopic"),
+			ValidTopics:           strings.Split(options.GetString("ValidTopics"), ","),
+			KafkaSecurityProtocol: options.GetString("Protocol"),
 		},
 		StorageConfig: StorageCfg{
 			StageBucket:      options.GetString("StageBucket"),
