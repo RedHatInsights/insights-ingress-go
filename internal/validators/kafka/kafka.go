@@ -29,7 +29,7 @@ type Validator struct {
 	Password                  string
 	CA                        string
 	SASLMechanism             string
-	Protocol                  string
+	KafkaSecurityProtocol                  string
 }
 
 // Config configures a new Kafka Validator
@@ -40,7 +40,7 @@ type Config struct {
 	Username        string
 	Password        string
 	CA              string
-	Protocol        string
+	KafkaSecurityProtocol        string
 	SASLMechanism   string
 	Debug           bool
 }
@@ -51,6 +51,7 @@ func New(cfg *Config, topics ...string) *Validator {
 		ValidationProducerMapping: make(map[string]chan validators.ValidationMessage),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
+		KafkaSecurityProtocol:     cfg.KafkaSecurityProtocol,
 	}
 
 	if cfg.CA != "" {
@@ -64,7 +65,6 @@ func New(cfg *Config, topics ...string) *Validator {
 
 	if cfg.SASLMechanism != "" {
 		kv.SASLMechanism = cfg.SASLMechanism
-		kv.Protocol = cfg.Protocol
 	}
 
 	// ensure the announce topic is added and valid
@@ -117,7 +117,7 @@ func (kv *Validator) addProducer(topic string) {
 		CA:            kv.CA,
 		Username:      kv.Username,
 		Password:      kv.Password,
-		Protocol:      kv.Protocol,
+		KafkaSecurityProtocol:      kv.KafkaSecurityProtocol,
 		SASLMechanism: kv.SASLMechanism,
 	})
 	kv.ValidationProducerMapping[topic] = ch

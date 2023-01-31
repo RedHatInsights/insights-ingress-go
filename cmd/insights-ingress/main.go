@@ -54,16 +54,18 @@ func main() {
 	})
 
 	kafkaCfg := kafka.Config{
-		Brokers: cfg.KafkaConfig.KafkaBrokers,
-		GroupID: cfg.KafkaConfig.KafkaGroupID,
+		Brokers:               cfg.KafkaConfig.KafkaBrokers,
+		GroupID:               cfg.KafkaConfig.KafkaGroupID,
+		KafkaSecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
 	}
 
 	producerCfg := queue.ProducerConfig{
-		Brokers:              cfg.KafkaConfig.KafkaBrokers,
-		Topic:                cfg.KafkaConfig.KafkaTrackerTopic,
-		Async:                true,
-		KafkaDeliveryReports: cfg.KafkaConfig.KafkaDeliveryReports,
-		Debug: 				  cfg.Debug,
+		Brokers:               cfg.KafkaConfig.KafkaBrokers,
+		Topic:                 cfg.KafkaConfig.KafkaTrackerTopic,
+		Async:                 true,
+		KafkaDeliveryReports:  cfg.KafkaConfig.KafkaDeliveryReports,
+		KafkaSecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
+		Debug:                 cfg.Debug,
 	}
 
 	// Kafka SSL Config
@@ -72,12 +74,10 @@ func main() {
 		kafkaCfg.Username = cfg.KafkaConfig.KafkaSSLConfig.KafkaUsername
 		kafkaCfg.Password = cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword
 		kafkaCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
-		kafkaCfg.Protocol = cfg.KafkaConfig.KafkaSSLConfig.Protocol
 		producerCfg.CA = cfg.KafkaConfig.KafkaSSLConfig.KafkaCA
 		producerCfg.Username = cfg.KafkaConfig.KafkaSSLConfig.KafkaUsername
 		producerCfg.Password = cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword
 		producerCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
-		producerCfg.Protocol = cfg.KafkaConfig.KafkaSSLConfig.Protocol
 	}
 
 	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidTopics...)

@@ -34,13 +34,14 @@ type IngressConfig struct {
 }
 
 type KafkaCfg struct {
-	KafkaBrokers         []string
-	KafkaGroupID         string
-	KafkaTrackerTopic    string
-	KafkaDeliveryReports bool
-	KafkaAnnounceTopic   string
-	ValidTopics          []string
-	KafkaSSLConfig       KafkaSSLCfg
+	KafkaBrokers          []string
+	KafkaGroupID          string
+	KafkaTrackerTopic     string
+	KafkaDeliveryReports  bool
+	KafkaAnnounceTopic    string
+	ValidTopics           []string
+	KafkaSecurityProtocol string
+	KafkaSSLConfig        KafkaSSLCfg
 }
 
 type KafkaSSLCfg struct {
@@ -48,7 +49,6 @@ type KafkaSSLCfg struct {
 	KafkaUsername string
 	KafkaPassword string
 	SASLMechanism string
-	Protocol      string
 }
 
 type StorageCfg struct {
@@ -93,6 +93,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaDeliveryReports", true)
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafakAnnounceTopic", "platform.upload.announce")
+	options.SetDefault("KafkaSecurityProtocol", "PLAINTEXT")
 
 	// Global defaults
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
@@ -123,12 +124,19 @@ func Get() *IngressConfig {
 		options.SetDefault("KafkaBrokers", clowder.KafkaServers)
 		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 		options.SetDefault("KafkaAnnounceTopic", clowder.KafkaTopics["platform.upload.announce"].Name)
+
+		if broker.SecurityProtocol != nil && *broker.SecurityProtocol != "" {
+			options.Set("KafkaSecurityProtocol", *broker.SecurityProtocol)
+		} else if broker.Sasl != nil && broker.Sasl.SecurityProtocol != nil && *broker.Sasl.SecurityProtocol != "" {
+			options.Set("KafkaSecurityProtocol", *broker.Sasl.SecurityProtocol)
+		} 
+
+
 		// Kafka SSL Config
 		if broker.Authtype != nil {
 			options.Set("KafkaUsername", *broker.Sasl.Username)
 			options.Set("KafkaPassword", *broker.Sasl.Password)
 			options.Set("SASLMechanism", *broker.Sasl.SaslMechanism)
-			options.Set("Protocol", *broker.Sasl.SecurityProtocol)
 		}
 		if broker.Cacert != nil {
 			caPath, err := cfg.KafkaCa(broker)
@@ -188,12 +196,13 @@ func Get() *IngressConfig {
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
-			KafkaBrokers:         options.GetStringSlice("KafkaBrokers"),
-			KafkaGroupID:         options.GetString("KafkaGroupID"),
-			KafkaTrackerTopic:    options.GetString("KafkaTrackerTopic"),
-			KafkaDeliveryReports: options.GetBool("KafkaDeliveryReports"),
-			KafkaAnnounceTopic:   options.GetString("KafakAnnounceTopic"),
-			ValidTopics:          strings.Split(options.GetString("ValidTopics"), ","),
+			KafkaBrokers:          options.GetStringSlice("KafkaBrokers"),
+			KafkaGroupID:          options.GetString("KafkaGroupID"),
+			KafkaTrackerTopic:     options.GetString("KafkaTrackerTopic"),
+			KafkaDeliveryReports:  options.GetBool("KafkaDeliveryReports"),
+			KafkaAnnounceTopic:    options.GetString("KafakAnnounceTopic"),
+			ValidTopics:           strings.Split(options.GetString("ValidTopics"), ","),
+			KafkaSecurityProtocol: options.GetString("KafkaSecurityProtocol"),
 		},
 		StorageConfig: StorageCfg{
 			StageBucket:      options.GetString("StageBucket"),
@@ -215,7 +224,6 @@ func Get() *IngressConfig {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaUsername = options.GetString("KafkaUsername")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaPassword = options.GetString("KafkaPassword")
 		IngressCfg.KafkaConfig.KafkaSSLConfig.SASLMechanism = options.GetString("SASLMechanism")
-		IngressCfg.KafkaConfig.KafkaSSLConfig.Protocol = options.GetString("Protocol")
 	}
 
 	if options.IsSet("KafkaCA") {

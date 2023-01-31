@@ -33,16 +33,16 @@ var (
 
 // ProducerConfig configures a producer
 type ProducerConfig struct {
-	Topic                string
-	Brokers              []string
-	Async                bool
-	Username             string
-	Password             string
-	CA                   string
-	Protocol             string
-	SASLMechanism        string
-	KafkaDeliveryReports bool
-	Debug                bool
+	Topic                 string
+	Brokers               []string
+	Async                 bool
+	Username              string
+	Password              string
+	CA                    string
+	KafkaSecurityProtocol string
+	SASLMechanism         string
+	KafkaDeliveryReports  bool
+	Debug                 bool
 }
 
 // Producer consumes in and produces to the topic in config
@@ -53,15 +53,15 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 	var configMap kafka.ConfigMap
 
 	configMap = kafka.ConfigMap{
-		"bootstrap.servers": config.Brokers[0],
+		"bootstrap.servers":   config.Brokers[0],
 		"go.delivery.reports": config.KafkaDeliveryReports,
 	}
 
 	if config.CA != "" {
 		_ = configMap.SetKey("ssl.ca.location", config.CA)
+		_ = configMap.SetKey("security.protocol", config.KafkaSecurityProtocol)
 
 		if config.SASLMechanism != "" {
-			_ = configMap.SetKey("security.protocol", config.Protocol)
 			_ = configMap.SetKey("sasl.mechanism", config.SASLMechanism)
 			_ = configMap.SetKey("sasl.username", config.Username)
 			_ = configMap.SetKey("sasl.password", config.Password)
