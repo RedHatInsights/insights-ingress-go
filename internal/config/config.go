@@ -125,9 +125,9 @@ func Get() *IngressConfig {
 		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 		options.SetDefault("KafkaAnnounceTopic", clowder.KafkaTopics["platform.upload.announce"].Name)
 
-		if *broker.SecurityProtocol != "" {
+		if broker.SecurityProtocol != nil && *broker.SecurityProtocol != "" {
 			options.Set("KafkaSecurityProtocol", *broker.SecurityProtocol)
-		} else if *broker.Sasl.SecurityProtocol != "" {
+		} else if broker.Sasl != nil && broker.Sasl.SecurityProtocol != nil && *broker.Sasl.SecurityProtocol != "" {
 			options.Set("KafkaSecurityProtocol", *broker.Sasl.SecurityProtocol)
 		} 
 
