@@ -125,9 +125,12 @@ func Get() *IngressConfig {
 		options.SetDefault("KafkaTrackerTopic", clowder.KafkaTopics["platform.payload-status"].Name)
 		options.SetDefault("KafkaAnnounceTopic", clowder.KafkaTopics["platform.upload.announce"].Name)
 
-		if broker.SecurityProtocol != nil {
+		if *broker.SecurityProtocol != "" {
 			options.Set("KafkaSecurityProtocol", *broker.SecurityProtocol)
-		}
+		} else if *broker.Sasl.SecurityProtocol != "" {
+			options.Set("KafkaSecurityProtocol", *broker.Sasl.SecurityProtocol)
+		} 
+
 
 		// Kafka SSL Config
 		if broker.Authtype != nil {
