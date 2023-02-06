@@ -60,6 +60,8 @@ objects:
           value: ${INGRESS_MAXSIZEMAP}
         - name: CLOWDER_ENABLED
           value: ${CLOWDER_ENABLED}
+        - name: INGRESS_MINIOENDPOINT
+          value: ${INGRESS_MINIOENDPOINT}
         - name: INGRESS_BLACK_LISTED_ORGIDS
           value: ${INGRESS_BLACK_LISTED_ORGIDS}
         resources:
@@ -141,6 +143,8 @@ parameters:
   value: '{"qpc": "157286400"}'
 - name: INGRESS_PAYLOADTRACKERURL
   value: 'payload-tracker'
+- name: INGRESS_MINIOENDPOINT
+  value: "" 
 - name: LOG_LEVEL
   value: INFO
 - description: Cpu limit of service
