@@ -238,5 +238,7 @@ func Get() *IngressConfig {
 		IngressCfg.KafkaConfig.KafkaSSLConfig.KafkaCA = options.GetString("KafkaCA")
 	}
 
+	fmt.Print(IngressCfg)
+
 	return IngressCfg
 }

@@ -3,6 +3,7 @@ package s3compat
 import (
 	"errors"
 	"time"
+	"fmt"
 
 	"github.com/minio/minio-go/v6"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -27,6 +28,8 @@ func GetClient(cfg *config.IngressConfig, stager *Stager) stage.Stager {
 	accessKeyID := storageCfg.StorageAccessKey
 	secretAccessKey := storageCfg.StorageSecretKey
 	useSSL := storageCfg.UseSSL
+
+	fmt.Print(storageCfg)
 
 	if storageCfg.StorageRegion != "" { 
 		stager.Client, _ = minio.NewWithRegion(endpoint, accessKeyID, secretAccessKey, useSSL, storageCfg.StorageRegion)
