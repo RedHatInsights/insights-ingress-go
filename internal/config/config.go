@@ -57,6 +57,7 @@ type StorageCfg struct {
 	StorageAccessKey string
 	StorageSecretKey string
 	UseSSL           bool
+	StorageRegion    string
 }
 
 type LoggingCfg struct {
@@ -154,6 +155,11 @@ func Get() *IngressConfig {
 		options.SetDefault("MinioAccessKey", cfg.ObjectStore.Buckets[0].AccessKey)
 		options.SetDefault("MinioSecretKey", cfg.ObjectStore.Buckets[0].SecretKey)
 		options.SetDefault("UseSSL", cfg.ObjectStore.Tls)
+		if cfg.ObjectStore.Buckets[0].Region != nil {
+			options.SetDefault("StorageRegion", cfg.ObjectStore.Buckets[0].Region)
+		} else {
+			options.SetDefault("StorageRegion", "")
+		}
 		// Cloudwatch
 		options.SetDefault("logGroup", cfg.Logging.Cloudwatch.LogGroup)
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
@@ -172,6 +178,7 @@ func Get() *IngressConfig {
 		options.SetDefault("MetricsPort", 8080)
 		// Storage
 		options.SetDefault("StageBucket", "available")
+		options.SetDefault("StorageRegion", "")
 		// Cloudwatch
 		options.SetDefault("LogGroup", "platform-dev")
 		options.SetDefault("AwsRegion", "us-east-1")
@@ -210,6 +217,7 @@ func Get() *IngressConfig {
 			StorageAccessKey: options.GetString("MinioAccessKey"),
 			StorageSecretKey: options.GetString("MinioSecretKey"),
 			UseSSL:           options.GetBool("UseSSL"),
+			StorageRegion:    options.GetString("StorageRegion"),
 		},
 		LoggingConfig: LoggingCfg{
 			LogGroup:           options.GetString("logGroup"),

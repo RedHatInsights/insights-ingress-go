@@ -18,16 +18,21 @@ type Stager struct {
 // GetClient gets the s3 compatible client info
 func GetClient(cfg *config.IngressConfig, stager *Stager) stage.Stager {
 	var endpoint string
-	if cfg.StorageConfig.StorageEndpoint == "" {
+	storageCfg := cfg.StorageConfig
+	if storageCfg.StorageEndpoint == "" {
 		endpoint = "s3.amazonaws.com"
 	} else {
-		endpoint = cfg.StorageConfig.StorageEndpoint
+		endpoint = storageCfg.StorageEndpoint
 	}
-	accessKeyID := cfg.StorageConfig.StorageAccessKey
-	secretAccessKey := cfg.StorageConfig.StorageSecretKey
-	useSSL := cfg.StorageConfig.UseSSL
+	accessKeyID := storageCfg.StorageAccessKey
+	secretAccessKey := storageCfg.StorageSecretKey
+	useSSL := storageCfg.UseSSL
 
-	stager.Client, _ = minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
+	if storageCfg.StorageRegion != "" { 
+		stager.Client, _ = minio.NewWithRegion(endpoint, accessKeyID, secretAccessKey, useSSL, storageCfg.StorageRegion)
+	} else {
+		stager.Client, _ = minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
+	}
 
 	return stager
 }
