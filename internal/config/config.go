@@ -150,7 +150,7 @@ func Get() *IngressConfig {
 		options.SetDefault("WebPort", cfg.PublicPort)
 		options.SetDefault("MetricsPort", cfg.MetricsPort)
 		// Storage
-		options.SetDefault("StageBucket", bucket.RequestedName)
+		options.SetDefault("StageBucket", bucket.Name)
 		options.SetDefault("MinioEndpoint", fmt.Sprintf("%s:%d", cfg.ObjectStore.Hostname, cfg.ObjectStore.Port))
 		options.SetDefault("MinioAccessKey", cfg.ObjectStore.Buckets[0].AccessKey)
 		options.SetDefault("MinioSecretKey", cfg.ObjectStore.Buckets[0].SecretKey)
