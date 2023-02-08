@@ -26,6 +26,7 @@ type IngressConfig struct {
 	OpenshiftBuildCommit string
 	Version              string
 	PayloadTrackerURL    string
+	TlsCAPath            string
 	StorageConfig        StorageCfg
 	LoggingConfig        LoggingCfg
 	BlackListedOrgIDs    []string
@@ -99,6 +100,7 @@ func Get() *IngressConfig {
 	// Global defaults
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
+	options.SetDefault("tlsCAPath", "")
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
@@ -146,6 +148,9 @@ func Get() *IngressConfig {
 			}
 			options.Set("KafkaCA", caPath)
 		}
+
+                // TLS
+		options.SetDefault("tlsCAPath", cfg.tlsCAPath)
 		// Ports
 		options.SetDefault("WebPort", cfg.PublicPort)
 		options.SetDefault("MetricsPort", cfg.MetricsPort)
@@ -198,6 +203,7 @@ func Get() *IngressConfig {
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              os.Getenv("1.0.8"),
 		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
+		TlsCAPath:            options.GetString("tlsCAPath"),
 		Profile:              options.GetBool("Profile"),
 		BlackListedOrgIDs:    options.GetStringSlice("Black_Listed_OrgIDs"),
 		Debug:                options.GetBool("Debug"),
