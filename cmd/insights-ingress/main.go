@@ -41,7 +41,7 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 	w.Write(api.ApiSpec)
 }
 
-func configureTLSHttpClient(cfg config.IngressConfig) (*http.Client) {
+func configureHttpClient(cfg config.IngressConfig) (*http.Client) {
 	if cfg.TlsCAPath != "" {
 		rootCAs, _ := x509.SystemCertPool()
 		if rootCAs == nil {
@@ -120,11 +120,11 @@ func main() {
 		stager, validator, tracker, *cfg,
 	)
 
-	httpClient := configureTLSHttpClient(*cfg)
+	httpClient := configureHttpClient(*cfg)
 
 	trackEndpoint := track.NewHandler(
 		*cfg,
-		httpClient
+		httpClient,
 	)
 
 	var sub chi.Router = chi.NewRouter()
