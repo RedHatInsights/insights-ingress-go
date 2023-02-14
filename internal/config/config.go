@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	rhiconfig "github.com/redhatinsights/app-common-go/pkg/api/v1"
@@ -22,6 +23,7 @@ type IngressConfig struct {
 	KafkaConfig          KafkaCfg
 	WebPort              int
 	MetricsPort          int
+	HTTPClientTimeout    time.Duration
 	Profile              bool
 	OpenshiftBuildCommit string
 	Version              string
@@ -101,6 +103,7 @@ func Get() *IngressConfig {
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("TlsCAPath", "")
+	options.SetDefault("HTTPTimeout", 10)
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
@@ -132,8 +135,7 @@ func Get() *IngressConfig {
 			options.Set("KafkaSecurityProtocol", *broker.SecurityProtocol)
 		} else if broker.Sasl != nil && broker.Sasl.SecurityProtocol != nil && *broker.Sasl.SecurityProtocol != "" {
 			options.Set("KafkaSecurityProtocol", *broker.Sasl.SecurityProtocol)
-		} 
-
+		}
 
 		// Kafka SSL Config
 		if broker.Authtype != nil {
@@ -149,7 +151,7 @@ func Get() *IngressConfig {
 			options.Set("KafkaCA", caPath)
 		}
 
-                // TLS
+		// TLS
 		options.SetDefault("TlsCAPath", cfg.TlsCAPath)
 		// Ports
 		options.SetDefault("WebPort", cfg.PublicPort)
@@ -200,6 +202,7 @@ func Get() *IngressConfig {
 		Auth:                 options.GetBool("Auth"),
 		WebPort:              options.GetInt("WebPort"),
 		MetricsPort:          options.GetInt("MetricsPort"),
+		HTTPClientTimeout:    time.Duration(options.GetInt("HTTPClientTimeout")),
 		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
 		Version:              os.Getenv("1.0.8"),
 		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),

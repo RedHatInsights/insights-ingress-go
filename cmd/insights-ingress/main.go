@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/api"
@@ -63,12 +64,12 @@ func configureHttpClient(cfg config.IngressConfig) *http.Client {
 		}
 		httpTransport := &http.Transport{TLSClientConfig: httpConfig}
 		client := &http.Client{Transport: httpTransport,
-			Timeout: time.Second * 10,
+			Timeout: time.Second * cfg.HTTPClientTimeout,
 		}
 
 		return client
 	} else {
-		return &http.Client{Timeout: time.Second * 10}
+		return &http.Client{Timeout: time.Second * cfg.HTTPClientTimeout}
 	}
 }
 
