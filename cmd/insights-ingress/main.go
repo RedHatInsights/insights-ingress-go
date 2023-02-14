@@ -41,32 +41,34 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 	w.Write(api.ApiSpec)
 }
 
-func configureHttpClient(cfg config.IngressConfig) (*http.Client) {
+func configureHttpClient(cfg config.IngressConfig) *http.Client {
 	if cfg.TlsCAPath != "" {
 		rootCAs, _ := x509.SystemCertPool()
 		if rootCAs == nil {
 			rootCAs = x509.NewCertPool()
 		}
-	
+
 		certs, err := ioutil.ReadFile(cfg.TlsCAPath)
 		if err != nil {
 			l.Log.Error("Failed to append CA to RootCAs")
 		}
-	
+
 		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
 			l.Log.Info("No certs appended, using system certs only")
 		}
-	
+
 		httpConfig := &tls.Config{
 			InsecureSkipVerify: false,
 			RootCAs:            rootCAs,
 		}
 		httpTransport := &http.Transport{TLSClientConfig: httpConfig}
-		client := &http.Client{Transport: httpTransport}
-	
+		client := &http.Client{Transport: httpTransport,
+			Timeout: time.Second * 10,
+		}
+
 		return client
 	} else {
-		return &http.Client{}
+		return &http.Client{Timeout: time.Second * 10}
 	}
 }
 
