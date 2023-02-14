@@ -50,7 +50,7 @@ func configureHttpClient(cfg config.IngressConfig) (*http.Client) {
 	
 		certs, err := ioutil.ReadFile(cfg.TlsCAPath)
 		if err != nil {
-			l.Log.Error("Failed to append %q to RootCAs: %v", cfg.TlsCAPath, err)
+			l.Log.Error("Failed to append CA to RootCAs")
 		}
 	
 		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
