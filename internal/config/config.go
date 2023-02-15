@@ -103,7 +103,7 @@ func Get() *IngressConfig {
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("TlsCAPath", "")
-	options.SetDefault("HTTPTimeout", 10)
+	options.SetDefault("HTTPClientTimeout", 10)
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
