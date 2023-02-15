@@ -81,7 +81,7 @@ var _ = Describe("Track", func() {
 	BeforeEach(func() {
 
 		rr = httptest.NewRecorder()
-    httpClient := &http.Client{}
+		httpClient := &http.Client{}
 		handler = NewHandler(*config.Get(), httpClient)
 		httpmock.Activate()
 	})
