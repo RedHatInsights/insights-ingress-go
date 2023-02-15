@@ -45,7 +45,7 @@ type MinimalStatus struct {
 
 // NewHandlers returns an http handler for tracking
 func NewHandler(
-	cfg config.IngressConfig) http.HandlerFunc {
+	cfg config.IngressConfig, client *http.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
 		reqID := chi.URLParam(r, "requestID")
@@ -66,7 +66,9 @@ func NewHandler(
 		}
 
 		verbosity, _ := strconv.Atoi(r.URL.Query().Get("verbosity"))
-		response, err := http.Get(cfg.PayloadTrackerURL + reqID)
+
+		
+		response, err := client.Get(cfg.PayloadTrackerURL + reqID)
 		if err != nil {
 			logerr("Failed to get payload status", err)
 			w.WriteHeader(http.StatusInternalServerError)
