@@ -64,6 +64,8 @@ objects:
           value: ${INGRESS_MINIOENDPOINT}
         - name: INGRESS_BLACK_LISTED_ORGIDS
           value: ${INGRESS_BLACK_LISTED_ORGIDS}
+        - name: SSL_CERT_DIR
+          value: ${SSL_CERT_DIR}
         resources:
           limits:
             cpu: ${CPU_LIMIT}
@@ -176,3 +178,5 @@ parameters:
   required: true
 - name: INGRESS_BLACK_LISTED_ORGIDS
   value: ""
+- name: SSL_CERT_DIR
+  value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'
