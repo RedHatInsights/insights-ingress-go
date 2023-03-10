@@ -9,13 +9,10 @@ import (
 )
 
 var _ = Describe("Kafka", func() {
-	var (
-		kv *Validator
-	)
-
 	Describe("Validating a service", func() {
 		Context("that has a valid topic", func() {
 			It("should not error", func() {
+				kv := buildValidator([]string{"test1", "test2", "unit"})
 				err := kv.ValidateService(&validators.ServiceDescriptor{
 					Service:  "unit",
 					Category: "test",
@@ -26,6 +23,7 @@ var _ = Describe("Kafka", func() {
 
 		Context("that has a valid topic and exists in the mapping", func() {
 			It("should not error", func() {
+				kv := buildValidator([]string{"test1", "test2", "unit"})
 				err := kv.ValidateService(&validators.ServiceDescriptor{
 					Service:  "unit2",
 					Category: "test",
@@ -36,6 +34,7 @@ var _ = Describe("Kafka", func() {
 
 		Context("that does not have a valid topic", func() {
 			It("should error", func() {
+				kv := buildValidator([]string{"test1", "test2", "unit"})
 				err := kv.ValidateService(&validators.ServiceDescriptor{
 					Service:  "unknown",
 					Category: "test",
@@ -45,3 +44,8 @@ var _ = Describe("Kafka", func() {
 		})
 	})
 })
+
+func buildValidator(validTopics []string) *Validator {
+	kafkaCfg := Config{Brokers: []string{"broker1"}}
+	return New(&kafkaCfg, validTopics...)
+}

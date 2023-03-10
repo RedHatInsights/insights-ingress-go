@@ -3,7 +3,6 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
@@ -16,13 +15,14 @@ var tdMapping map[string]string
 
 func init() {
 	tdMapping = make(map[string]string)
+	// Map these service names (the key) to the topics (the value)
 	tdMapping["unit2"] = "unit"
 	tdMapping["openshift"] = "buckit"
 }
 
 // Validator posts requests to topics for validation
 type Validator struct {
-	ValidationProducerMapping map[string]chan validators.ValidationMessage
+	ValidationProducerChannel chan validators.ValidationMessage
 	KafkaBrokers              []string
 	KafkaGroupID              string
 	Username                  string
@@ -30,6 +30,7 @@ type Validator struct {
 	CA                        string
 	SASLMechanism             string
 	KafkaSecurityProtocol     string
+	validServicesMap          map[string]bool
 }
 
 // Config configures a new Kafka Validator
@@ -48,7 +49,7 @@ type Config struct {
 // New constructs and initializes a new Kafka Validator
 func New(cfg *Config, topics ...string) *Validator {
 	kv := &Validator{
-		ValidationProducerMapping: make(map[string]chan validators.ValidationMessage),
+		ValidationProducerChannel: make(chan validators.ValidationMessage),
 		KafkaBrokers:              cfg.Brokers,
 		KafkaGroupID:              cfg.GroupID,
 		KafkaSecurityProtocol:     cfg.KafkaSecurityProtocol,
@@ -67,13 +68,11 @@ func New(cfg *Config, topics ...string) *Validator {
 		kv.SASLMechanism = cfg.SASLMechanism
 	}
 
-	// ensure the announce topic is added and valid
-	topics = append(topics, "announce")
+	kv.validServicesMap = buildValidServicesMap(topics)
 
-	for _, topic := range topics {
-		topic = config.GetTopic(fmt.Sprintf("platform.upload.%s", topic))
-		kv.addProducer(topic)
-	}
+	topic := config.GetTopic("platform.upload.announce")
+
+	kv.addProducer(topic)
 
 	return kv
 }
@@ -85,11 +84,8 @@ func (kv *Validator) Validate(vr *validators.Request) {
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to marshal json")
 		return
 	}
-	topic := serviceToTopic(vr.Service)
-	topic = fmt.Sprintf("platform.upload.%s", topic)
 	announceTopic := config.Get().KafkaConfig.KafkaAnnounceTopic
-	realizedTopicName := config.GetTopic(topic)
-	l.Log.WithFields(logrus.Fields{"data": data, "topic": realizedTopicName}).Debug("Posting data to topic")
+	l.Log.WithFields(logrus.Fields{"data": data, "topic": announceTopic}).Debug("Posting data to topic")
 	message := validators.ValidationMessage{
 		Message: data,
 		Headers: map[string]string{
@@ -99,14 +95,9 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	if vr.Metadata.QueueKey != "" {
 		message.Key = []byte(vr.Metadata.QueueKey)
 	}
-	switch account := vr.Account; account {
-	case "":
-		kv.ValidationProducerMapping[config.GetTopic(announceTopic)] <- message
-		incMessageProduced(vr.Service)
-	default:
-		kv.ValidationProducerMapping[realizedTopicName] <- message
-		kv.ValidationProducerMapping[config.GetTopic(announceTopic)] <- message
-	}
+
+	kv.ValidationProducerChannel <- message
+	incMessageProduced(vr.Service)
 }
 
 func (kv *Validator) addProducer(topic string) {
@@ -120,17 +111,19 @@ func (kv *Validator) addProducer(topic string) {
 		KafkaSecurityProtocol: kv.KafkaSecurityProtocol,
 		SASLMechanism:         kv.SASLMechanism,
 	})
-	kv.ValidationProducerMapping[topic] = ch
+	kv.ValidationProducerChannel = ch
 }
 
 // ValidateService ensures that a service maps to a real topic
 func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) error {
 	topic := serviceToTopic(service.Service)
-	for _, validTopic := range config.Get().KafkaConfig.ValidTopics {
-		if validTopic == topic {
-			return nil
-		}
+
+	_, isValidService := kv.validServicesMap[topic]
+
+	if isValidService {
+		return nil
 	}
+
 	return errors.New("Validation topic is invalid: " + topic)
 }
 
@@ -139,5 +132,16 @@ func serviceToTopic(service string) string {
 	if topic != "" {
 		return topic
 	}
-	return fmt.Sprintf("%s", service)
+	return service
+}
+
+func buildValidServicesMap(validServicesList []string) map[string]bool {
+
+	validServicesMap := make(map[string]bool)
+
+	for _, service := range validServicesList {
+		validServicesMap[service] = true
+	}
+
+	return validServicesMap
 }
