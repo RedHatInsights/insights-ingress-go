@@ -29,20 +29,20 @@ type Validator struct {
 	Password                  string
 	CA                        string
 	SASLMechanism             string
-	KafkaSecurityProtocol                  string
+	KafkaSecurityProtocol     string
 }
 
 // Config configures a new Kafka Validator
 type Config struct {
-	Brokers         []string
-	GroupID         string
-	ValidationTopic string
-	Username        string
-	Password        string
-	CA              string
-	KafkaSecurityProtocol        string
-	SASLMechanism   string
-	Debug           bool
+	Brokers               []string
+	GroupID               string
+	ValidationTopic       string
+	Username              string
+	Password              string
+	CA                    string
+	KafkaSecurityProtocol string
+	SASLMechanism         string
+	Debug                 bool
 }
 
 // New constructs and initializes a new Kafka Validator
@@ -112,13 +112,13 @@ func (kv *Validator) Validate(vr *validators.Request) {
 func (kv *Validator) addProducer(topic string) {
 	ch := make(chan validators.ValidationMessage, 100)
 	go queue.Producer(ch, &queue.ProducerConfig{
-		Brokers:       kv.KafkaBrokers,
-		Topic:         topic,
-		CA:            kv.CA,
-		Username:      kv.Username,
-		Password:      kv.Password,
-		KafkaSecurityProtocol:      kv.KafkaSecurityProtocol,
-		SASLMechanism: kv.SASLMechanism,
+		Brokers:               kv.KafkaBrokers,
+		Topic:                 topic,
+		CA:                    kv.CA,
+		Username:              kv.Username,
+		Password:              kv.Password,
+		KafkaSecurityProtocol: kv.KafkaSecurityProtocol,
+		SASLMechanism:         kv.SASLMechanism,
 	})
 	kv.ValidationProducerMapping[topic] = ch
 }

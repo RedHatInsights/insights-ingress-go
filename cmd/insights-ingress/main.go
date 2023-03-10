@@ -39,7 +39,6 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 	w.Write(api.ApiSpec)
 }
 
-
 func main() {
 	cfg := config.Get()
 	l.InitLogger(cfg)
