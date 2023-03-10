@@ -28,7 +28,7 @@ func GetClient(cfg *config.IngressConfig, stager *Stager) stage.Stager {
 	secretAccessKey := storageCfg.StorageSecretKey
 	useSSL := storageCfg.UseSSL
 
-	if storageCfg.StorageRegion != "" { 
+	if storageCfg.StorageRegion != "" {
 		stager.Client, _ = minio.NewWithRegion(endpoint, accessKeyID, secretAccessKey, useSSL, storageCfg.StorageRegion)
 	} else {
 		stager.Client, _ = minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
