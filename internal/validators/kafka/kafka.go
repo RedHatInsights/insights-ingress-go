@@ -11,15 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var tdMapping map[string]string
-
-func init() {
-	tdMapping = make(map[string]string)
-	// Map these service names (the key) to the topics (the value)
-	tdMapping["unit2"] = "unit"
-	tdMapping["openshift"] = "buckit"
-}
-
 // Validator posts requests to topics for validation
 type Validator struct {
 	ValidationProducerChannel chan validators.ValidationMessage
@@ -116,23 +107,14 @@ func (kv *Validator) addProducer(topic string) {
 
 // ValidateService ensures that a service maps to a real topic
 func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) error {
-	topic := serviceToTopic(service.Service)
 
-	_, isValidService := kv.validServicesMap[topic]
+	_, isValidService := kv.validServicesMap[service.Service]
 
 	if isValidService {
 		return nil
 	}
 
-	return errors.New("Validation topic is invalid: " + topic)
-}
-
-func serviceToTopic(service string) string {
-	topic := tdMapping[service]
-	if topic != "" {
-		return topic
-	}
-	return service
+	return errors.New("Upload type is not supported: " + service.Service)
 }
 
 func buildValidServicesMap(validServicesList []string) map[string]bool {

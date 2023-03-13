@@ -23,7 +23,7 @@ var _ = Describe("Kafka", func() {
 
 		Context("that has a valid topic and exists in the mapping", func() {
 			It("should not error", func() {
-				kv := buildValidator([]string{"test1", "test2", "unit"})
+				kv := buildValidator([]string{"test1", "test2", "unit", "unit2"})
 				err := kv.ValidateService(&validators.ServiceDescriptor{
 					Service:  "unit2",
 					Category: "test",
@@ -39,7 +39,7 @@ var _ = Describe("Kafka", func() {
 					Service:  "unknown",
 					Category: "test",
 				})
-				Expect(err.Error()).To(Equal("Validation topic is invalid: unknown"))
+				Expect(err.Error()).To(Equal("Upload type is not supported: unknown"))
 			})
 		})
 	})
