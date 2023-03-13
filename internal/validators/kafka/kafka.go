@@ -38,7 +38,7 @@ type Config struct {
 }
 
 // New constructs and initializes a new Kafka Validator
-func New(cfg *Config, topics ...string) *Validator {
+func New(cfg *Config, validServices ...string) *Validator {
 	kv := &Validator{
 		ValidationProducerChannel: make(chan validators.ValidationMessage),
 		KafkaBrokers:              cfg.Brokers,
@@ -59,11 +59,11 @@ func New(cfg *Config, topics ...string) *Validator {
 		kv.SASLMechanism = cfg.SASLMechanism
 	}
 
-	kv.validServicesMap = buildValidServicesMap(topics)
+	kv.validServicesMap = buildValidServicesMap(validServices)
 
-	topic := config.GetTopic("platform.upload.announce")
+	announceTopic := config.GetTopic("platform.upload.announce")
 
-	kv.addProducer(topic)
+	kv.addProducer(announceTopic)
 
 	return kv
 }
@@ -114,7 +114,7 @@ func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) erro
 		return nil
 	}
 
-	return errors.New("Upload type is not supported: " + service.Service)
+	return errors.New("Service type is not supported: " + service.Service)
 }
 
 func buildValidServicesMap(validServicesList []string) map[string]bool {

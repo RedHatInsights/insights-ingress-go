@@ -39,7 +39,7 @@ var _ = Describe("Kafka", func() {
 					Service:  "unknown",
 					Category: "test",
 				})
-				Expect(err.Error()).To(Equal("Upload type is not supported: unknown"))
+				Expect(err.Error()).To(Equal("Service type is not supported: unknown"))
 			})
 		})
 	})
