@@ -39,13 +39,13 @@ var _ = Describe("Kafka", func() {
 					Service:  "unknown",
 					Category: "test",
 				})
-				Expect(err.Error()).To(Equal("Service type is not supported: unknown"))
+				Expect(err.Error()).To(Equal("Upload type is not supported: unknown"))
 			})
 		})
 	})
 })
 
-func buildValidator(validTopics []string) *Validator {
+func buildValidator(validUploadTypes []string) *Validator {
 	kafkaCfg := Config{Brokers: []string{"broker1"}}
-	return New(&kafkaCfg, validTopics...)
+	return New(&kafkaCfg, validUploadTypes...)
 }

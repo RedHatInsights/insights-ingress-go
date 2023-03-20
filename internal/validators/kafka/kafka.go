@@ -3,6 +3,7 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
@@ -21,7 +22,7 @@ type Validator struct {
 	CA                        string
 	SASLMechanism             string
 	KafkaSecurityProtocol     string
-	validServicesMap          map[string]bool
+	validUploadTypes          map[string]bool
 }
 
 // Config configures a new Kafka Validator
@@ -59,11 +60,14 @@ func New(cfg *Config, validServices ...string) *Validator {
 		kv.SASLMechanism = cfg.SASLMechanism
 	}
 
-	kv.validServicesMap = buildValidServicesMap(validServices)
+	kv.validUploadTypes = buildValidUploadTypeMap(validServices)
 
 	announceTopic := config.GetTopic("platform.upload.announce")
 
 	kv.addProducer(announceTopic)
+
+	fmt.Println("brokers: ", cfg.Brokers)
+	fmt.Println("announceTopic: ", announceTopic)
 
 	return kv
 }
@@ -108,22 +112,22 @@ func (kv *Validator) addProducer(topic string) {
 // ValidateService ensures that a service maps to a real topic
 func (kv *Validator) ValidateService(service *validators.ServiceDescriptor) error {
 
-	_, isValidService := kv.validServicesMap[service.Service]
+	_, isValidUploadType := kv.validUploadTypes[service.Service]
 
-	if isValidService {
+	if isValidUploadType {
 		return nil
 	}
 
-	return errors.New("Service type is not supported: " + service.Service)
+	return errors.New("Upload type is not supported: " + service.Service)
 }
 
-func buildValidServicesMap(validServicesList []string) map[string]bool {
+func buildValidUploadTypeMap(validUploadTypeList []string) map[string]bool {
 
-	validServicesMap := make(map[string]bool)
+	validUploadTypes := make(map[string]bool)
 
-	for _, service := range validServicesList {
-		validServicesMap[service] = true
+	for _, service := range validUploadTypeList {
+		validUploadTypes[service] = true
 	}
 
-	return validServicesMap
+	return validUploadTypes
 }
