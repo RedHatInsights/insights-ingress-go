@@ -62,12 +62,9 @@ func New(cfg *Config, validServices ...string) *Validator {
 
 	kv.validUploadTypes = buildValidUploadTypeMap(validServices)
 
-	announceTopic := config.GetTopic("platform.upload.announce")
+	announceTopic := config.Get().KafkaConfig.KafkaAnnounceTopic
 
 	kv.addProducer(announceTopic)
-
-	fmt.Println("brokers: ", cfg.Brokers)
-	fmt.Println("announceTopic: ", announceTopic)
 
 	return kv
 }
