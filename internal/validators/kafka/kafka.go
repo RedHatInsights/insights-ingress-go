@@ -3,7 +3,6 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
