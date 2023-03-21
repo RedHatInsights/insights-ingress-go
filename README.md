@@ -128,13 +128,13 @@ cloud.redhat.com, the customer should engage with support.
 
 #### Prerequisites
 
-Golang >= 1.12
+Golang >= 1.16
 
 #### Launching the Service
 
 Compile the source code into a go binary:
 
-    $> go build
+    $> make build
 
 Launch the application
 
@@ -150,9 +150,9 @@ You can also build ingress using Docker/Podman with the provided Dockerfile.
 
     $> docker build . -t ingress:latest
 
-### Podman Compose
+### Local Development
 
-See [instructions](https://github.com/RedHatInsights/insights-ingress-go/blob/master/development/README.md)
+More information on local development can be found [here](./development/README.md)
 
 #### Uploading a File
 
@@ -176,4 +176,4 @@ This decodes to:
 
 Use `go test` to test the application
 
-    $> go test ./...
+    $> make test

@@ -22,15 +22,29 @@ services:
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
   minio:
     image: minio/minio
-    command: server /data
+    command: server --address 0.0.0.0:9000 --console-address 0.0.0.0:9990 /data
     volumes:
-      - '/mnt/config:/data:z'
-      - '/mnt/data:/root/.minio:z'
+      - './minio-conf:/mnt/config:z'
+      - './minio-data/.minio:/mnt/data:z'
     ports:
       - 9000:9000
+      - 9990:9990
     environment:
-      - MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
-      - MINIO_SECRET_KEY=$MINIO_SECRET_KEY
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+  minio-createbucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} || exit 1;
+      /usr/bin/mc mb --ignore-existing myminio/insights-upload-perma;
+      /usr/bin/mc policy set public myminio/insights-upload-perma;
+      "
   ingress:
     #image: quay.io/cloudservices/insights-ingress:latest
     image: ingress:latest
@@ -49,4 +63,5 @@ services:
       - INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY
       - INGRESS_MINIOENDPOINT=minio:9000
     depends_on:
-       - kafka
+      - kafka
+      - minio
