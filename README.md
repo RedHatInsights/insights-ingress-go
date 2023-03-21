@@ -57,10 +57,6 @@ Example:
 
   `application/vnd.redhat.advisor.example+tgz` => `{"service": "advisor"}`
 
-In the case of the legacy operation, the service name tells ingress what topic to use:
-
-  `application/vnd.redhat.advisor.example+tgz` => `platform.upload.advisor`
-
 ### Message Formats
 
 All messages placed on the Kafka topic will contain JSON with the details for the 
