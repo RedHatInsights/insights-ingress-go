@@ -81,7 +81,7 @@ func main() {
 		producerCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
 	}
 
-	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidUploadTypes...)
+	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidTopics...)
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
