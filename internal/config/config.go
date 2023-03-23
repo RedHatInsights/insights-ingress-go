@@ -42,7 +42,7 @@ type KafkaCfg struct {
 	KafkaTrackerTopic     string
 	KafkaDeliveryReports  bool
 	KafkaAnnounceTopic    string
-	ValidUploadTypes      []string
+	ValidTopics           []string
 	KafkaSecurityProtocol string
 	KafkaSSLConfig        KafkaSSLCfg
 }
@@ -108,7 +108,7 @@ func Get() *IngressConfig {
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
-	options.SetDefault("Valid_Upload_Types", "unit,announce")
+	options.SetDefault("ValidTopics", "unit,announce")
 	options.SetDefault("Profile", false)
 	options.SetDefault("Black_Listed_OrgIDs", []string{})
 	options.SetDefault("Debug", false)
@@ -217,7 +217,7 @@ func Get() *IngressConfig {
 			KafkaTrackerTopic:     options.GetString("KafkaTrackerTopic"),
 			KafkaDeliveryReports:  options.GetBool("KafkaDeliveryReports"),
 			KafkaAnnounceTopic:    options.GetString("KafakAnnounceTopic"),
-			ValidUploadTypes:      strings.Split(options.GetString("Valid_Upload_Types"), ","),
+			ValidTopics:           strings.Split(options.GetString("ValidTopics"), ","),
 			KafkaSecurityProtocol: options.GetString("KafkaSecurityProtocol"),
 		},
 		StorageConfig: StorageCfg{

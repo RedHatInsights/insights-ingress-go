@@ -54,8 +54,8 @@ objects:
           value: ${INGRESS_STAGEBUCKET}
         - name: INGRESS_LOG_LEVEL
           value: ${LOG_LEVEL}
-        - name: INGRESS_VALID_UPLOAD_TYPES
-          value: ${INGRESS_VALID_UPLOAD_TYPES}
+        - name: INGRESS_VALIDTOPICS
+          value: ${INGRESS_VALIDTOPICS}
         - name: INGRESS_MAXSIZEMAP
           value: ${INGRESS_MAXSIZEMAP}
         - name: CLOWDER_ENABLED
@@ -83,17 +83,62 @@ objects:
     - ${INGRESS_STAGEBUCKET}
     kafkaTopics:
     - replicas: 3
+      partitions: 64
+      topicName: platform.upload.advisor
+    - replicas: 3
       partitions: 3
       topicName: platform.payload-status
     - replicas: 3
+      partitions: 4
+      topicName: platform.upload.compliance
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.hccm
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.qpc
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.rhv
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.tower
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.leapp-reporting
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.pinakes
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.buckit
+    - replicas: 3
+      partitions: 16
+      topicName: platform.upload.xavier
+    - replicas: 3
+      partitions: 10
+      topicName: platform.upload.mkt
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.catalog
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.playbook
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.resource-optimization
+    - replicas: 3
       partitions: 64
       topicName: platform.upload.announce
+    - replicas: 3
+      partitions: 3
+      topicName: platform.upload.malware-detection
 
 parameters:
 - name: INGRESS_STAGEBUCKET
   value: insights-upload-perma
-- name: INGRESS_VALID_UPLOAD_TYPES
-  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,xavier,mkt,playbook,playbook-sat,resource-optimization,malware-detection,pinakes,assisted-installer,runtimes-java-general,openshift
+- name: INGRESS_VALIDTOPICS
+  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,buckit,xavier,mkt,playbook,playbook-sat,resource-optimization,malware-detection,pinakes,assisted-installer,runtimes-java-general
 - name: INGRESS_DEFAULTMAXSIZE
   value: '104857600'
 - name: INGRESS_MAXSIZEMAP
