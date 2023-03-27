@@ -96,7 +96,7 @@ func Get() *IngressConfig {
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("KafkaDeliveryReports", true)
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
-	options.SetDefault("KafakAnnounceTopic", "platform.upload.announce")
+	options.SetDefault("KafkaAnnounceTopic", "platform.upload.announce")
 	options.SetDefault("KafkaSecurityProtocol", "PLAINTEXT")
 
 	// Global defaults
@@ -216,7 +216,7 @@ func Get() *IngressConfig {
 			KafkaGroupID:          options.GetString("KafkaGroupID"),
 			KafkaTrackerTopic:     options.GetString("KafkaTrackerTopic"),
 			KafkaDeliveryReports:  options.GetBool("KafkaDeliveryReports"),
-			KafkaAnnounceTopic:    options.GetString("KafakAnnounceTopic"),
+			KafkaAnnounceTopic:    options.GetString("KafkaAnnounceTopic"),
 			ValidTopics:           strings.Split(options.GetString("ValidTopics"), ","),
 			KafkaSecurityProtocol: options.GetString("KafkaSecurityProtocol"),
 		},
