@@ -101,11 +101,11 @@ func (kv *Validator) Validate(vr *validators.Request) {
 	}
 	switch account := vr.Account; account {
 	case "":
-		kv.ValidationProducerMapping[config.GetTopic(announceTopic)] <- message
+		kv.ValidationProducerMapping[announceTopic] <- message
 		incMessageProduced(vr.Service)
 	default:
 		kv.ValidationProducerMapping[realizedTopicName] <- message
-		kv.ValidationProducerMapping[config.GetTopic(announceTopic)] <- message
+		kv.ValidationProducerMapping[announceTopic] <- message
 	}
 }
 
