@@ -72,6 +72,7 @@ func New(cfg *Config, topics ...string) *Validator {
 
 	for _, topic := range topics {
 		topic = config.GetTopic(fmt.Sprintf("platform.upload.%s", topic))
+        fmt.Println("topic: |", topic, "|")
 		kv.addProducer(topic)
 	}
 
@@ -96,6 +97,10 @@ func (kv *Validator) Validate(vr *validators.Request) {
 			"service": vr.Service,
 		},
 	}
+
+    fmt.Println("announcetopic: |", announceTopic, "|")
+    fmt.Println("config.GetTopic(announceTopic)]: |", config.GetTopic(announceTopic), "|")
+    fmt.Println("realizedTopicName: |", realizedTopicName, "|")
 	if vr.Metadata.QueueKey != "" {
 		message.Key = []byte(vr.Metadata.QueueKey)
 	}
