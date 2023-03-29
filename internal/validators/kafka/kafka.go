@@ -96,12 +96,6 @@ func (kv *Validator) Validate(vr *validators.Request) {
 			"service": vr.Service,
 		},
 	}
-
-    fmt.Println("announcetopic: |", announceTopic, "|")
-    fmt.Println("config.GetTopic(announceTopic)]: |", config.GetTopic(announceTopic), "|")
-    fmt.Println("realizedTopicName: |", realizedTopicName, "|")
-
-
 	if vr.Metadata.QueueKey != "" {
 		message.Key = []byte(vr.Metadata.QueueKey)
 	}
