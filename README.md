@@ -26,17 +26,10 @@ The Ingress workflow is as follows:
   cloud storage, and puts a message on the announcement topic while applying a header
   to identify the destination service.
 
-For the vast majority of topics, the above process is accurate. For payloads from both
+For the vast majority of upload types, the above process is accurate. For payloads from both
 **ansible tower** and the **insights cluster operator**, the flow is a bit different. The key difference here is that it relies on the UHC Auth Proxy for authentication.
 
 ![UML](https://www.plantuml.com/plantuml/png/TP5FSvim4CNl-HHRNzBEDEP0Jpt5mTF6qwRrXFYSMSC6D0Y9QbTntKzV2Mpe4FV4_dc_vV6uPK4dljLNxvGfj2y9Qf6EFoU9myEoKbBxlMToXJL2HfQ5RPDEeudC3KkfrJx9FjriusZty3rfaOLS63rdWK1bo2sxUFygFuPD-pwy92e-mY8RgaKeDuPLLGl3puuSYdMB3sSzDjYY2ffLNqHrjlunxLCkK5EOfdaiudwrtS1N53hWSTBvkWYhtNq6AoyrR9tzVOpYs94HLQ0eQo0dzweAcZXbAaVCqUHGHMZNQOlbMp6BTLZHdRDD_udvqCCmY6IUdfeBSDhlUrCj_h46xhGj6ZWVcO17qbEEOq23gTxV_TFJDX-4puzZX6DKNwmxe2jXZqmbM0Daoiug8pDs33U6Duzg9Xbp6g-BFG-11-lpyoF3wHHgXyVuZ3WBLa43Uryq9F-dvwcJAQ4Dgp2CPzx-XM_uqk3fp8pkhJpOL_hNoBLrrMQTd38FbQDVdbWswsjG1cn7Xclr8XUStWOpljL_0G00)
-
-### Kafka Topics (Legacy)
-
-Ingress produces to topics to alert services of a new upload. The first topic an
-upload is advertised to is the one gathered from the content type.
-
-    - Produce to topic derived from content type: `platform.upload.service-name`
 
 ### Announcement Topic
 
@@ -63,10 +56,6 @@ to apply to the `service` header.
 Example:
 
   `application/vnd.redhat.advisor.example+tgz` => `{"service": "advisor"}`
-
-In the case of the legacy operation, the service name tells ingress what topic to use:
-
-  `application/vnd.redhat.advisor.example+tgz` => `platform.upload.advisor`
 
 ### Message Formats
 
@@ -162,7 +151,7 @@ You can provide these headers manually with a curl command
         $> curl -F "file=@somefile.tar.gz;type=application/vnd.redhat.<service-name>.somefile+tgz" -H "x-rh-identity: <base64 string>" -H "x-rh-insights-request-id: <uuid>" \
         http://localhost:3000/api/ingress/v1/upload
 
-Note, that your service name needs to be in the `INGRESS_VALIDTOPICS` variable inside of the `.env` file.
+Note, that your service name needs to be in the `INGRESS_VALID_UPLOAD_TYPES` variable inside of the `.env` file.
 
 For testing, the following base64 identity can be used:
 
