@@ -14,7 +14,7 @@ test:
 
 run-api: $(BINARY)
 	INGRESS_STAGEBUCKET=insights-upload-perma \
-	INGRESS_VALIDTOPICS=advisor,qpc \
+	INGRESS_VALID_UPLOAD_TYPES=advisor,qpc \
 	OPENSHIFT_BUILD_COMMIT=somestring \
 	INGRESS_MINIODEV=true \
 	INGRESS_MINIOACCESSKEY=$(MINIO_ACCESS_KEY) \
