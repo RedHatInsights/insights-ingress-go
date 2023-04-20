@@ -21,7 +21,15 @@ docker --config="$DOCKER_CONF" login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
 docker --config="$DOCKER_CONF" login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
 docker --config="$DOCKER_CONF" build -t "${IMAGE}:${IMAGE_TAG}" .
 docker --config="$DOCKER_CONF" push "${IMAGE}:${IMAGE_TAG}"
-docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:qa"
-docker --config="$DOCKER_CONF" push "${IMAGE}:qa"
-docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
-docker --config="$DOCKER_CONF" push "${IMAGE}:latest"
+
+if [[ $GIT_BRANCH != *"security-compliance"*]]; then
+    docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:qa"
+    docker --config="$DOCKER_CONF" push "${IMAGE}:qa"
+    docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
+    docker --config="$DOCKER_CONF" push "${IMAGE}:latest"
+fi
+
+if [[ $GIT_BRANCH == *"security-compliance"*]]; then
+    docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:security-compliance"
+    docker --config="$DOCKER_CONF" push "${IMAGE}:security-compliance"
+fi
