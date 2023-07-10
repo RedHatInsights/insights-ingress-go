@@ -93,7 +93,7 @@ parameters:
 - name: INGRESS_STAGEBUCKET
   value: insights-upload-perma
 - name: INGRESS_VALID_UPLOAD_TYPES
-  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,xavier,mkt,playbook,playbook-sat,resource-optimization,malware-detection,pinakes,assisted-installer,runtimes-java-general,openshift,tasks
+  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,xavier,mkt,playbook,playbook-sat,resource-optimization,malware-detection,pinakes,assisted-installer,runtimes-java-general,openshift,tasks,automation-hub
 - name: INGRESS_DEFAULTMAXSIZE
   value: '104857600'
 - name: INGRESS_MAXSIZEMAP
