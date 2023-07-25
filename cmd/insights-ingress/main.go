@@ -2,10 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -40,37 +37,6 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(api.ApiSpec)
-}
-
-func configureHttpClient(cfg config.IngressConfig) *http.Client {
-	if cfg.TlsCAPath != "" {
-		rootCAs, _ := x509.SystemCertPool()
-		if rootCAs == nil {
-			rootCAs = x509.NewCertPool()
-		}
-
-		certs, err := ioutil.ReadFile(cfg.TlsCAPath)
-		if err != nil {
-			l.Log.Error("Failed to append CA to RootCAs")
-		}
-
-		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-			l.Log.Info("No certs appended, using system certs only")
-		}
-
-		httpConfig := &tls.Config{
-			InsecureSkipVerify: false,
-			RootCAs:            rootCAs,
-		}
-		httpTransport := &http.Transport{TLSClientConfig: httpConfig}
-		client := &http.Client{Transport: httpTransport,
-			Timeout: time.Second * cfg.HTTPClientTimeout,
-		}
-
-		return client
-	} else {
-		return &http.Client{Timeout: time.Second * cfg.HTTPClientTimeout}
-	}
 }
 
 func main() {
@@ -115,7 +81,7 @@ func main() {
 		producerCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
 	}
 
-	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidTopics...)
+	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidUploadTypes...)
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
@@ -123,7 +89,9 @@ func main() {
 		stager, validator, tracker, *cfg,
 	)
 
-	httpClient := configureHttpClient(*cfg)
+	httpClient := &http.Client{
+		Timeout: time.Second * time.Duration(cfg.HTTPClientTimeout),
+	}
 
 	trackEndpoint := track.NewHandler(
 		*cfg,
