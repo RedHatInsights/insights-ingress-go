@@ -117,7 +117,7 @@ cloud.redhat.com, the customer should engage with support.
 
 #### Prerequisites
 
-Golang >= 1.16
+Golang >= 1.19
 
 #### Launching the Service
 
