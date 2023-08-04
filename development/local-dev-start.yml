@@ -15,6 +15,7 @@ services:
     depends_on:
       - zookeeper
     environment:
+      # - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092  # Use this if you are spinning up the Ingress API without docker
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092
       - KAFKA_BROKER_ID=1
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
