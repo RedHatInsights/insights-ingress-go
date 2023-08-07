@@ -3,7 +3,7 @@
 
 export GO111MODULE="on"
 export GOPATH="$(pwd)/gopath"
-export GOROOT="/opt/go/1.16.10"
+export GOROOT="/opt/go/1.19.11"
 export PATH="${GOROOT}/bin:${PATH}"
 ACG_CONFIG="$(pwd)/cdappconfig.json"  go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
