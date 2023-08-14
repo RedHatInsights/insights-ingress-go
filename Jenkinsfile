@@ -17,15 +17,60 @@ pipeline {
     options {
         timestamps()
     }
+    environment {
+        // --------------------------------------------
+        // Options that must be configured by app owner
+        // --------------------------------------------
+        APP_NAME="ingress"  // name of app-sre "application" folder this component lives in
+        COMPONENT_NAME="ingress"  // name of app-sre "resourceTemplate" in deploy.yaml for this component
+        IMAGE="quay.io/cloudservices/insights-ingress"  
+
+        IQE_PLUGINS="ingress"
+        IQE_MARKER_EXPRESSION="smoke"
+        IQE_FILTER_EXPRESSION=""
+        IQE_CJI_TIMEOUT="30m"
+
+        EXTRA_DEPLOY_ARGS="advisor"
+
+        CICD_URL='https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd'
+    }
+
     stages {
-        stage('Go Test') {
-            steps {
-                sh 'export GO111MODULE="on"'
-                sh 'export GOPATH=/var/gopath'
-                sh 'go version'
-                sh 'ACG_CONFIG="$(pwd)/cdappconfig.json"  go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...'
+        stage('Pipeline') {
+            parallel {
+                stage('Build the PR commit image') {
+                    steps {
+                        withVault([configuration: configuration, vaultSecrets: secrets]) {
+                            sh './build_deploy.sh'
+                        }
+                        
+                        sh 'mkdir -p artifacts'
+                    }
+                }
+                
+                stage('Go Test') {
+                    steps {
+                        sh 'export GO111MODULE="on"'
+                        sh 'export GOPATH=/var/gopath'
+                        sh 'go version'
+                        sh 'ACG_CONFIG="$(pwd)/cdappconfig.json"  go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...'
+                    }
+                }
             }
-        }    
+        } 
+    }
+
+    post {
+        always{
+            withVault([configuration: configuration, vaultSecrets: secrets]) {
+                sh '''
+                    curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh
+                    source ./.cicd_bootstrap.sh
+
+                    source "${CICD_ROOT}/post_test_results.sh"
+                '''
+            }
+        }
     }
 }
 
