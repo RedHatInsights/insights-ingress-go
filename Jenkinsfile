@@ -63,10 +63,7 @@ pipeline {
                 
                 stage('Go Test') {
                     steps {
-                        sh 'export GO111MODULE="on"'
-                        sh 'export GOPATH=/var/gopath'
-                        sh 'go version'
-                        sh 'ACG_CONFIG="$(pwd)/cdappconfig.json"  go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...'
+                        sh './unit_test.sh'
                     }
                 }
             }
@@ -80,6 +77,9 @@ pipeline {
                     curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh
                     source ./.cicd_bootstrap.sh
 
+                    source "${CICD_ROOT}/build.sh"
+                    source "${CICD_ROOT}/deploy_ephemeral_env.sh"
+                    source "${CICD_ROOT}/cji_smoke_test.sh"
                     source "${CICD_ROOT}/post_test_results.sh"
                 '''
             }
