@@ -144,7 +144,7 @@ func NewHandler(
 	tracker announcers.Announcer,
 	cfg config.IngressConfig) http.HandlerFunc {
 
-	isCustomerBlackListed := isRequestFromBlackListedOrgID(cfg)
+	isCustomerDenyListed := isRequestFromDenyListedOrgID(cfg)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
@@ -178,10 +178,10 @@ func NewHandler(
 			id.Identity.OrgID = id.Identity.Internal.OrgID
 		}
 
-		if isCustomerBlackListed(id) {
+		if isCustomerDenyListed(id) {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("Upload denied. Please contact Red Hat Support."))
-			requestLogger.WithFields(logrus.Fields{"account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info("Upload rejected due to customer being blacklisted")
+			requestLogger.WithFields(logrus.Fields{"account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info("Upload rejected due to customer being denylisted")
 			return
 		}
 
@@ -330,15 +330,15 @@ func NewHandler(
 	}
 }
 
-func isRequestFromBlackListedOrgID(cfg config.IngressConfig) func(identity.XRHID) bool {
+func isRequestFromDenyListedOrgID(cfg config.IngressConfig) func(identity.XRHID) bool {
 
-	blackListedOrgIDs := make(map[string]bool)
-	for _, orgID := range cfg.BlackListedOrgIDs {
-		blackListedOrgIDs[orgID] = true
+	denyListedOrgIDs := make(map[string]bool)
+	for _, orgID := range cfg.DenyListedOrgIDs {
+		denyListedOrgIDs[orgID] = true
 	}
 
 	return func(id identity.XRHID) bool {
-		_, blackListed := blackListedOrgIDs[id.Identity.OrgID]
-		return blackListed
+		_, denyListed := denyListedOrgIDs[id.Identity.OrgID]
+		return denyListed
 	}
 }
