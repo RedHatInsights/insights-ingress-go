@@ -31,7 +31,7 @@ type IngressConfig struct {
 	TlsCAPath            string
 	StorageConfig        StorageCfg
 	LoggingConfig        LoggingCfg
-	BlackListedOrgIDs    []string
+	DenyListedOrgIDs    []string
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
 }
@@ -110,7 +110,7 @@ func Get() *IngressConfig {
 	options.SetDefault("OpenshiftBuildCommit", "notrunninginopenshift")
 	options.SetDefault("Valid_Upload_Types", "unit,announce")
 	options.SetDefault("Profile", false)
-	options.SetDefault("Black_Listed_OrgIDs", []string{})
+	options.SetDefault("Deny_Listed_OrgIDs", []string{})
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetEnvPrefix("INGRESS")
@@ -208,7 +208,7 @@ func Get() *IngressConfig {
 		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
 		TlsCAPath:            options.GetString("TlsCAPath"),
 		Profile:              options.GetBool("Profile"),
-		BlackListedOrgIDs:    options.GetStringSlice("Black_Listed_OrgIDs"),
+		DenyListedOrgIDs:    options.GetStringSlice("Deny_Listed_OrgIDs"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
