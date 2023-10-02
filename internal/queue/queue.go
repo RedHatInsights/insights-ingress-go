@@ -59,13 +59,13 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 
 	if config.CA != "" {
 		_ = configMap.SetKey("ssl.ca.location", config.CA)
-		_ = configMap.SetKey("security.protocol", config.KafkaSecurityProtocol)
+	}
 
-		if config.SASLMechanism != "" {
-			_ = configMap.SetKey("sasl.mechanism", config.SASLMechanism)
-			_ = configMap.SetKey("sasl.username", config.Username)
-			_ = configMap.SetKey("sasl.password", config.Password)
-		}
+	if config.SASLMechanism != "" {
+		_ = configMap.SetKey("security.protocol", config.KafkaSecurityProtocol)
+		_ = configMap.SetKey("sasl.mechanism", config.SASLMechanism)
+		_ = configMap.SetKey("sasl.username", config.Username)
+		_ = configMap.SetKey("sasl.password", config.Password)
 	}
 
 	if config.Debug {
