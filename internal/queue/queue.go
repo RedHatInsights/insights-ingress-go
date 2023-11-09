@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"strings"
 	"time"
 
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
@@ -53,7 +54,7 @@ func Producer(in chan validators.ValidationMessage, config *ProducerConfig) {
 	var configMap kafka.ConfigMap
 
 	configMap = kafka.ConfigMap{
-		"bootstrap.servers":   config.Brokers[0],
+		"bootstrap.servers":   strings.Join(config.Brokers, ","),
 		"go.delivery.reports": config.KafkaDeliveryReports,
 	}
 
