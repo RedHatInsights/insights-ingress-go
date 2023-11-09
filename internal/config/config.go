@@ -31,7 +31,7 @@ type IngressConfig struct {
 	TlsCAPath            string
 	StorageConfig        StorageCfg
 	LoggingConfig        LoggingCfg
-	DenyListedOrgIDs    []string
+	DenyListedOrgIDs     []string
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
 }
@@ -208,7 +208,7 @@ func Get() *IngressConfig {
 		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
 		TlsCAPath:            options.GetString("TlsCAPath"),
 		Profile:              options.GetBool("Profile"),
-		DenyListedOrgIDs:    options.GetStringSlice("Deny_Listed_OrgIDs"),
+		DenyListedOrgIDs:     options.GetStringSlice("Deny_Listed_OrgIDs"),
 		Debug:                options.GetBool("Debug"),
 		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
