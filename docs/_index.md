@@ -217,7 +217,7 @@ This decodes to
 
 Use `  go test  ` to test the application
 
-Testing Konflux
+Testing Konflux M
 
 <div class="highlight-default notranslate">
 
