@@ -217,8 +217,7 @@ This decodes to
 
 Use `  go test  ` to test the application
 
-Testing Konflux Merge 
-
+Test
 <div class="highlight-default notranslate">
 
 <div class="highlight">
