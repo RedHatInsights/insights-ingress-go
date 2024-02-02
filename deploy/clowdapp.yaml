@@ -58,6 +58,8 @@ objects:
           value: ${INGRESS_VALID_UPLOAD_TYPES}
         - name: INGRESS_MAXSIZEMAP
           value: ${INGRESS_MAXSIZEMAP}
+        - name: INGRESS_DEFAULTMAXSIZE
+          value: ${INGRESS_DEFAULTMAXSIZE}
         - name: CLOWDER_ENABLED
           value: ${CLOWDER_ENABLED}
         - name: INGRESS_MINIOENDPOINT
