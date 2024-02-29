@@ -50,6 +50,16 @@ func makeTestRequest(uri string, request_id string, account string, orgID string
 				},
 			},
 		})
+	case "serviceaccount":
+		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+			Identity: identity.Identity{
+				OrgID: orgID,
+				Internal: identity.Internal{
+					OrgID: orgID,
+				},
+				Type: "ServiceAccount",
+			},
+		})
 	default:
 		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
 			Identity: identity.Identity{
@@ -121,16 +131,6 @@ var _ = Describe("Track", func() {
 			})
 		})
 
-		Context("with an incorrect orgID but valid account", func() {
-			It("should return an HTTP 200", func() {
-				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
-				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "12346", "customer")
-				Expect(err).To(BeNil())
-				handler.ServeHTTP(rr, req)
-				Expect(rr.Code).To(Equal(200))
-			})
-		})
-
 		Context("with an invalid request-id", func() {
 			It("should return HTTP 404", func() {
 				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/3e3f56e642a248008811cce123b2c0f2", httpmock.NewStringResponder(200, badJsonID))
@@ -174,5 +174,28 @@ var _ = Describe("Track", func() {
 				Expect(rr.Body.String()).To(Equal(minimalJsonBody))
 			})
 		})
+
+		Context("with an service-account", func() {
+			It("should return HTTP 200", func() {
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710", "12345", "serviceaccount")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+				Expect(rr.Body.String()).To(Equal(minimalJsonBody))
+			})
+		})
+
+		Context("with an service-account with an incorrect orgID", func() {
+			It("should return HTTP 403", func() {
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710", "12346", "serviceaccount")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(403))
+			})
+		})
+
 	})
 })
