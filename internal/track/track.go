@@ -2,7 +2,6 @@ package track
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -97,10 +96,9 @@ func NewHandler(
 			subjectSplit := strings.Split(id.Identity.X509.SubjectDN, "=")
 			subjectDN = subjectSplit[len(subjectSplit)-1]
 		}
-		fmt.Print(id.Identity.Type)
-		fmt.Print(subjectDN)
+
 		if id.Identity.Type != "Associate" && subjectDN != "insightspipelineqe" {
-			if !isIdAuthorized(id.Identity, pt.Data[0].Account, pt.Data[0].OrgID) {
+			if !isIdAuthorized(id.Identity, pt.Data[0].OrgID) {
 
 				incomingRequestID := request_id.GetReqID(r.Context())
 
@@ -144,8 +142,8 @@ func NewHandler(
 	}
 }
 
-func isIdAuthorized(identity identity.Identity, accountNumber string, orgID string) bool {
-	return identity.AccountNumber == accountNumber || identity.OrgID == orgID
+func isIdAuthorized(identity identity.Identity, orgID string) bool {
+	return identity.OrgID == orgID
 }
 
 func isValidUUID(s string) bool {
