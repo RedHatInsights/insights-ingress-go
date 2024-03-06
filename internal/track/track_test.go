@@ -45,7 +45,16 @@ func makeTestRequest(uri string, request_id string, account string, orgID string
 		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
 			Identity: identity.Identity{
 				X509: identity.X509{
-					SubjectDN: "/DC=com/DC=redhat/CN=insightspipelineqe",
+					SubjectDN: "/DC=com/DC=redhat/CN=" + AutomatedIntegrationTestCertSubject,
+					IssuerDN:  "CN=redhat",
+				},
+			},
+		})
+	case "untrusted_x509":
+		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+			Identity: identity.Identity{
+				X509: identity.X509{
+					SubjectDN: "/DC=com/DC=redhat/CN=im_not_to_be_trusted",
 					IssuerDN:  "CN=redhat",
 				},
 			},
@@ -194,6 +203,18 @@ var _ = Describe("Track", func() {
 				Expect(err).To(BeNil())
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(403))
+			})
+		})
+
+		Context("with an untrusted cert", func() {
+			It("should return HTTP 403", func() {
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/", httpmock.NewStringResponder(200, goodJsonBody))
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089710", "12346", "untrusted_x509")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(403))
+				Expect(rr.Body).ToNot(BeNil())
+				Expect(rr.Body.String()).To(Equal(""))
 			})
 		})
 

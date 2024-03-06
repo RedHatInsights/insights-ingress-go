@@ -17,6 +17,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const AutomatedIntegrationTestCertSubject = "68bdb922-9e82-445c-a457-f83c13d23e3d"
+
 type TrackerResponse struct {
 	Data     []Status    `json:"data"`
 	Duration interface{} `json:"duration"`
@@ -91,15 +93,8 @@ func NewHandler(
 			return
 		}
 
-		var subjectDN string
-		if id.Identity.X509.SubjectDN != "" {
-			subjectSplit := strings.Split(id.Identity.X509.SubjectDN, "=")
-			subjectDN = subjectSplit[len(subjectSplit)-1]
-		}
-
-		if id.Identity.Type != "Associate" && subjectDN != "insightspipelineqe" {
+		if id.Identity.Type != "Associate" && isTrustedIntegrationTestCert(id) == false {
 			if !isIdAuthorized(id.Identity, pt.Data[0].OrgID) {
-
 				incomingRequestID := request_id.GetReqID(r.Context())
 
 				requestLogger.WithFields(logrus.Fields{"requestID": reqID,
@@ -140,6 +135,18 @@ func NewHandler(
 			w.Write(responseBody)
 		}
 	}
+}
+
+func isTrustedIntegrationTestCert(id identity.XRHID) bool {
+
+	if id.Identity.X509.SubjectDN == "" {
+		return false
+	}
+
+	subjectSplit := strings.Split(id.Identity.X509.SubjectDN, "=")
+	subjectDN := subjectSplit[len(subjectSplit)-1]
+
+	return subjectDN == AutomatedIntegrationTestCertSubject
 }
 
 func isIdAuthorized(identity identity.Identity, orgID string) bool {
