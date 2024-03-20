@@ -2,7 +2,6 @@ package track
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -17,6 +16,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
+
+const AutomatedIntegrationTestCertSubject = "68bdb922-9e82-445c-a457-f83c13d23e3d"
 
 type TrackerResponse struct {
 	Data     []Status    `json:"data"`
@@ -92,16 +93,8 @@ func NewHandler(
 			return
 		}
 
-		var subjectDN string
-		if id.Identity.X509.SubjectDN != "" {
-			subjectSplit := strings.Split(id.Identity.X509.SubjectDN, "=")
-			subjectDN = subjectSplit[len(subjectSplit)-1]
-		}
-		fmt.Print(id.Identity.Type)
-		fmt.Print(subjectDN)
-		if id.Identity.Type != "Associate" && subjectDN != "insightspipelineqe" {
-			if !isIdAuthorized(id.Identity, pt.Data[0].Account, pt.Data[0].OrgID) {
-
+		if id.Identity.Type != "Associate" && isTrustedIntegrationTestCert(id) == false {
+			if !isIdAuthorized(id.Identity, pt.Data[0].OrgID) {
 				incomingRequestID := request_id.GetReqID(r.Context())
 
 				requestLogger.WithFields(logrus.Fields{"requestID": reqID,
@@ -144,8 +137,20 @@ func NewHandler(
 	}
 }
 
-func isIdAuthorized(identity identity.Identity, accountNumber string, orgID string) bool {
-	return identity.AccountNumber == accountNumber || identity.OrgID == orgID
+func isTrustedIntegrationTestCert(id identity.XRHID) bool {
+
+	if id.Identity.X509.SubjectDN == "" {
+		return false
+	}
+
+	subjectSplit := strings.Split(id.Identity.X509.SubjectDN, "=")
+	subjectDN := subjectSplit[len(subjectSplit)-1]
+
+	return subjectDN == AutomatedIntegrationTestCertSubject
+}
+
+func isIdAuthorized(identity identity.Identity, orgID string) bool {
+	return identity.OrgID == orgID
 }
 
 func isValidUUID(s string) bool {
