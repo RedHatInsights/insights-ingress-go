@@ -6,7 +6,7 @@ COPY . .
 USER 0
 
 RUN go get -d ./... && \
-    go build -o insights-ingress-go cmd/insights-ingress/main.go
+    go build -buildvcs=false -o insights-ingress-go ./cmd/insights-ingress
 
 RUN cp /go/src/app/insights-ingress-go /usr/bin/
 
