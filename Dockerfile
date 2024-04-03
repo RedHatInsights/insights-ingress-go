@@ -19,3 +19,9 @@ COPY --from=builder /go/src/app/insights-ingress-go ./insights-ingress-go
 USER 1001
 
 CMD ["/insights-ingress-go"]
+
+# OpenShift preflight check requires a license
+COPY --from=build /build/LICENSE /licenses/LICENSE
+
+# OpenShift preflight check requires a non-root user
+USER 1001
