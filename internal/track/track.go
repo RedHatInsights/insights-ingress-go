@@ -17,7 +17,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const AutomatedIntegrationTestCertSubject = "68bdb922-9e82-445c-a457-f83c13d23e3d"
+const (
+	AutomatedIntegrationTestCertSubjectStage = "68bdb922-9e82-445c-a457-f83c13d23e3d"
+	AutomatedIntegrationTestCertSubjectProd  = "bb2c0145-d185-4cc9-9ba1-2cdbaf90e60f"
+)
 
 type TrackerResponse struct {
 	Data     []Status    `json:"data"`
@@ -146,7 +149,7 @@ func isTrustedIntegrationTestCert(id identity.XRHID) bool {
 	subjectSplit := strings.Split(id.Identity.X509.SubjectDN, "=")
 	subjectDN := subjectSplit[len(subjectSplit)-1]
 
-	return subjectDN == AutomatedIntegrationTestCertSubject
+	return subjectDN == AutomatedIntegrationTestCertSubjectStage || subjectDN == AutomatedIntegrationTestCertSubjectProd
 }
 
 func isIdAuthorized(identity identity.Identity, orgID string) bool {
