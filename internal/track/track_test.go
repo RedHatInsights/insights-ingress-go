@@ -45,7 +45,7 @@ func makeTestRequest(uri string, request_id string, account string, orgID string
 		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
 			Identity: identity.Identity{
 				X509: identity.X509{
-					SubjectDN: "/DC=com/DC=redhat/CN=" + AutomatedIntegrationTestCertSubject,
+					SubjectDN: "/DC=com/DC=redhat/CN=" + AutomatedIntegrationTestCertSubjectStage,
 					IssuerDN:  "CN=redhat",
 				},
 			},
