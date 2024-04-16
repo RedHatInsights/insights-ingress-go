@@ -16,8 +16,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
-	"github.com/redhatinsights/platform-go-middlewares/request_id"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -68,7 +68,7 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+	ctx = identity.WithIdentity(ctx, identity.XRHID{
 		Identity: identity.Identity{
 			AccountNumber: "540155",
 			OrgID:         "12345",
@@ -78,7 +78,7 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 		},
 	})
 
-	req = req.WithContext(context.WithValue(ctx, request_id.RequestIDKey, requestId))
+	req = req.WithContext(context.WithValue(ctx, request_id.GetReqID(ctx), requestId))
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	return req, nil
@@ -112,7 +112,7 @@ func makeTestRequest(uri string, testType string, tenant string, body string) (*
 
 	ctx := context.Background()
 	if tenant == "anemic" {
-		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		ctx = identity.WithIdentity(ctx, identity.XRHID{
 			Identity: identity.Identity{
 				OrgID: "12345",
 				Internal: identity.Internal{
@@ -121,7 +121,7 @@ func makeTestRequest(uri string, testType string, tenant string, body string) (*
 			},
 		})
 	} else {
-		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		ctx = identity.WithIdentity(ctx, identity.XRHID{
 			Identity: identity.Identity{
 				AccountNumber: "540155",
 				OrgID:         "12345",

@@ -19,8 +19,8 @@ import (
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
-	"github.com/redhatinsights/platform-go-middlewares/request_id"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 	"github.com/sirupsen/logrus"
 )
 
@@ -157,7 +157,7 @@ func NewHandler(
 		}
 
 		if cfg.Auth == true {
-			id = identity.Get(r.Context())
+			id = identity.GetIdentity(r.Context())
 		}
 
 		if cfg.Debug && cfg.DebugUserAgent.MatchString(userAgent) {

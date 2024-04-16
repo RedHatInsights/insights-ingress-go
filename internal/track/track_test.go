@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 
 	. "github.com/redhatinsights/insights-ingress-go/internal/track"
 )
@@ -32,7 +32,7 @@ func makeTestRequest(uri string, request_id string, account string, orgID string
 
 	switch account_type {
 	case "associate":
-		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		ctx = identity.WithIdentity(ctx, identity.XRHID{
 			Identity: identity.Identity{
 				AccountNumber: account,
 				Internal: identity.Internal{
@@ -42,25 +42,27 @@ func makeTestRequest(uri string, request_id string, account string, orgID string
 			},
 		})
 	case "x509":
-		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		x509 := identity.X509{
+			SubjectDN: "/DC=com/DC=redhat/CN=" + AutomatedIntegrationTestCertSubjectStage,
+			IssuerDN:  "CN=redhat",
+		}
+		ctx = identity.WithIdentity(ctx, identity.XRHID{
 			Identity: identity.Identity{
-				X509: identity.X509{
-					SubjectDN: "/DC=com/DC=redhat/CN=" + AutomatedIntegrationTestCertSubjectStage,
-					IssuerDN:  "CN=redhat",
-				},
+				X509: &x509,
 			},
 		})
 	case "untrusted_x509":
-		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		x509 := identity.X509{
+			SubjectDN: "/DC=com/DC=redhat/CN=im_not_to_be_trusted",
+			IssuerDN:  "CN=redhat",
+		}
+		ctx = identity.WithIdentity(ctx, identity.XRHID{
 			Identity: identity.Identity{
-				X509: identity.X509{
-					SubjectDN: "/DC=com/DC=redhat/CN=im_not_to_be_trusted",
-					IssuerDN:  "CN=redhat",
-				},
+				X509: &x509,
 			},
 		})
 	case "serviceaccount":
-		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		ctx = identity.WithIdentity(ctx, identity.XRHID{
 			Identity: identity.Identity{
 				OrgID: orgID,
 				Internal: identity.Internal{
@@ -70,7 +72,7 @@ func makeTestRequest(uri string, request_id string, account string, orgID string
 			},
 		})
 	default:
-		ctx = context.WithValue(ctx, identity.Key, identity.XRHID{
+		ctx = identity.WithIdentity(ctx, identity.XRHID{
 			Identity: identity.Identity{
 				AccountNumber: account,
 				OrgID:         orgID,

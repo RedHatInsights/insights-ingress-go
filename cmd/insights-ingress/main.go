@@ -22,8 +22,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
-	"github.com/redhatinsights/platform-go-middlewares/request_id"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 	"github.com/sirupsen/logrus"
 )
 
@@ -98,11 +98,15 @@ func main() {
 		httpClient,
 	)
 
+	identityErrorLogFunc := func(ctx context.Context, rawId, msg string) {
+		l.Log.WithFields(logrus.Fields{"error": msg, "rawId": rawId}).Error("Failed to decode Identity header")
+	}
+
 	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
-		sub.With(identity.EnforceIdentity).Get("/", lubDub)
-		sub.With(upload.ResponseMetricsMiddleware, identity.EnforceIdentity, middleware.Logger).Post("/upload", handler)
-		sub.With(identity.EnforceIdentity).Get("/track/{requestID}", trackEndpoint)
+		sub.With(identity.EnforceIdentityWithLogger(identityErrorLogFunc)).Get("/", lubDub)
+		sub.With(upload.ResponseMetricsMiddleware, identity.EnforceIdentityWithLogger(identityErrorLogFunc), middleware.Logger).Post("/upload", handler)
+		sub.With(identity.EnforceIdentityWithLogger(identityErrorLogFunc)).Get("/track/{requestID}", trackEndpoint)
 	} else {
 		sub.Get("/", lubDub)
 		sub.With(upload.ResponseMetricsMiddleware, middleware.Logger).Post("/upload", handler)
