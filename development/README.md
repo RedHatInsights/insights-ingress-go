@@ -5,7 +5,7 @@ The podman compose file found in this directory will standup kafka and minio for
 ## Requirements
 * podman
 * podman-compose
-* golang => 1.19
+* golang => 1.21
 
 Docker will alos work if that is all you have
 
