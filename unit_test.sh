@@ -4,6 +4,7 @@
 export GO111MODULE="on"
 export GOPATH="$(pwd)/gopath"
 export GOROOT="/opt/go/1.21.9"
+echo | ls /opt/go
 export PATH="${GOROOT}/bin:${PATH}"
 ACG_CONFIG="$(pwd)/cdappconfig.json"  go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
