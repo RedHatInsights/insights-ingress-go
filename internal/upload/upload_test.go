@@ -78,8 +78,8 @@ func makeMultipartRequest(uri string, parts ...*FilePart) (*http.Request, error)
 		},
 	})
 
-	req = req.WithContext(context.WithValue(ctx, request_id.GetReqID(ctx), requestId))
-
+	req.Header.Add("x-rh-insights-request-id", requestId)
+	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	return req, nil
 }
@@ -132,7 +132,8 @@ func makeTestRequest(uri string, testType string, tenant string, body string) (*
 		})
 	}
 
-	req = req.WithContext(context.WithValue(ctx, request_id.RequestIDKey, requestId))
+	req.Header.Add("x-rh-insights-request-id", requestId)
+	req = req.WithContext(ctx)
 	return req, nil
 
 }
@@ -165,7 +166,11 @@ var _ = Describe("Upload", func() {
 		tracker = &announcers.Fake{}
 
 		rr = httptest.NewRecorder()
+
 		handler = NewHandler(stager, validator, tracker, *config.Get())
+		reqConfiguredHandlerFunc := request_id.ConfiguredRequestID("x-rh-insights-request-id")
+		handler = reqConfiguredHandlerFunc(handler)
+
 		timeNow = setTime()
 	})
 
