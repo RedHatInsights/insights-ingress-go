@@ -10,8 +10,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
-	"github.com/redhatinsights/platform-go-middlewares/request_id"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -60,7 +60,7 @@ func NewHandler(
 		}
 
 		if cfg.Auth {
-			id = identity.Get(r.Context())
+			id = identity.GetIdentity(r.Context())
 		}
 
 		if !isValidUUID(reqID) {
@@ -141,6 +141,9 @@ func NewHandler(
 }
 
 func isTrustedIntegrationTestCert(id identity.XRHID) bool {
+	if id.Identity.X509 == nil {
+		return false
+	}
 
 	if id.Identity.X509.SubjectDN == "" {
 		return false

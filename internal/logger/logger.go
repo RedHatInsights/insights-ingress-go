@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
-	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
+	lc "github.com/redhatinsights/platform-go-middlewares/v2/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,7 +23,7 @@ type CustomCloudwatch struct {
 	Hostname string
 }
 
-//Marshaler is an interface any type can implement to change its output in our production logs.
+// Marshaler is an interface any type can implement to change its output in our production logs.
 type Marshaler interface {
 	MarshalLog() map[string]interface{}
 }
@@ -42,7 +42,7 @@ func NewCloudwatchFormatter() *CustomCloudwatch {
 	return f
 }
 
-//Format is the log formatter for the entry
+// Format is the log formatter for the entry
 func (f *CustomCloudwatch) Format(entry *logrus.Entry) ([]byte, error) {
 	b := &bytes.Buffer{}
 
@@ -120,10 +120,11 @@ func InitLogger(cfg *config.IngressConfig) *logrus.Logger {
 	if key != "" {
 		cred := credentials.NewStaticCredentials(key, secret, "")
 		awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
-		hook, err := lc.NewBatchingHook(group, stream, awsconf, 10*time.Second)
+		batchWriter, err := lc.NewBatchWriterWithDuration(group, stream, awsconf, 10*time.Second)
 		if err != nil {
 			Log.Info(err)
 		}
+		hook := lc.NewLogrusHook(batchWriter)
 		Log.Hooks.Add(hook)
 	}
 
