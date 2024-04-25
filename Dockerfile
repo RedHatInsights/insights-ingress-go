@@ -14,6 +14,8 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
 WORKDIR /
 
+RUN microdnf update -y
+
 COPY --from=builder /go/src/app/insights-ingress-go ./insights-ingress-go
 
 USER 1001
