@@ -16,7 +16,7 @@ WORKDIR /
 
 COPY --from=builder /go/src/app/insights-ingress-go ./insights-ingress-go
 
-COPY --from=builder /go/src/app/LICENSE /licenses/LICENSE
+COPY --from=builder /go/src/app/licenses/LICENSE .
 
 USER 1001
 
