@@ -11,7 +11,7 @@ services:
   kafka:
     image: confluentinc/cp-kafka
     ports:
-      - 29092:29092
+      - "29092:29092"
     depends_on:
       - zookeeper
     environment:
@@ -50,7 +50,7 @@ services:
     #image: quay.io/cloudservices/insights-ingress:latest
     image: ingress:latest
     ports:
-      - 8080:3000
+      - "3000:3000"
     mem_limit: 512M
     environment:
       - INGRESS_STAGEBUCKET=insights-upload-perma
