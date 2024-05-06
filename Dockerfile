@@ -1,7 +1,16 @@
 FROM registry.access.redhat.com/ubi8/go-toolset:latest as builder
 
 WORKDIR /go/src/app
-COPY . .
+
+COPY cmd cmd
+
+COPY internal internal
+
+COPY go.mod go.mod
+
+COPY go.sum go.sum
+
+COPY licenses licenses
 
 USER 0
 
