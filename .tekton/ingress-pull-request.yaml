@@ -307,6 +307,28 @@ spec:
         operator: in
         values:
         - "false"
+    - name: grype-scan
+      params:
+      # - name: image-digest
+      #   value: $(tasks.build-container.results.IMAGE_DIGEST)
+      - name: ARGS
+        value: [$(tasks.build-container.results.IMAGE_URL)]
+      runAfter:
+      - build-container
+      taskRef:
+        params:
+        - name: url
+          value: https://github.com/tektoncd/catalog.git
+        - name: revision
+          value: e763a4473e877b9a5bc25e22657728e35df6ef0e
+        - name: pathInRepo
+          value: /task/grype/0.1/grype.yaml
+        resolver: git
+      when:
+      - input: $(params.skip-checks)
+        operator: in
+        values:
+        - "false"
     - name: sast-snyk-check
       runAfter:
       - clone-repository
