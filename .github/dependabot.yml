@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    target-branch: "security-compliance"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      base-image:
+        dependency-type: "production"
+    commit-message:
+      prefix: "[base image] "
