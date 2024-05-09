@@ -10,7 +10,7 @@ RUN go get -d ./... && \
 
 RUN cp /go/src/app/insights-ingress-go /usr/bin/
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.9-1161
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.9-1161.1715068733
 
 WORKDIR /
 
