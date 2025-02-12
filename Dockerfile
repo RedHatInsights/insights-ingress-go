@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/go-toolset:latest as builder
+FROM registry.access.redhat.com/ubi9/go-toolset:latest as builder
 
 WORKDIR /go/src/app
 
@@ -15,11 +15,11 @@ COPY licenses licenses
 USER 0
 
 RUN go get -d ./... && \
-    go build -o insights-ingress-go cmd/insights-ingress/main.go
+  go build -o insights-ingress-go cmd/insights-ingress/main.go
 
 RUN cp /go/src/app/insights-ingress-go /usr/bin/
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 WORKDIR /
 
