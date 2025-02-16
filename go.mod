@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/aws/aws-sdk-go v1.51.21
-	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/go-chi/chi v4.1.3+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/minio/minio-go/v6 v6.0.57
