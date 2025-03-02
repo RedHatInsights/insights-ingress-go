@@ -4,14 +4,14 @@ go 1.21
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
-	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/go-chi/chi/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.32.0
-	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/prometheus/client_golang v1.21.0
+	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0-beta.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.11.0
