@@ -5,3 +5,4 @@ coverage.txt
 .scannerwork
 .sonar/sonar-scanner.properties
 gopath
+development/filebased/

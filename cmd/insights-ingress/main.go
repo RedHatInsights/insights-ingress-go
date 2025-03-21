@@ -11,8 +11,11 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/api"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	"github.com/redhatinsights/insights-ingress-go/internal/download"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
 	"github.com/redhatinsights/insights-ingress-go/internal/track"
 	"github.com/redhatinsights/insights-ingress-go/internal/upload"
@@ -39,6 +42,32 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 	w.Write(api.ApiSpec)
 }
 
+func getStager(cfg config.IngressConfig) (stage.Stager, error) {
+	if cfg.StagerImplementation == "s3" {
+		return s3compat.GetClient(&cfg, &s3compat.S3Stager{
+			Bucket: cfg.StorageConfig.StageBucket,
+		}), nil
+	}
+
+	if cfg.StagerImplementation == "filebased" {
+		if cfg.StorageConfig.StorageFileSystemPath == "" {
+			return nil, fmt.Errorf("Invalid StorageFileSystemPath setting")
+		}
+
+		err := os.MkdirAll(cfg.StorageConfig.StorageFileSystemPath, os.ModePerm)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to create StorageFileSystemPath (%s) - %w", cfg.StorageConfig.StorageFileSystemPath, err)
+		}
+
+		return &filebased.FileBasedStager{
+			StagePath: cfg.StorageConfig.StorageFileSystemPath,
+			BaseURL:   cfg.ServiceBaseURL,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("Unknown value for StagerImplementation (%s)", cfg.StagerImplementation)
+}
+
 func main() {
 	cfg := config.Get()
 	l.InitLogger(cfg)
@@ -50,9 +79,10 @@ func main() {
 		middleware.Recoverer,
 	)
 
-	stager := s3compat.GetClient(cfg, &s3compat.Stager{
-		Bucket: cfg.StorageConfig.StageBucket,
-	})
+	stager, err := getStager(*cfg)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Unable to create Stager implementation")
+	}
 
 	kafkaCfg := kafka.Config{
 		Brokers:               cfg.KafkaConfig.KafkaBrokers,
@@ -98,6 +128,10 @@ func main() {
 		httpClient,
 	)
 
+	downloadEndpoint := download.NewHandler(
+		*cfg,
+	)
+
 	identityErrorLogFunc := func(ctx context.Context, rawId, msg string) {
 		l.Log.WithFields(logrus.Fields{"error": msg, "rawId": rawId}).Error("Failed to decode Identity header")
 	}
@@ -117,6 +151,11 @@ func main() {
 	r.Mount("/api/ingress/v1", sub)
 	r.Mount("/r/insights/platform/ingress/v1", sub)
 	r.Get("/", lubDub)
+	if cfg.StagerImplementation == "filebased" {
+		var fbSub chi.Router = chi.NewRouter()
+		fbSub.Get("/{requestID}", downloadEndpoint)
+		r.Mount("/download", fbSub)
+	}
 	mr.Get("/", lubDub)
 	mr.Handle("/metrics", promhttp.Handler())
 
@@ -124,7 +163,7 @@ func main() {
 		r.Mount("/debug", middleware.Profiler())
 	}
 
-	l.Log.WithFields(logrus.Fields{"Web Port": cfg.WebPort}).Info("Starting Service")
+	l.Log.WithFields(logrus.Fields{"Web Port": cfg.WebPort}).Info("Starting Service with mode " + cfg.StagerImplementation)
 
 	srv := http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.WebPort),

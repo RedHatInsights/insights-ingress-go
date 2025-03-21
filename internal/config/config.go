@@ -34,6 +34,8 @@ type IngressConfig struct {
 	DenyListedOrgIDs     []string
 	Debug                bool
 	DebugUserAgent       *regexp.Regexp
+	ServiceBaseURL       string
+	StagerImplementation string
 }
 
 type KafkaCfg struct {
@@ -55,12 +57,13 @@ type KafkaSSLCfg struct {
 }
 
 type StorageCfg struct {
-	StageBucket      string
-	StorageEndpoint  string
-	StorageAccessKey string
-	StorageSecretKey string
-	UseSSL           bool
-	StorageRegion    string
+	StageBucket           string
+	StorageEndpoint       string
+	StorageAccessKey      string
+	StorageSecretKey      string
+	UseSSL                bool
+	StorageRegion         string
+	StorageFileSystemPath string
 }
 
 type LoggingCfg struct {
@@ -76,6 +79,21 @@ func GetTopic(topic string) string {
 		return rhiconfig.KafkaTopics[topic].Name
 	}
 	return topic
+}
+
+func GetStagerImplementation(stagerImplementation string, stageFileSystemPath string) string {
+	if !clowder.IsClowderEnabled() {
+		lowerStagerImplementation := strings.ToLower(stagerImplementation)
+		if lowerStagerImplementation == "filebased" {
+			if len(stageFileSystemPath) != 0 {
+				err := os.MkdirAll(stageFileSystemPath, os.ModePerm)
+				if err == nil {
+					return "filebased"
+				}
+			}
+		}
+	}
+	return "s3"
 }
 
 // Get provides the IngressConfig
@@ -113,6 +131,8 @@ func Get() *IngressConfig {
 	options.SetDefault("Deny_Listed_OrgIDs", []string{})
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
+	options.SetDefault("ServiceBaseURL", "http://localhost:3000")
+	options.SetDefault("StagerImplementation", "s3")
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 	kubenv := viper.New()
@@ -221,12 +241,13 @@ func Get() *IngressConfig {
 			KafkaSecurityProtocol: options.GetString("KafkaSecurityProtocol"),
 		},
 		StorageConfig: StorageCfg{
-			StageBucket:      options.GetString("StageBucket"),
-			StorageEndpoint:  options.GetString("MinioEndpoint"),
-			StorageAccessKey: options.GetString("MinioAccessKey"),
-			StorageSecretKey: options.GetString("MinioSecretKey"),
-			UseSSL:           options.GetBool("UseSSL"),
-			StorageRegion:    options.GetString("StorageRegion"),
+			StageBucket:           options.GetString("StageBucket"),
+			StorageEndpoint:       options.GetString("MinioEndpoint"),
+			StorageAccessKey:      options.GetString("MinioAccessKey"),
+			StorageSecretKey:      options.GetString("MinioSecretKey"),
+			UseSSL:                options.GetBool("UseSSL"),
+			StorageRegion:         options.GetString("StorageRegion"),
+			StorageFileSystemPath: options.GetString("StorageFileSystemPath"),
 		},
 		LoggingConfig: LoggingCfg{
 			LogGroup:           options.GetString("logGroup"),
@@ -235,6 +256,8 @@ func Get() *IngressConfig {
 			AwsAccessKeyId:     options.GetString("AwsAccessKeyId"),
 			AwsSecretAccessKey: options.GetString("AwsSecretAccessKey"),
 		},
+		ServiceBaseURL:       options.GetString("ServiceBaseURL"),
+		StagerImplementation: options.GetString("StagerImplementation"),
 	}
 
 	if options.IsSet("KafkaUsername") {
