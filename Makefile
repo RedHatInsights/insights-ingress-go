@@ -2,16 +2,22 @@ include development/.env
 
 BINARY=insights-ingress-go
 DATA_DIR=$(PWD)/development/filebased
+TAGS_OPTS=
+BUILD_OPTS=
+ifeq ($(shell uname -s), Darwin)
+	TAGS_OPTS=-tags dynamic
+	BUILD_OPTS=-ldflags -s -tags dynamic
+endif
 
 .PHONY: $(BINARY)
 
 build: $(BINARY)
 
 $(BINARY):
-	go build -ldflags -s -tags dynamic -o $(BINARY) cmd/insights-ingress/main.go
+	go build ${BUILD_OPTS} -o $(BINARY) cmd/insights-ingress/main.go
 
 test:
-	go test -tags dynamic -p 1 -v ./...
+	go test ${TAGS_OPTS} -p 1 -v ./...
 
 setup-filebased:
 	mkdir -p $(DATA_DIR)

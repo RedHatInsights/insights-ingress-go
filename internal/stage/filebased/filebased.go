@@ -17,7 +17,7 @@ type FileBasedStager struct {
 	BaseURL   string
 }
 
-func FilterAlphanumeric(s string) string {
+func filterAlphanumeric(s string) string {
 	var sb strings.Builder
 	for _, r := range s {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
@@ -27,23 +27,23 @@ func FilterAlphanumeric(s string) string {
 	return sb.String()
 }
 
-func GetFileStorageName(requestID string) (string, error) {
-	key := FilterAlphanumeric(requestID)
+func GetFileStorageName(requestID string, storageDir string) (string, string, error) {
+	key := filterAlphanumeric(requestID)
 	if len(key) == 0 {
-		return "", errors.New("bad request id format")
+		return "", "", errors.New("bad request id format")
 	}
 	fileName := key + ".tar.gz"
-	return fileName, nil
+	filePath := filepath.Join(storageDir, fileName)
+	return fileName, filePath, nil
 }
 
 // Stage stores the file in filesystem storage and returns a presigned url
 func (s *FileBasedStager) Stage(in *stage.Input) (string, error) {
-	fileName, err := GetFileStorageName(in.Key)
+	_, filePath, err := GetFileStorageName(in.Key, s.StagePath)
 	if err != nil {
 		return "", err
 	}
 	file := in.Payload
-	filePath := filepath.Join(s.StagePath, fileName)
 	dst, err := os.Create(filePath)
 	if err != nil {
 		return "", err
