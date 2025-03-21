@@ -131,6 +131,7 @@ func Get() *IngressConfig {
 	options.SetDefault("Deny_Listed_OrgIDs", []string{})
 	options.SetDefault("Debug", false)
 	options.SetDefault("DebugUserAgent", `unspecified`)
+	options.SetDefault("ServiceBaseURL", "http://localhost:3000")
 	options.SetDefault("StagerImplementation", "s3")
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
@@ -203,14 +204,8 @@ func Get() *IngressConfig {
 		options.SetDefault("WebPort", 3000)
 		options.SetDefault("MetricsPort", 8080)
 		// Storage
-		stagerImplementation := GetStagerImplementation(options.GetString("StagerImplementation"), options.GetString("StorageFileSystemPath"))
-		options.SetDefault("StagerImplementation", stagerImplementation)
-		if stagerImplementation == "s3" {
-			options.SetDefault("StageBucket", "available")
-			options.SetDefault("StorageRegion", "")
-		} else {
-			options.SetDefault("ServiceBaseURL", "http://localhost:3000")
-		}
+		options.SetDefault("StageBucket", "available")
+		options.SetDefault("StorageRegion", "")
 		// Cloudwatch
 		options.SetDefault("LogGroup", "platform-dev")
 		options.SetDefault("AwsRegion", "us-east-1")

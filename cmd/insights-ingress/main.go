@@ -42,19 +42,30 @@ func apiSpec(w http.ResponseWriter, r *http.Request) {
 	w.Write(api.ApiSpec)
 }
 
-func getStager(cfg config.IngressConfig) stage.Stager {
-	var stager stage.Stager
+func getStager(cfg config.IngressConfig) (stage.Stager, error) {
 	if cfg.StagerImplementation == "s3" {
-		stager = s3compat.GetClient(&cfg, &s3compat.S3Stager{
+		return s3compat.GetClient(&cfg, &s3compat.S3Stager{
 			Bucket: cfg.StorageConfig.StageBucket,
-		})
-	} else {
-		stager = &filebased.FileBasedStager{
+		}), nil
+	}
+
+	if cfg.StagerImplementation == "filebased" {
+		if cfg.StorageConfig.StorageFileSystemPath == "" {
+			return nil, fmt.Errorf("Invalid StorageFileSystemPath setting")
+		}
+
+		err := os.MkdirAll(cfg.StorageConfig.StorageFileSystemPath, os.ModePerm)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to create StorageFileSystemPath (%s) - %w", cfg.StorageConfig.StorageFileSystemPath, err)
+		}
+
+		return &filebased.FileBasedStager{
 			StagePath: cfg.StorageConfig.StorageFileSystemPath,
 			BaseURL:   cfg.ServiceBaseURL,
-		}
+		}, nil
 	}
-	return stager
+
+	return nil, fmt.Errorf("Unknown value for StagerImplementation (%s)", cfg.StagerImplementation)
 }
 
 func main() {
@@ -67,7 +78,11 @@ func main() {
 		middleware.RealIP,
 		middleware.Recoverer,
 	)
-	stager := getStager(*cfg)
+
+	stager, err := getStager(*cfg)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Unable to create Stager implementation")
+	}
 
 	kafkaCfg := kafka.Config{
 		Brokers:               cfg.KafkaConfig.KafkaBrokers,
