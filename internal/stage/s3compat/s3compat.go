@@ -10,13 +10,13 @@ import (
 )
 
 // Stager provides the mechanism to stage a payload via aws S3
-type Stager struct {
+type S3Stager struct {
 	Bucket string
 	Client *minio.Client
 }
 
 // GetClient gets the s3 compatible client info
-func GetClient(cfg *config.IngressConfig, stager *Stager) stage.Stager {
+func GetClient(cfg *config.IngressConfig, stager *S3Stager) stage.Stager {
 	var endpoint string
 	storageCfg := cfg.StorageConfig
 	if storageCfg.StorageEndpoint == "" {
@@ -38,7 +38,7 @@ func GetClient(cfg *config.IngressConfig, stager *Stager) stage.Stager {
 }
 
 // Stage stores the file in s3 compatible storage and returns a presigned url
-func (s *Stager) Stage(in *stage.Input) (string, error) {
+func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 	bucketName := s.Bucket
 	objectName := in.Key
 	object := in.Payload
@@ -64,7 +64,7 @@ func (s *Stager) Stage(in *stage.Input) (string, error) {
 }
 
 // GetURL retrieves a presigned url from s3 compatible storage
-func (s *Stager) GetURL(requestID string) (string, error) {
+func (s *S3Stager) GetURL(requestID string) (string, error) {
 	url, err := s.Client.PresignedGetObject(s.Bucket, requestID, time.Second*24*60*60, nil)
 	if err != nil {
 		return "", errors.New("Failed to generate presigned url: " + err.Error())
