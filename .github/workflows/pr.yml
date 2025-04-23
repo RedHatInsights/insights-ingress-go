@@ -6,11 +6,24 @@ on:
 
 jobs:
   test:
+
+    strategy:
+      matrix:
+        go-version: [1.23.x]
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Run Tests
+        run: go test ./...
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -24,8 +37,7 @@ jobs:
       - name: Install Openapi-spec-validator
         run: |
             pipenv install openapi-spec-validator
-        
+
       - name: Run Openapi Validation
         run: |
             pipenv run openapi-spec-validator internal/api/openapi.json
-
