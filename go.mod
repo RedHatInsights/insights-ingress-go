@@ -2,8 +2,6 @@ module github.com/redhatinsights/insights-ingress-go
 
 go 1.23.0
 
-toolchain go1.23.4
-
 require (
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/go-chi/chi v4.1.2+incompatible
