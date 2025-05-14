@@ -1,6 +1,46 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
 metadata:
+  annotations:
+    build.appstudio.openshift.io/repo: https://github.com/RedHatInsights/insights-ingress-go?rev={{revision}}
+    build.appstudio.redhat.com/commit_sha: '{{revision}}'
+    build.appstudio.redhat.com/pull_request_number: '{{pull_request_number}}'
+    build.appstudio.redhat.com/target_branch: '{{target_branch}}'
+    pipelinesascode.tekton.dev/max-keep-runs: "3"
+    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch
+      == "master"
   creationTimestamp: null
+  labels:
+    appstudio.openshift.io/application: insights-ingress-go
+    appstudio.openshift.io/component: ingress
+    pipelines.appstudio.openshift.io/type: build
+  name: ingress-on-pull-request
+  namespace: hcc-integrations-tenant
 spec:
+  params:
+  - name: git-url
+    value: '{{source_url}}'
+  - name: revision
+    value: '{{revision}}'
+  - name: output-image
+    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/ingress:on-pr-{{revision}}
+  - name: image-expires-after
+    value: 5d
+  - name: dockerfile
+    value: Dockerfile
+  pipelineRef:
+    params:
+    - name: url
+      value: https://github.com/RedHatInsights/konflux-pipelines
+    - name: revision
+      value: main
+    - name: pathInRepo
+      value: pipelines/docker-build-oci-ta.yaml
+    resolver: git
   taskRunTemplate:
     serviceAccountName: build-pipeline-ingress
+  workspaces:
+  - name: git-auth
+    secret:
+      secretName: '{{ git_auth_secret }}'
 status: {}
