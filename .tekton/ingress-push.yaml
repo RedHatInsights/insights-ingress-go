@@ -22,7 +22,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/ingress:{{revision}}
+    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/insights-ingress-go-sc/ingress-sc:{{revision}}
   - name: dockerfile
     value: Dockerfile
   pipelineRef:
