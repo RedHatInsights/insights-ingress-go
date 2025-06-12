@@ -7,13 +7,13 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "master"
+      == "security-compliance"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: insights-ingress-go
-    appstudio.openshift.io/component: ingress
+    appstudio.openshift.io/application: insights-ingress-go-sc
+    appstudio.openshift.io/component: ingress-sc
     pipelines.appstudio.openshift.io/type: build
-  name: ingress-on-push
+  name: ingress-sc-on-push
   namespace: hcc-integrations-tenant
 spec:
   params:
@@ -22,7 +22,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/ingress:{{revision}}
+    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/ingress-sc:{{revision}}
   - name: dockerfile
     value: Dockerfile
   pipelineRef:

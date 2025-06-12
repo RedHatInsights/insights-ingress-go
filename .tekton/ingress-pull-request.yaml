@@ -8,13 +8,13 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch
-      == "master"
+      == "security-compliance"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: insights-ingress-go
-    appstudio.openshift.io/component: ingress
+    appstudio.openshift.io/application: insights-ingress-go-sc
+    appstudio.openshift.io/component: ingress-sc
     pipelines.appstudio.openshift.io/type: build
-  name: ingress-on-pull-request
+  name: ingress-sc-on-pull-request
   namespace: hcc-integrations-tenant
 spec:
   params:
@@ -23,7 +23,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/ingress:on-pr-{{revision}}
+    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/ingress-sc:on-pr-{{revision}}
   - name: image-expires-after
     value: 5d
   - name: dockerfile
