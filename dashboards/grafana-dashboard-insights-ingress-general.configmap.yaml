@@ -211,7 +211,7 @@ data:
                 "uid": "$datasource"
               },
               "editorMode": "code",
-              "expr": "sum(increase(ingress_kafka_produce_failures[24h])) / sum(increase(ingress_kafka_produced[24h])) ",
+              "expr": "sum(increase(ingress_kafka_produce_failures[24h]) or (up * 0)) / sum(increase(ingress_kafka_produced[24h])) ",
               "interval": "",
               "legendFormat": "",
               "range": true,
@@ -683,7 +683,7 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum(increase(ingress_kafka_produce_failures[5m])) by (topic)",
+              "expr": "sum(increase(ingress_kafka_produce_failures[5m]) or (up * 0)) by (topic)",
               "legendFormat": "{{topic}}",
               "refId": "A"
             }
