@@ -329,7 +329,7 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum(increase(ingress_requests{namespace=\"ingress-prod\"}[5m])) by (pod)",
+              "expr": "sum(increase(ingress_requests{namespace=~\"ingress-(stage|prod)\"}[5m])) by (pod)",
               "legendFormat": "{{pod}}",
               "refId": "A"
             }
@@ -888,7 +888,7 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum(ingress_version{namespace=\"ingress-prod\"}) by (version)",
+              "expr": "sum(ingress_version{namespace=~\"ingress-(stage|prod)\"}) by (version)",
               "legendFormat": "{{version}}",
               "refId": "A"
             }
