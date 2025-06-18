@@ -11,10 +11,10 @@ metadata:
     pipelinesascode.tekton.dev/pipeline: https://github.com/RedHatInsights/konflux-pipelines/raw/v1.18.0/pipelines/docker-build-oci-ta.yaml
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: insights-ingress-go-sc
-    appstudio.openshift.io/component: ingress-sc
+    appstudio.openshift.io/application: insights-ingress-go
+    appstudio.openshift.io/component: ingress
     pipelines.appstudio.openshift.io/type: build
-  name: ingress-sc-on-push
+  name: ingress-on-push
   namespace: hcc-integrations-tenant
 spec:
   params:
@@ -23,7 +23,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/insights-ingress-go-sc/ingress-sc:{{revision}}
+    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/insights-ingress-go/ingress:{{revision}}
   - name: dockerfile
     value: Dockerfile
   pipelineRef:
