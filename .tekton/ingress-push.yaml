@@ -7,7 +7,8 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "security-compliance"
+      == "master"
+    pipelinesascode.tekton.dev/pipeline: https://github.com/RedHatInsights/konflux-pipelines/raw/v1.18.0/pipelines/docker-build-oci-ta.yaml
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: insights-ingress-go-sc
@@ -26,15 +27,9 @@ spec:
   - name: dockerfile
     value: Dockerfile
   pipelineRef:
-    params:
-    - name: url
-      value: https://github.com/RedHatInsights/konflux-pipelines
-    - name: revision
-      value: main
-    - name: pathInRepo
-      value: pipelines/docker-build-oci-ta.yaml
-    resolver: git
-  taskRunTemplate: {}
+    name: docker-build-oci-ta
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-ingress
   workspaces:
   - name: git-auth
     secret:
