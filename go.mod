@@ -21,7 +21,7 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0 // indirect
 	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
