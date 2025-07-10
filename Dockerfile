@@ -4,7 +4,7 @@ WORKDIR /go/src/app
 
 # The current ubi9 image does not include Go 1.24, so we specify it.
 # Adding "auto" will allow a newer version to be downloaded if specified in go.mod
-ARG GOTOOLCHAIN=go1.24.3+auto
+ARG GOTOOLCHAIN=go1.24.4+auto
 
 COPY cmd cmd
 
@@ -27,12 +27,21 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 WORKDIR /
 
-RUN microdnf update -y
-
 COPY --from=builder /go/src/app/insights-ingress-go ./insights-ingress-go
 
-COPY --from=builder /go/src/app/licenses/LICENSE .
+RUN mkdir -p /licenses
+COPY --from=builder /go/src/app/licenses/LICENSE /licenses
 
 USER 1001
 
 CMD ["/insights-ingress-go"]
+
+# Define labels for the ingress
+LABEL url="https://www.redhat.com"
+LABEL name="ingress" \
+      description="This adds the satellite/ingress-rhel9 image to the Red Hat container registry. To pull this container image, run the following command: podman pull registry.stage.redhat.io/satellite/ingress-rhel9" \
+      summary="A new satellite/ingress-rhel9 container image is now available as a Technology Preview in the Red Hat container registry."
+LABEL com.redhat.component="ingress" \
+      io.k8s.display-name="IoP ingress" \
+      io.k8s.description="This adds the satellite/ingress image to the Red Hat container registry. To pull this container image, run the following command: podman pull registry.stage.redhat.io/satellite/ingress-rhel9" \
+      io.openshift.tags="insights satellite iop ingress"
