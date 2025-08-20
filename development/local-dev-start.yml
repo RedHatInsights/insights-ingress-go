@@ -52,7 +52,7 @@ services:
     restart: on-failure
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} || exit 1;
+      export MC_HOST_myminio=http://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio:9000;
       /usr/bin/mc mb --ignore-existing myminio/insights-upload-perma;
       /usr/bin/mc policy set public myminio/insights-upload-perma;
       "
