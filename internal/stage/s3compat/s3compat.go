@@ -58,7 +58,7 @@ func (s *S3Stager) Stage(in *stage.Input) (string, error) {
 		},
 	)
 	if err != nil {
-		return "", errors.New("Failed to upload to storage" + err.Error())
+		return "", errors.New("Failed to upload '" + bucketName + "' to storage: " + err.Error())
 	}
 	return s.GetURL(in.Key)
 }
