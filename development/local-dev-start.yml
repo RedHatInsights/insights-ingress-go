@@ -16,9 +16,19 @@ services:
       - zookeeper
     environment:
       # - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092  # Use this if you are spinning up the Ingress API without docker
+      - KAFKA_LISTENERS=PLAINTEXT://kafka:29092,CONTROLLER://kafka:9093
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092
       - KAFKA_BROKER_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - CLUSTER_ID=1
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - KAFKA_NUM_PARTITIONS=3
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
   minio:
@@ -42,12 +52,13 @@ services:
     restart: on-failure
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} || exit 1;
+      export MC_HOST_myminio=http://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio:9000;
       /usr/bin/mc mb --ignore-existing myminio/insights-upload-perma;
       /usr/bin/mc policy set public myminio/insights-upload-perma;
       "
   ingress:
     #image: quay.io/cloudservices/insights-ingress:latest
+    #image: localhost/ingress:latest  # Use this in the case of local changes of ingress (podman build . -t ingress:latest)
     image: ingress:latest
     ports:
       - "3000:3000"
