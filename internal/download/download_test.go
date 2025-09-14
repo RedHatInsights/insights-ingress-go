@@ -1,7 +1,7 @@
 package download_test
 
 import (
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/httptest"
 	"os"
