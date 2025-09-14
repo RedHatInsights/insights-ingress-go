@@ -7,7 +7,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/uuid v1.6.0
-	github.com/jarcoal/httpmock v1.3.1
+	github.com/jarcoal/httpmock v1.4.1
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.32.0
