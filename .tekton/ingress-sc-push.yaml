@@ -7,14 +7,14 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "master"
+      == "security-compliance"
     pipelinesascode.tekton.dev/pipeline: https://github.com/RedHatInsights/konflux-pipelines/raw/v1.26.0/pipelines/docker-build-oci-ta.yaml
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: insights-ingress-go
-    appstudio.openshift.io/component: ingress
+    appstudio.openshift.io/application: insights-ingress-go-sc
+    appstudio.openshift.io/component: ingress-sc
     pipelines.appstudio.openshift.io/type: build
-  name: ingress-on-push
+  name: ingress-sc-on-push
   namespace: hcc-integrations-tenant
 spec:
   params:
@@ -23,21 +23,13 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/ingress:{{revision}}
+    value: quay.io/redhat-user-workloads/hcc-integrations-tenant/insights-ingress-go-sc/ingress-sc:{{revision}}
   - name: dockerfile
     value: Dockerfile
-  - name: build-source-image
-    value: "true"
-  - name: hermetic
-    value: "true"
-  - name: prefetch-input
-    value: '[{"type": "gomod", "path": "."}]'
-  - name: prefetch-dev-package-managers
-    value: "true"
   pipelineRef:
     name: docker-build-oci-ta
   taskRunTemplate:
-    serviceAccountName: build-pipeline-ingress
+    serviceAccountName: build-pipeline-ingress-sc
   workspaces:
   - name: git-auth
     secret:
