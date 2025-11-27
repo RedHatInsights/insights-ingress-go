@@ -7,22 +7,5 @@
     "schedule": [
       "at any time"
     ]
-  },
-  "baseBranchPatterns": [
-    "master",
-    "/^foreman-.*$/"
-  ],
-  "packageRules": [
-    {
-      "matchBaseBranches": [
-        "/^foreman-.*$/"
-      ],
-      "description": "Enable only specific managers on foreman branches",
-      "enabledManagers": [
-        "tekton",
-        "dockerfile",
-        "rpm-lockfile"
-      ]
-    }
-  ]
+  }
 }
