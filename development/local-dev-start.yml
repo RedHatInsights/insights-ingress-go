@@ -10,6 +10,7 @@ services:
       - ZOOKEEPER_SERVER_ID=1
   kafka:
     image: confluentinc/cp-kafka
+    restart: always
     ports:
       - "29092:29092"
     depends_on:
@@ -54,7 +55,7 @@ services:
       /bin/sh -c "
       export MC_HOST_myminio=http://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio:9000;
       /usr/bin/mc mb --ignore-existing myminio/insights-upload-perma;
-      /usr/bin/mc policy set public myminio/insights-upload-perma;
+      /usr/bin/mc anonymous set public myminio/insights-upload-perma;
       "
   ingress:
     #image: quay.io/cloudservices/insights-ingress:latest
