@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 )
