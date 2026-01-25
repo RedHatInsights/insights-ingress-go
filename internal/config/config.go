@@ -203,15 +203,18 @@ func Get() *IngressConfig {
 		// Ports
 		options.SetDefault("WebPort", 3000)
 		options.SetDefault("MetricsPort", 8080)
-		// Storage
+		// Storage (MinIO/S3-compatible)
 		options.SetDefault("StageBucket", "available")
+		options.SetDefault("MinioEndpoint", "")
+		options.SetDefault("MinioAccessKey", "")
+		options.SetDefault("MinioSecretKey", "")
 		options.SetDefault("StorageRegion", "")
-		// Cloudwatch
-		options.SetDefault("LogGroup", "platform-dev")
-		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("UseSSL", false)
-		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
-		options.SetDefault("AwsSecretAccessKey", os.Getenv("CW_AWS_SECRET_ACCESS_KEY"))
+		// Cloudwatch (disabled by default for on-prem)
+		options.SetDefault("LogGroup", "")
+		options.SetDefault("AwsRegion", "")
+		options.SetDefault("AwsAccessKeyId", "")
+		options.SetDefault("AwsSecretAccessKey", "")
 	}
 
 	IngressCfg := &IngressConfig{
