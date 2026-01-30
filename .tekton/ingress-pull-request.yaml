@@ -39,7 +39,7 @@ spec:
     value: "true"
   - name: build-args
     type: array
-    value: ["--os=linux", "--arch=amd64"]
+    value: ["--arch=amd64"]
   pipelineRef:
     name: docker-build-oci-ta
   taskRunTemplate:
