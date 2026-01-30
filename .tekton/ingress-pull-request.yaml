@@ -37,6 +37,9 @@ spec:
     value: '[{"type": "gomod", "path": "."}]'
   - name: prefetch-dev-package-managers
     value: "true"
+  - name: build-args
+    type: array
+    value: 'PLATFORM=linux/amd64'
   pipelineRef:
     name: docker-build-oci-ta
   taskRunTemplate:
