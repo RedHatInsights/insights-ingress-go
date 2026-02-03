@@ -111,13 +111,30 @@ func Get() *IngressConfig {
 	options.SetDefault("Hostname", hostname)
 
 	// Kafka config
+	options.SetDefault("KafkaBrokers", []string{"kafka:29092"})
 	options.SetDefault("KafkaGroupID", "ingress")
 	options.SetDefault("KafkaDeliveryReports", true)
 	options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
 	options.SetDefault("KafkaAnnounceTopic", "platform.upload.announce")
 	options.SetDefault("KafkaSecurityProtocol", "PLAINTEXT")
 
+	// Storage (MinIO/S3-compatible)
+	options.SetDefault("StageBucket", "available")
+	options.SetDefault("MinioEndpoint", "")
+	options.SetDefault("MinioAccessKey", "")
+	options.SetDefault("MinioSecretKey", "")
+	options.SetDefault("StorageRegion", "")
+	options.SetDefault("UseSSL", false)
+
+	// Cloudwatch
+	options.SetDefault("LogGroup", "")
+	options.SetDefault("AwsRegion", "")
+	options.SetDefault("AwsAccessKeyId", "")
+	options.SetDefault("AwsSecretAccessKey", "")
+
 	// Global defaults
+	options.SetDefault("WebPort", 3000)
+	options.SetDefault("MetricsPort", 8080)
 	options.SetDefault("MaxUploadMem", 1024*1024*8)
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("TlsCAPath", "")
@@ -192,29 +209,6 @@ func Get() *IngressConfig {
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
-	} else {
-		// Kafka
-		defaultBrokers := os.Getenv("INGRESS_KAFKA_BROKERS")
-		if len(defaultBrokers) == 0 {
-			defaultBrokers = "kafka:29092"
-		}
-		options.SetDefault("KafkaBrokers", []string{defaultBrokers})
-		options.SetDefault("KafkaTrackerTopic", "platform.payload-status")
-		// Ports
-		options.SetDefault("WebPort", 3000)
-		options.SetDefault("MetricsPort", 8080)
-		// Storage (MinIO/S3-compatible)
-		options.SetDefault("StageBucket", "available")
-		options.SetDefault("MinioEndpoint", "")
-		options.SetDefault("MinioAccessKey", "")
-		options.SetDefault("MinioSecretKey", "")
-		options.SetDefault("StorageRegion", "")
-		options.SetDefault("UseSSL", false)
-		// Cloudwatch (disabled by default for on-prem)
-		options.SetDefault("LogGroup", "")
-		options.SetDefault("AwsRegion", "")
-		options.SetDefault("AwsAccessKeyId", "")
-		options.SetDefault("AwsSecretAccessKey", "")
 	}
 
 	IngressCfg := &IngressConfig{
