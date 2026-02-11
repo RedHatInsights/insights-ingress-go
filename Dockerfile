@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:latest@sha256:a532ce56e98300a4594b25f8df35016d55de69e4df00062b8e04b3840511e494 as builder
+FROM registry.access.redhat.com/ubi9/go-toolset:latest@sha256:c928a8d014091005444cd8d0de2f9815d2162b89ac9d075c1f8d7c9caf41177e as builder
 
 WORKDIR /go/src/app
 
