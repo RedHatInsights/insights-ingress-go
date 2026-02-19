@@ -1,6 +1,7 @@
 .DS_Store
 insights-ingress-go
 .idea
+.vscode
 coverage.txt
 .scannerwork
 .sonar/sonar-scanner.properties
