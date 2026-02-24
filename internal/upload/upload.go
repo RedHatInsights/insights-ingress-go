@@ -276,7 +276,7 @@ func NewHandler(
 			Status:    "received",
 			StatusMsg: "Payload received by ingress",
 		}
-		requestLogger.Info("Payload received")
+		requestLogger.WithFields(logrus.Fields{"audit": true}).Info("Payload received")
 		tracker.Status(ps)
 
 		stageInput := &stage.Input{
