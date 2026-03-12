@@ -125,7 +125,7 @@ parameters:
   required: true
 - description: Image name
   name: IMAGE
-  value: quay.io/redhat-services-prod/hcc-integrations-tenant/ingress
+  IMAGE: quay.io/repository/redhat-services-prod/hcc-integrations-tenant/insights-ingress-go
 - description: Determines Clowder deployment
   name: CLOWDER_ENABLED
   value: "false"
