@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/jarcoal/httpmock"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
