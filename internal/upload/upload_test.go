@@ -159,6 +159,15 @@ var _ = Describe("Upload", func() {
 		Expect(rr.Body).ToNot(BeNil())
 	}
 
+	var boilerWithContentType = func(code int, expectedContentType string, parts ...*FilePart) {
+		req, err := makeMultipartRequest("/api/ingress/v1/upload", parts...)
+		Expect(err).To(BeNil())
+		handler.ServeHTTP(rr, req)
+		Expect(rr.Code).To(Equal(code))
+		Expect(rr.Body).ToNot(BeNil())
+		Expect(rr.Header().Get("Content-Type")).To(Equal(expectedContentType))
+	}
+
 	BeforeEach(func() {
 
 		stager = &stage.Fake{ShouldError: false}
@@ -182,6 +191,13 @@ var _ = Describe("Upload", func() {
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
 				Expect(rr.Body.String()).To(Equal(goodJsonBody))
+			})
+
+			It("should return Content-Type application/json", func() {
+				req, err := makeTestRequest("/api/ingress/v1/upload", "new", "", "")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Header().Get("Content-Type")).To(Equal("application/json"))
 			})
 		})
 
@@ -224,11 +240,28 @@ var _ = Describe("Upload", func() {
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.advisor.test"})
 			})
+
+			It("should return Content-Type application/json on 201", func() {
+				boilerWithContentType(http.StatusCreated, "application/json", &FilePart{
+					Name:        "file",
+					Content:     "testing",
+					ContentType: "application/vnd.redhat.advisor.test"})
+			})
 		})
 
 		Context("with no metadata from something not advisor", func() {
 			It("should return HTTP 202", func() {
 				boiler(http.StatusAccepted,
+					&FilePart{
+						Name:        "file",
+						Content:     "testing",
+						ContentType: "application/vnd.redhat.openshift.test",
+					},
+				)
+			})
+
+			It("should return Content-Type application/json on 202", func() {
+				boilerWithContentType(http.StatusAccepted, "application/json",
 					&FilePart{
 						Name:        "file",
 						Content:     "testing",
