@@ -150,8 +150,17 @@ func Get() *IngressConfig {
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetDefault("ServiceBaseURL", "http://localhost:3000")
 	options.SetDefault("StagerImplementation", "s3")
+	// Kafka SASL/TLS defaults — AutomaticEnv resolves these via the INGRESS_ prefix
+	// (e.g. INGRESS_KAFKAUSERNAME, INGRESS_SASLMECHANISM, INGRESS_KAFKACA).
+	// In Clowder mode, Set() overrides these with values from the Clowder config.
+	options.SetDefault("KafkaUsername", "")
+	options.SetDefault("KafkaPassword", "")
+	options.SetDefault("SASLMechanism", "")
+	options.SetDefault("KafkaCA", "")
+
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
+
 	kubenv := viper.New()
 	kubenv.SetDefault("Openshift_Build_Commit", "notrunninginopenshift")
 	kubenv.AutomaticEnv()
