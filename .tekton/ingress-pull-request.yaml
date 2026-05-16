@@ -37,6 +37,8 @@ spec:
     value: '[{"type": "gomod", "path": "."}]'
   - name: prefetch-dev-package-managers
     value: "true"
+  - name: buildah-format
+    value: oci
   pipelineRef:
     name: docker-build-oci-ta
   taskRunTemplate:
