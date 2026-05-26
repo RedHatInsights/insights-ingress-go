@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:latest@sha256:7f4d4708bb41f24b2589a76aea8d2b359c9079b4c18c8fb026d036a231c2b8be as builder
+FROM registry.access.redhat.com/ubi9/go-toolset:latest@sha256:ed3201d9d55c2d1cfefc1191c5f28e98921e09541a11046d25d0c73bbde73be1 as builder
 
 WORKDIR /go/src/app
 
@@ -19,7 +19,7 @@ RUN go get -d ./... && \
 
 RUN cp /go/src/app/insights-ingress-go /usr/bin/
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.7-1773939694
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1779709832
 
 WORKDIR /
 
