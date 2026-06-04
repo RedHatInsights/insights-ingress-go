@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
 )

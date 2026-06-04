@@ -119,6 +119,14 @@ cloud.redhat.com, the customer should engage with support.
 
 Golang >= 1.21
 
+**macOS additional dependencies (for running with `-tags dynamic`):**
+
+```bash
+brew install pkg-config librdkafka
+```
+
+These are required for building with the `dynamic` tag, which links against the system librdkafka library for Kafka support.
+
 #### Launching the Service
 
 Compile the source code into a go binary:

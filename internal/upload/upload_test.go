@@ -151,12 +151,15 @@ var _ = Describe("Upload", func() {
 		goodAnemicJsonBody = `{"request_id":"e6b06142958942139a5e1e2f513c448b","upload":{"org_id":"12345"}}`
 	)
 
-	var boiler = func(code int, parts ...*FilePart) {
+	var boiler = func(code int, expectedContentType string, parts ...*FilePart) {
 		req, err := makeMultipartRequest("/api/ingress/v1/upload", parts...)
 		Expect(err).To(BeNil())
 		handler.ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(code))
 		Expect(rr.Body).ToNot(BeNil())
+		if expectedContentType != "" {
+			Expect(rr.Header().Get("Content-Type")).To(Equal(expectedContentType))
+		}
 	}
 
 	BeforeEach(func() {
@@ -182,6 +185,13 @@ var _ = Describe("Upload", func() {
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
 				Expect(rr.Body.String()).To(Equal(goodJsonBody))
+			})
+
+			It("should return Content-Type application/json", func() {
+				req, err := makeTestRequest("/api/ingress/v1/upload", "new", "", "")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Header().Get("Content-Type")).To(Equal("application/json"))
 			})
 		})
 
@@ -218,8 +228,8 @@ var _ = Describe("Upload", func() {
 
 	Describe("Posting a file to /upload", func() {
 		Context("with a valid advisor Content-Type and no metadata", func() {
-			It("should return HTTP 201", func() {
-				boiler(http.StatusCreated, &FilePart{
+			It("should return HTTP 201 with Content-Type application/json", func() {
+				boiler(http.StatusCreated, "application/json", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.advisor.test"})
@@ -227,8 +237,8 @@ var _ = Describe("Upload", func() {
 		})
 
 		Context("with no metadata from something not advisor", func() {
-			It("should return HTTP 202", func() {
-				boiler(http.StatusAccepted,
+			It("should return HTTP 202 with Content-Type application/json", func() {
+				boiler(http.StatusAccepted, "application/json",
 					&FilePart{
 						Name:        "file",
 						Content:     "testing",
@@ -240,7 +250,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with a metadata part", func() {
 			It("should return HTTP 202", func() {
-				boiler(http.StatusAccepted,
+				boiler(http.StatusAccepted, "application/json",
 					&FilePart{
 						Name:        "file",
 						Content:     "testing",
@@ -263,7 +273,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with a metadata part containing a queue key", func() {
 			It("should return HTTP 202", func() {
-				boiler(http.StatusAccepted,
+				boiler(http.StatusAccepted, "application/json",
 					&FilePart{
 						Name:        "file",
 						Content:     "testing",
@@ -286,7 +296,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with an invalid metadata part", func() {
 			It("will still return HTTP 202", func() {
-				boiler(http.StatusAccepted,
+				boiler(http.StatusAccepted, "application/json",
 					&FilePart{
 						Name:        "file",
 						Content:     "testing",
@@ -309,7 +319,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with an invalid Content-Type", func() {
 			It("should return HTTP 415", func() {
-				boiler(http.StatusUnsupportedMediaType, &FilePart{
+				boiler(http.StatusUnsupportedMediaType, "", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/invalid",
@@ -319,7 +329,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with a valid file part", func() {
 			It("should return a 202", func() {
-				boiler(http.StatusAccepted, &FilePart{
+				boiler(http.StatusAccepted, "application/json", &FilePart{
 					Name:        "upload",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
@@ -329,7 +339,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with an incorrect part name", func() {
 			It("should return HTTP 400", func() {
-				boiler(http.StatusBadRequest, &FilePart{
+				boiler(http.StatusBadRequest, "", &FilePart{
 					Name:        "invalid",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
@@ -339,7 +349,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with a valid Content-Type and no metadata", func() {
 			It("should invoke the stager", func() {
-				boiler(http.StatusAccepted, &FilePart{
+				boiler(http.StatusAccepted, "application/json", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
@@ -349,7 +359,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with a valid Content-Type and no metadata", func() {
 			It("should parse to service and category", func() {
-				boiler(http.StatusAccepted, &FilePart{
+				boiler(http.StatusAccepted, "application/json", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test"})
@@ -364,7 +374,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with legacy content type and no metadata", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusCreated, "application/json", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/x-gzip; charset=binary",
@@ -374,7 +384,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with alternate legacy content type and no metadata", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusCreated, "application/json", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/gzip",
@@ -384,7 +394,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with new file command legacy type and no metadata", func() {
 			It("should validate and be processed", func() {
-				boiler(http.StatusCreated, &FilePart{
+				boiler(http.StatusCreated, "application/json", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/gzip; charset=binary",
@@ -394,7 +404,7 @@ var _ = Describe("Upload", func() {
 
 		Context("with invalid service name", func() {
 			It("should return 415", func() {
-				boiler(http.StatusUnsupportedMediaType, &FilePart{
+				boiler(http.StatusUnsupportedMediaType, "", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.failed.test"})
@@ -406,7 +416,7 @@ var _ = Describe("Upload", func() {
 				cfg := config.Get()
 				cfg.DefaultMaxSize = 1
 				handler = NewHandler(stager, validator, tracker, *cfg)
-				boiler(http.StatusRequestEntityTooLarge, &FilePart{
+				boiler(http.StatusRequestEntityTooLarge, "", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
@@ -422,7 +432,7 @@ var _ = Describe("Upload", func() {
 				cfg.DefaultMaxSize = 1
 				cfg.MaxSizeMap = TypeMap
 				handler = NewHandler(stager, validator, tracker, *cfg)
-				boiler(http.StatusAccepted, &FilePart{
+				boiler(http.StatusAccepted, "application/json", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.qpc.test",
@@ -434,7 +444,7 @@ var _ = Describe("Upload", func() {
 			It("should return 413", func() {
 				stager = &stage.Fake{ShouldError: true}
 				handler = NewHandler(stager, validator, tracker, *config.Get())
-				boiler(http.StatusInternalServerError, &FilePart{
+				boiler(http.StatusInternalServerError, "", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",
@@ -446,7 +456,7 @@ var _ = Describe("Upload", func() {
 				cfg := config.Get()
 				cfg.DenyListedOrgIDs = []string{"12345"}
 				handler = NewHandler(stager, validator, tracker, *cfg)
-				boiler(http.StatusForbidden, &FilePart{
+				boiler(http.StatusForbidden, "", &FilePart{
 					Name:        "file",
 					Content:     "testing",
 					ContentType: "application/vnd.redhat.unit.test",

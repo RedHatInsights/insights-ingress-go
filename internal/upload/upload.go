@@ -126,7 +126,6 @@ func handleTestRequest(reqID string, identity identity.Identity, w http.Response
 		Account:   identity.AccountNumber,
 		OrgID:     identity.OrgID,
 	}
-	w.WriteHeader(http.StatusOK)
 	jsonBody, err := createUploadResponse(mockVr)
 	if err != nil {
 		logerr("Unable to marshal JSON response body", err)
@@ -134,6 +133,8 @@ func handleTestRequest(reqID string, identity identity.Identity, w http.Response
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBody)
 }
 
@@ -320,12 +321,12 @@ func NewHandler(
 		}
 
 		metadata, err := readMetadataPart(r)
+		w.Header().Set("Content-Type", "application/json")
 		if vr.Service == "advisor" && metadata == nil {
 			w.WriteHeader(http.StatusCreated)
 		} else {
 			w.WriteHeader(http.StatusAccepted)
 		}
-		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonBody)
 	}
 }

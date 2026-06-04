@@ -14,8 +14,7 @@ COPY licenses licenses
 
 USER 0
 
-RUN go get -d ./... && \
-  go build -o insights-ingress-go cmd/insights-ingress/main.go
+RUN go build -o insights-ingress-go cmd/insights-ingress/main.go
 
 RUN cp /go/src/app/insights-ingress-go /usr/bin/
 
@@ -31,13 +30,3 @@ COPY --from=builder /go/src/app/licenses/LICENSE /licenses
 USER 1001
 
 CMD ["/insights-ingress-go"]
-
-# Define labels for the ingress
-LABEL url="https://www.redhat.com"
-LABEL name="ingress" \
-      description="This adds the satellite/ingress-rhel9 image to the Red Hat container registry. To pull this container image, run the following command: podman pull registry.stage.redhat.io/satellite/ingress-rhel9" \
-      summary="A new satellite/ingress-rhel9 container image is now available as a Technology Preview in the Red Hat container registry."
-LABEL com.redhat.component="ingress" \
-      io.k8s.display-name="IoP ingress" \
-      io.k8s.description="This adds the satellite/ingress image to the Red Hat container registry. To pull this container image, run the following command: podman pull registry.stage.redhat.io/satellite/ingress-rhel9" \
-      io.openshift.tags="insights satellite iop ingress"

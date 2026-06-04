@@ -22,8 +22,8 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
 	"github.com/redhatinsights/insights-ingress-go/internal/version"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
