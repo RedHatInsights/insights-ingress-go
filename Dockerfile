@@ -12,6 +12,10 @@ COPY go.sum go.sum
 
 COPY licenses licenses
 
+#This was added to use never patch 1.26.4 required by mitigations,
+#it is safe to remove if go-toolset has correct version for our build
+ENV GOTOOLCHAIN=go1.26.4+auto
+
 USER 0
 
 RUN go build -o insights-ingress-go cmd/insights-ingress/main.go
