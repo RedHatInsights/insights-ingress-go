@@ -1,6 +1,6 @@
 module github.com/redhatinsights/insights-ingress-go
 
-go 1.26.4
+go 1.26.3
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8
