@@ -35,10 +35,7 @@
                                         "format": "binary"
                                     },
                                     "metadata": {
-                                        "type": "object",
-                                        "additionalProperties": {
-                                            "type": "string"
-                                        }
+                                        "$ref": "#/components/schemas/Metadata"
                                     }
                                 }
                             }
@@ -155,6 +152,66 @@
     },
     "components": {
         "schemas": {
+            "Metadata": {
+                "type": "object",
+                "properties": {
+                    "account": {
+                        "type": "string"
+                    },
+                    "org_id": {
+                        "type": "string"
+                    },
+                    "insights_id": {
+                        "type": "string"
+                    },
+                    "machine_id": {
+                        "type": "string"
+                    },
+                    "subscription_manager_id": {
+                        "type": "string"
+                    },
+                    "fqdn": {
+                        "type": "string"
+                    },
+                    "bios_uuid": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "ansible_host": {
+                        "type": "string"
+                    },
+                    "reporter": {
+                        "type": "string"
+                    },
+                    "queue_key": {
+                        "type": "string"
+                    },
+                    "ip_addresses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "mac_addresses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "stale_timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "custom_metadata": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "UploadResponse": {
                 "type": "object",
                 "properties": {
