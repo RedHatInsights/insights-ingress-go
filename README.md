@@ -1,7 +1,6 @@
 # Insights Ingress
 
-Ingress is designed to receive payloads from clients and distribute them via a
-Kafka message queue to other platform services.
+Ingress is a Go service that receives file upload payloads from clients and distributes them via a Kafka message queue to other platform services. It stages uploads to S3-compatible object storage (or local filesystem) and announces them to downstream consumers.
 
 ## Details
 
@@ -14,6 +13,41 @@ to a Kafka message queue in order to notify services of new and available upload
 for processing.
 
 The service runs inside Openshift Dedicated.
+
+## Documentation
+
+- **[AGENTS.md](AGENTS.md)** -- Conventions, architecture decisions, and cross-cutting guidelines for AI agents and contributors
+- **[docs/](docs/)** -- Detailed domain-specific guidelines (API contracts, testing, configuration, security, and more)
+- **[development/README.md](development/README.md)** -- Local development environment setup with Docker/Podman Compose
+
+## Project Structure
+
+```
+insights-ingress-go/
+├── cmd/
+│   ├── insights-ingress/       # Application entry point (main.go)
+│   └── example-ingress-client/ # Example upload client
+├── internal/
+│   ├── api/                    # HTTP handlers and OpenAPI spec
+│   ├── config/                 # Viper-based configuration with Clowder support
+│   ├── announcers/             # Kafka announce producer interface and fakes
+│   ├── validators/             # Upload validation interface
+│   │   └── kafka/              # Kafka-based validator implementation
+│   ├── stage/                  # Storage staging interface
+│   │   ├── s3compat/           # S3/MinIO storage backend
+│   │   └── filebased/          # Local filesystem storage backend
+│   ├── upload/                 # Upload processing pipeline
+│   ├── queue/                  # Kafka producer goroutines
+│   ├── track/                  # Payload status tracking
+│   ├── download/               # Download handler
+│   ├── logger/                 # Structured logging setup (logrus)
+│   └── version/                # Build version info
+├── development/                # Docker Compose and local dev configs
+├── deploy/                     # ClowdApp deployment manifests
+├── docs/                       # Detailed domain-specific guidelines
+├── Dockerfile                  # Production container build
+└── Makefile                    # Build, test, and local run targets
+```
 
 ## How It Works
 
@@ -117,7 +151,7 @@ cloud.redhat.com, the customer should engage with support.
 
 #### Prerequisites
 
-Golang >= 1.21
+Go >= 1.25
 
 **macOS additional dependencies (for running with `-tags dynamic`):**
 
@@ -125,7 +159,19 @@ Golang >= 1.21
 brew install pkg-config librdkafka
 ```
 
-These are required for building with the `dynamic` tag, which links against the system librdkafka library for Kafka support.
+These are required for building with the `dynamic` tag, which links against the system librdkafka library for Kafka support. The Makefile automatically applies `-tags dynamic` on macOS.
+
+#### Tech Stack
+
+| Component | Library |
+|-----------|---------|
+| HTTP router | [chi/v5](https://github.com/go-chi/chi) |
+| Kafka | [confluent-kafka-go/v2](https://github.com/confluentinc/confluent-kafka-go) |
+| S3 storage | [minio-go/v6](https://github.com/minio/minio-go) / [aws-sdk-go](https://github.com/aws/aws-sdk-go) |
+| Configuration | [Viper](https://github.com/spf13/viper) + [Clowder app-common-go](https://github.com/redhatinsights/app-common-go) |
+| Metrics | [Prometheus client_golang](https://github.com/prometheus/client_golang) |
+| Logging | [Logrus](https://github.com/sirupsen/logrus) |
+| Testing | [Ginkgo v1](https://github.com/onsi/ginkgo) + [Gomega](https://github.com/onsi/gomega) |
 
 #### Launching the Service
 
@@ -149,7 +195,17 @@ You can also build ingress using Docker/Podman with the provided Dockerfile.
 
 ### Local Development
 
-More information on local development can be found [here](./development/README.md)
+To run the full stack locally with dependencies (Kafka, MinIO/filesystem), see [development/README.md](./development/README.md).
+
+**Quick start with S3/MinIO backend:**
+
+    $> make start-api-dependencies
+    $> make run-api
+
+**Quick start with filesystem backend:**
+
+    $> make start-filebased-api-dependencies
+    $> make run-filebased-api
 
 #### Uploading a File
 
@@ -174,3 +230,5 @@ This decodes to:
 Use `go test` to test the application
 
     $> make test
+
+For detailed testing conventions (Ginkgo/Gomega patterns, fakes, CI configuration), see [AGENTS.md](AGENTS.md) and [docs/testing-guidelines.md](docs/testing-guidelines.md).
