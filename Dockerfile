@@ -1,32 +1,36 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:latest as builder
-
-WORKDIR /go/src/app
-
-COPY cmd cmd
-
-COPY internal internal
-
-COPY go.mod go.mod
-
-COPY go.sum go.sum
-
-COPY licenses licenses
+################################
+# STEP 1 build executable binary
+################################
+FROM registry.access.redhat.com/hi/go:latest-fips-builder AS builder
 
 USER 0
 
-RUN go build -o insights-ingress-go cmd/insights-ingress/main.go
+WORKDIR /workspace
 
-RUN cp /go/src/app/insights-ingress-go /usr/bin/
+# Cache deps before copying source so that we do not need to re-download for every build
+COPY go.mod go.sum .
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+# Fetch dependencies
+RUN go mod download
+
+# Now copy the rest of the files for build
+COPY cmd cmd
+COPY internal internal
+
+# Build the binary
+RUN go build -ldflags "-w -s" -o insights-ingress-go cmd/insights-ingress/main.go
+
+############################
+# STEP 2 build a small image
+############################
+FROM registry.access.redhat.com/hi/go:latest-fips
 
 WORKDIR /
 
-COPY --from=builder /go/src/app/insights-ingress-go ./insights-ingress-go
+COPY --from=builder /workspace/insights-ingress-go /usr/bin/insights-ingress-go
 
-RUN mkdir -p /licenses
-COPY --from=builder /go/src/app/licenses/LICENSE /licenses
+COPY licenses/LICENSE /licenses/LICENSE
 
 USER 1001
 
-CMD ["/insights-ingress-go"]
+CMD ["insights-ingress-go"]
