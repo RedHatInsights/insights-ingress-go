@@ -13,7 +13,6 @@ objects:
     testing:
       iqePlugin: ingress
     dependencies:
-    - puptoo
     - storage-broker
     optionalDependencies:
     - host-inventory
