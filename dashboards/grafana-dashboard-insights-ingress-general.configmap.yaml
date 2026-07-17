@@ -912,18 +912,33 @@ data:
               "text": "crcp01ue1-prometheus",
               "value": "crcp01ue1-prometheus"
             },
-            "hide": 0,
             "includeAll": false,
-            "label": "datasource",
-            "multi": false,
+            "label": "environment",
             "name": "datasource",
-            "options": [],
-            "query": "prometheus",
-            "queryValue": "",
-            "refresh": 1,
-            "regex": "/^crcs*./",
-            "skipUrlSync": false,
-            "type": "datasource"
+            "options": [
+              {
+                "selected": false,
+                "text": "crcs02ue1-prometheus",
+                "value": "crcs02ue1-prometheus"
+              },
+              {
+                "selected": true,
+                "text": "crcp01ue1-prometheus",
+                "value": "crcp01ue1-prometheus"
+              },
+              {
+                "selected": false,
+                "text": "hccs01ue1-prometheus",
+                "value": "hccs01ue1-prometheus"
+              },
+              {
+                "selected": false,
+                "text": "hccp01ue1-prometheus",
+                "value": "hccp01ue1-prometheus"
+              }
+            ],
+            "query": "crcs02ue1-prometheus, crcp01ue1-prometheus, hccs01ue1-prometheus, hccp01ue1-prometheus",
+            "type": "custom"
           }
         ]
       },
