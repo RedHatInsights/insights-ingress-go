@@ -1,7 +1,7 @@
 ################################
 # STEP 1 build executable binary
 ################################
-FROM registry.access.redhat.com/hi/go:latest-fips-builder AS builder
+FROM registry.access.redhat.com/hi/go:1.26-fips-builder AS builder
 
 USER 0
 
@@ -23,7 +23,7 @@ RUN go build -ldflags "-w -s" -o insights-ingress-go cmd/insights-ingress/main.g
 ############################
 # STEP 2 build a small image
 ############################
-FROM registry.access.redhat.com/hi/go:latest-fips
+FROM registry.access.redhat.com/hi/go:1.26-fips
 
 WORKDIR /
 
