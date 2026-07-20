@@ -38,6 +38,18 @@ type IngressConfig struct {
 	DebugUserAgent        *regexp.Regexp
 	ServiceBaseURL        string
 	StagerImplementation  string
+	OtelConfig            OtelCfg
+}
+
+type OtelCfg struct {
+	OtelEnabled               bool
+	OtelEndpoint              string
+	OtelSamplingRate          float64
+	OtelServiceName           string
+	OtelBSPMaxQueueSize       int
+	OtelBSPMaxExportBatchSize int
+	OtelBSPScheduleDelay      int
+	OtelBSPExportTimeout      int
 }
 
 type KafkaCfg struct {
@@ -154,6 +166,17 @@ func Get() *IngressConfig {
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetDefault("ServiceBaseURL", "http://localhost:3000")
 	options.SetDefault("StagerImplementation", "s3")
+
+	// OpenTelemetry
+	options.SetDefault("OtelEnabled", false)
+	options.SetDefault("OtelEndpoint", "localhost:4318")
+	options.SetDefault("OtelSamplingRate", 1.0)
+	options.SetDefault("OtelServiceName", "ingress")
+	options.SetDefault("OtelBSPMaxQueueSize", 2048)
+	options.SetDefault("OtelBSPMaxExportBatchSize", 512)
+	options.SetDefault("OtelBSPScheduleDelay", 5000)
+	options.SetDefault("OtelBSPExportTimeout", 30000)
+
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 	kubenv := viper.New()
@@ -261,6 +284,16 @@ func Get() *IngressConfig {
 		},
 		ServiceBaseURL:       options.GetString("ServiceBaseURL"),
 		StagerImplementation: options.GetString("StagerImplementation"),
+		OtelConfig: OtelCfg{
+			OtelEnabled:               options.GetBool("OtelEnabled"),
+			OtelEndpoint:              options.GetString("OtelEndpoint"),
+			OtelSamplingRate:          options.GetFloat64("OtelSamplingRate"),
+			OtelServiceName:           options.GetString("OtelServiceName"),
+			OtelBSPMaxQueueSize:       options.GetInt("OtelBSPMaxQueueSize"),
+			OtelBSPMaxExportBatchSize: options.GetInt("OtelBSPMaxExportBatchSize"),
+			OtelBSPScheduleDelay:      options.GetInt("OtelBSPScheduleDelay"),
+			OtelBSPExportTimeout:      options.GetInt("OtelBSPExportTimeout"),
+		},
 	}
 
 	if options.IsSet("KafkaUsername") {

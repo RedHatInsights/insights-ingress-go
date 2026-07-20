@@ -174,7 +174,7 @@ func NewHandler(
 		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
-		requestLogger := l.Log.WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
+		requestLogger := l.Log.WithContext(r.Context()).WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
 
 		logerr := func(msg string, err error) {
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
@@ -238,7 +238,7 @@ func NewHandler(
 
 		observeSize(userAgent, size)
 
-		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID})
+		requestLogger = requestLogger.WithContext(r.Context()).WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID})
 
 		requestLogger.Debug("ContentType received from client")
 		serviceDescriptor, validationErr := getServiceDescriptor(contentType)
@@ -321,7 +321,7 @@ func NewHandler(
 		}
 
 		start := time.Now()
-		url, err := stager.Stage(stageInput)
+		url, err := stager.Stage(r.Context(), stageInput)
 		stageInput.Close()
 		observeStageElapsed(time.Since(start))
 		if err != nil {
@@ -343,7 +343,7 @@ func NewHandler(
 		requestLogger.WithFields(logrus.Fields{"service": vr.Service}).Info("Payload sent to validation service")
 		tracker.Status(ps)
 
-		validator.Validate(vr)
+		validator.Validate(r.Context(), vr)
 
 		jsonBody, err := createUploadResponse(vr)
 		if err != nil {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
@@ -17,6 +18,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
+	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
 	"github.com/redhatinsights/insights-ingress-go/internal/track"
 	"github.com/redhatinsights/insights-ingress-go/internal/upload"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
@@ -28,6 +30,7 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func lubDub(w http.ResponseWriter, r *http.Request) {
@@ -71,10 +74,53 @@ func getStager(cfg config.IngressConfig) (stage.Stager, error) {
 func main() {
 	cfg := config.Get()
 	l.InitLogger(cfg)
+
+	otelCfg := telemetry.OtelConfig{
+		Enabled:               cfg.OtelConfig.OtelEnabled,
+		Endpoint:              cfg.OtelConfig.OtelEndpoint,
+		SamplingRate:          cfg.OtelConfig.OtelSamplingRate,
+		ServiceName:           cfg.OtelConfig.OtelServiceName,
+		BSPMaxQueueSize:       cfg.OtelConfig.OtelBSPMaxQueueSize,
+		BSPMaxExportBatchSize: cfg.OtelConfig.OtelBSPMaxExportBatchSize,
+		BSPScheduleDelay:      cfg.OtelConfig.OtelBSPScheduleDelay,
+		BSPExportTimeout:      cfg.OtelConfig.OtelBSPExportTimeout,
+	}
+	shutdown, err := telemetry.InitTracer(otelCfg)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Failed to initialize OpenTelemetry")
+	}
+
 	r := chi.NewRouter()
 	mr := chi.NewRouter()
+	r.Use(request_id.ConfiguredRequestID("x-rh-insights-request-id"))
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if header := r.Header.Get("X-Rh-Identity"); header != "" {
+				if id, err := identity.DecodeIdentity(header); err == nil {
+					r = r.WithContext(identity.WithIdentity(r.Context(), id))
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
+	if cfg.OtelConfig.OtelEnabled {
+		r.Use(otelhttp.NewMiddleware("ingress",
+			otelhttp.WithFilter(func(r *http.Request) bool {
+				return r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/upload")
+			}),
+		))
+
+		l.Log.WithFields(logrus.Fields{
+			"endpoint":              otelCfg.Endpoint,
+			"sampling_rate":         otelCfg.SamplingRate,
+			"service_name":          otelCfg.ServiceName,
+			"bsp_max_queue_size":    otelCfg.BSPMaxQueueSize,
+			"bsp_max_export_batch":  otelCfg.BSPMaxExportBatchSize,
+			"bsp_schedule_delay_ms": otelCfg.BSPScheduleDelay,
+			"bsp_export_timeout_ms": otelCfg.BSPExportTimeout,
+		}).Info("OpenTelemetry tracing enabled")
+	}
 	r.Use(
-		request_id.ConfiguredRequestID("x-rh-insights-request-id"),
 		middleware.RealIP,
 		middleware.Recoverer,
 	)
@@ -184,6 +230,11 @@ func main() {
 		sigint := make(chan os.Signal)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdown(shutdownCtx); err != nil {
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
+		}
 		if err := srv.Shutdown(context.Background()); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}

@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"context"
 	"errors"
 )
 
@@ -10,7 +11,7 @@ type Fake struct {
 	Called bool
 }
 
-func (v *Fake) Validate(in *Request) {
+func (v *Fake) Validate(_ context.Context, in *Request) {
 	v.Called = true
 	v.In = in
 }

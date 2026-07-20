@@ -67,6 +67,12 @@ objects:
           value: ${INGRESS_DENY_LISTED_ORGIDS}
         - name: SSL_CERT_DIR
           value: ${SSL_CERT_DIR}
+        - name: INGRESS_OTELENABLED
+          value: ${INGRESS_OTELENABLED}
+        - name: INGRESS_OTELENDPOINT
+          value: ${INGRESS_OTELENDPOINT}
+        - name: INGRESS_OTELSAMPLINGRATE
+          value: ${INGRESS_OTELSAMPLINGRATE}
         resources:
           limits:
             cpu: ${CPU_LIMIT}
@@ -148,3 +154,9 @@ parameters:
   value: ""
 - name: SSL_CERT_DIR
   value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'
+- name: INGRESS_OTELENABLED
+  value: "false"
+- name: INGRESS_OTELENDPOINT
+  value: "localhost:4318"
+- name: INGRESS_OTELSAMPLINGRATE
+  value: "1.0"

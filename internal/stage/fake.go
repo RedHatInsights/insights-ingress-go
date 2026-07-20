@@ -1,6 +1,7 @@
 package stage
 
 import (
+	"context"
 	"errors"
 	"sync"
 )
@@ -17,7 +18,7 @@ type Fake struct {
 }
 
 // Stage is used for testing with Fake input
-func (f *Fake) Stage(input *Input) (string, error) {
+func (f *Fake) Stage(_ context.Context, input *Input) (string, error) {
 	f.Input = input
 	f.lock.Lock()
 	f.StageCalledV = true

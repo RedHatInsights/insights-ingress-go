@@ -1,6 +1,9 @@
 package stage
 
-import "io"
+import (
+	"context"
+	"io"
+)
 
 // Input contains data and metadata to be staged
 type Input struct {
@@ -20,6 +23,6 @@ func (i *Input) Close() {
 
 // Stager provides the mechanism to stage a payload
 type Stager interface {
-	Stage(*Input) (string, error)
+	Stage(ctx context.Context, in *Input) (string, error)
 	GetURL(requestID string) (string, error)
 }
