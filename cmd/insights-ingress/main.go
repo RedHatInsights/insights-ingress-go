@@ -75,17 +75,7 @@ func main() {
 	cfg := config.Get()
 	l.InitLogger(cfg)
 
-	otelCfg := telemetry.OtelConfig{
-		Enabled:               cfg.OtelConfig.OtelEnabled,
-		Endpoint:              cfg.OtelConfig.OtelEndpoint,
-		SamplingRate:          cfg.OtelConfig.OtelSamplingRate,
-		ServiceName:           cfg.OtelConfig.OtelServiceName,
-		BSPMaxQueueSize:       cfg.OtelConfig.OtelBSPMaxQueueSize,
-		BSPMaxExportBatchSize: cfg.OtelConfig.OtelBSPMaxExportBatchSize,
-		BSPScheduleDelay:      cfg.OtelConfig.OtelBSPScheduleDelay,
-		BSPExportTimeout:      cfg.OtelConfig.OtelBSPExportTimeout,
-	}
-	shutdown, err := telemetry.InitTracer(otelCfg)
+	shutdown, err := telemetry.InitTracer(cfg.OtelConfig)
 	if err != nil {
 		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Failed to initialize OpenTelemetry")
 	}
@@ -103,7 +93,7 @@ func main() {
 			next.ServeHTTP(w, r)
 		})
 	})
-	if cfg.OtelConfig.OtelEnabled {
+	if cfg.OtelConfig.Enabled {
 		r.Use(otelhttp.NewMiddleware("ingress",
 			otelhttp.WithFilter(func(r *http.Request) bool {
 				return r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/upload")
@@ -111,13 +101,13 @@ func main() {
 		))
 
 		l.Log.WithFields(logrus.Fields{
-			"endpoint":              otelCfg.Endpoint,
-			"sampling_rate":         otelCfg.SamplingRate,
-			"service_name":          otelCfg.ServiceName,
-			"bsp_max_queue_size":    otelCfg.BSPMaxQueueSize,
-			"bsp_max_export_batch":  otelCfg.BSPMaxExportBatchSize,
-			"bsp_schedule_delay_ms": otelCfg.BSPScheduleDelay,
-			"bsp_export_timeout_ms": otelCfg.BSPExportTimeout,
+			"endpoint":              cfg.OtelConfig.Endpoint,
+			"sampling_rate":         cfg.OtelConfig.SamplingRate,
+			"service_name":          cfg.OtelConfig.ServiceName,
+			"bsp_max_queue_size":    cfg.OtelConfig.BSPMaxQueueSize,
+			"bsp_max_export_batch":  cfg.OtelConfig.BSPMaxExportBatchSize,
+			"bsp_schedule_delay_ms": cfg.OtelConfig.BSPScheduleDelay,
+			"bsp_export_timeout_ms": cfg.OtelConfig.BSPExportTimeout,
 		}).Info("OpenTelemetry tracing enabled")
 	}
 	r.Use(

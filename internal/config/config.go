@@ -38,18 +38,18 @@ type IngressConfig struct {
 	DebugUserAgent        *regexp.Regexp
 	ServiceBaseURL        string
 	StagerImplementation  string
-	OtelConfig            OtelCfg
+	OtelConfig            OtelConfig
 }
 
-type OtelCfg struct {
-	OtelEnabled               bool
-	OtelEndpoint              string
-	OtelSamplingRate          float64
-	OtelServiceName           string
-	OtelBSPMaxQueueSize       int
-	OtelBSPMaxExportBatchSize int
-	OtelBSPScheduleDelay      int
-	OtelBSPExportTimeout      int
+type OtelConfig struct {
+	Enabled               bool
+	Endpoint              string
+	SamplingRate          float64
+	ServiceName           string
+	BSPMaxQueueSize       int
+	BSPMaxExportBatchSize int
+	BSPScheduleDelay      int
+	BSPExportTimeout      int
 }
 
 type KafkaCfg struct {
@@ -284,15 +284,15 @@ func Get() *IngressConfig {
 		},
 		ServiceBaseURL:       options.GetString("ServiceBaseURL"),
 		StagerImplementation: options.GetString("StagerImplementation"),
-		OtelConfig: OtelCfg{
-			OtelEnabled:               options.GetBool("OtelEnabled"),
-			OtelEndpoint:              options.GetString("OtelEndpoint"),
-			OtelSamplingRate:          options.GetFloat64("OtelSamplingRate"),
-			OtelServiceName:           options.GetString("OtelServiceName"),
-			OtelBSPMaxQueueSize:       options.GetInt("OtelBSPMaxQueueSize"),
-			OtelBSPMaxExportBatchSize: options.GetInt("OtelBSPMaxExportBatchSize"),
-			OtelBSPScheduleDelay:      options.GetInt("OtelBSPScheduleDelay"),
-			OtelBSPExportTimeout:      options.GetInt("OtelBSPExportTimeout"),
+		OtelConfig: OtelConfig{
+			Enabled:               options.GetBool("OtelEnabled"),
+			Endpoint:              options.GetString("OtelEndpoint"),
+			SamplingRate:          options.GetFloat64("OtelSamplingRate"),
+			ServiceName:           options.GetString("OtelServiceName"),
+			BSPMaxQueueSize:       options.GetInt("OtelBSPMaxQueueSize"),
+			BSPMaxExportBatchSize: options.GetInt("OtelBSPMaxExportBatchSize"),
+			BSPScheduleDelay:      options.GetInt("OtelBSPScheduleDelay"),
+			BSPExportTimeout:      options.GetInt("OtelBSPExportTimeout"),
 		},
 	}
 

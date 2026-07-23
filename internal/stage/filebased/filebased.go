@@ -44,19 +44,17 @@ func GetFileStorageName(requestID string, storageDir string) (string, string, er
 
 // Stage stores the file in filesystem storage and returns a presigned url
 func (s *FileBasedStager) Stage(ctx context.Context, in *stage.Input) (string, error) {
+	_, filePath, err := GetFileStorageName(in.Key, s.StagePath)
+	if err != nil {
+		return "", err
+	}
+
 	_, span := otel.Tracer("ingress").Start(ctx, "stage.file.write",
 		trace.WithAttributes(
-			attribute.String("file.path", s.StagePath),
+			attribute.String("file.path", filePath),
 			attribute.Int64("file.size", in.Size),
 		))
 	defer span.End()
-
-	_, filePath, err := GetFileStorageName(in.Key, s.StagePath)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return "", err
-	}
 	file := in.Payload
 	dst, err := os.Create(filePath)
 	if err != nil {

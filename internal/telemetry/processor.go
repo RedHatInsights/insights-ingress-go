@@ -12,14 +12,14 @@ import (
 type IngressAttributeProcessor struct{}
 
 func (p *IngressAttributeProcessor) OnStart(ctx context.Context, s sdktrace.ReadWriteSpan) {
-	s.SetAttributes(attribute.String("rh.service", "ingress"))
-
+	attrs := []attribute.KeyValue{attribute.String("rh.service", "ingress")}
 	if reqID := request_id.GetReqID(ctx); reqID != "" {
-		s.SetAttributes(attribute.String("rh.request_id", reqID))
+		attrs = append(attrs, attribute.String("rh.request_id", reqID))
 	}
 	if id := identity.GetIdentity(ctx); id.Identity.OrgID != "" {
-		s.SetAttributes(attribute.String("rh.org_id", id.Identity.OrgID))
+		attrs = append(attrs, attribute.String("rh.org_id", id.Identity.OrgID))
 	}
+	s.SetAttributes(attrs...)
 }
 
 func (p *IngressAttributeProcessor) OnEnd(_ sdktrace.ReadOnlySpan)     {}

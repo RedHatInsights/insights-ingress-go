@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
@@ -13,7 +14,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.41.0"
 )
 
-func InitTracer(cfg OtelConfig) (func(context.Context) error, error) {
+func InitTracer(cfg config.OtelConfig) (func(context.Context) error, error) {
 	noop := func(context.Context) error { return nil }
 
 	if !cfg.Enabled {

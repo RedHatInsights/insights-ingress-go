@@ -118,7 +118,7 @@ func InitLogger(cfg *config.IngressConfig) *logrus.Logger {
 		ReportCaller: true,
 	}
 
-	if cfg.OtelConfig.OtelEnabled {
+	if cfg.OtelConfig.Enabled {
 		Log.Hooks.Add(&telemetry.TraceLogHook{})
 	}
 

@@ -28,6 +28,7 @@ type Validator struct {
 	CA                        string
 	SASLMechanism             string
 	KafkaSecurityProtocol     string
+	announceTopic             string
 	validUploadTypes          map[string]bool
 }
 
@@ -67,24 +68,22 @@ func New(cfg *Config, validServices ...string) *Validator {
 	}
 
 	kv.validUploadTypes = buildValidUploadTypeMap(validServices)
+	kv.announceTopic = config.Get().KafkaConfig.KafkaAnnounceTopic
 
-	announceTopic := config.Get().KafkaConfig.KafkaAnnounceTopic
-
-	kv.addProducer(announceTopic)
+	kv.addProducer(kv.announceTopic)
 
 	return kv
 }
 
 // Validate validates a ValidationRequest
 func (kv *Validator) Validate(ctx context.Context, vr *validators.Request) {
-	announceTopic := config.Get().KafkaConfig.KafkaAnnounceTopic
-	ctx, span := otel.Tracer("ingress").Start(ctx, "send "+announceTopic,
+	ctx, span := otel.Tracer("ingress").Start(ctx, "send "+kv.announceTopic,
 		trace.WithSpanKind(trace.SpanKindProducer),
 		trace.WithAttributes(
 			attribute.String("messaging.system", "kafka"),
 			attribute.String("messaging.operation.name", "send"),
 			attribute.String("messaging.operation.type", "send"),
-			attribute.String("messaging.destination.name", announceTopic),
+			attribute.String("messaging.destination.name", kv.announceTopic),
 		))
 	defer span.End()
 
@@ -95,7 +94,7 @@ func (kv *Validator) Validate(ctx context.Context, vr *validators.Request) {
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to marshal json")
 		return
 	}
-	l.Log.WithFields(logrus.Fields{"data": data, "topic": announceTopic}).Debug("Posting data to topic")
+	l.Log.WithFields(logrus.Fields{"data": data, "topic": kv.announceTopic}).Debug("Posting data to topic")
 	headers := map[string]string{
 		"service": vr.Service,
 	}

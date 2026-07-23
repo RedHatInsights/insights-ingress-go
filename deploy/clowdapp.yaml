@@ -73,6 +73,14 @@ objects:
           value: ${INGRESS_OTELENDPOINT}
         - name: INGRESS_OTELSAMPLINGRATE
           value: ${INGRESS_OTELSAMPLINGRATE}
+        - name: INGRESS_OTELBSPMAXQUEUESIZE
+          value: ${INGRESS_OTELBSPMAXQUEUESIZE}
+        - name: INGRESS_OTELBSPMAXEXPORTBATCHSIZE
+          value: ${INGRESS_OTELBSPMAXEXPORTBATCHSIZE}
+        - name: INGRESS_OTELBSPSCHEDULEDELAY
+          value: ${INGRESS_OTELBSPSCHEDULEDELAY}
+        - name: INGRESS_OTELBSPEXPORTTIMEOUT
+          value: ${INGRESS_OTELBSPEXPORTTIMEOUT}
         resources:
           limits:
             cpu: ${CPU_LIMIT}
@@ -160,3 +168,11 @@ parameters:
   value: "localhost:4318"
 - name: INGRESS_OTELSAMPLINGRATE
   value: "1.0"
+- name: INGRESS_OTELBSPMAXQUEUESIZE
+  value: "2048"
+- name: INGRESS_OTELBSPMAXEXPORTBATCHSIZE
+  value: "512"
+- name: INGRESS_OTELBSPSCHEDULEDELAY
+  value: "5000"
+- name: INGRESS_OTELBSPEXPORTTIMEOUT
+  value: "30000"

@@ -9,13 +9,14 @@ import (
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
+	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
 )
 
 var _ = Describe("InitTracer", func() {
 	Context("when OTel is disabled", func() {
 		It("should return a no-op shutdown function", func() {
-			cfg := telemetry.OtelConfig{
+			cfg := config.OtelConfig{
 				Enabled:      false,
 				Endpoint:     "localhost:4318",
 				SamplingRate: 1.0,
@@ -30,7 +31,7 @@ var _ = Describe("InitTracer", func() {
 		})
 
 		It("should not set an SDK TracerProvider", func() {
-			cfg := telemetry.OtelConfig{Enabled: false}
+			cfg := config.OtelConfig{Enabled: false}
 			_, err := telemetry.InitTracer(cfg)
 			Expect(err).To(BeNil())
 
@@ -42,7 +43,7 @@ var _ = Describe("InitTracer", func() {
 
 	Context("when OTel is enabled", func() {
 		It("should set an SDK TracerProvider", func() {
-			cfg := telemetry.OtelConfig{
+			cfg := config.OtelConfig{
 				Enabled:      true,
 				Endpoint:     "localhost:4318",
 				SamplingRate: 1.0,
