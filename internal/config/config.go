@@ -44,6 +44,7 @@ type IngressConfig struct {
 type OtelConfig struct {
 	Enabled               bool
 	Endpoint              string
+	Insecure              bool
 	SamplingRate          float64
 	ServiceName           string
 	BSPMaxQueueSize       int
@@ -170,6 +171,7 @@ func Get() *IngressConfig {
 	// OpenTelemetry
 	options.SetDefault("OtelEnabled", false)
 	options.SetDefault("OtelEndpoint", "localhost:4318")
+	options.SetDefault("OtelInsecure", true)
 	options.SetDefault("OtelSamplingRate", 1.0)
 	options.SetDefault("OtelServiceName", "ingress")
 	options.SetDefault("OtelBSPMaxQueueSize", 2048)
@@ -287,6 +289,7 @@ func Get() *IngressConfig {
 		OtelConfig: OtelConfig{
 			Enabled:               options.GetBool("OtelEnabled"),
 			Endpoint:              options.GetString("OtelEndpoint"),
+			Insecure:              options.GetBool("OtelInsecure"),
 			SamplingRate:          options.GetFloat64("OtelSamplingRate"),
 			ServiceName:           options.GetString("OtelServiceName"),
 			BSPMaxQueueSize:       options.GetInt("OtelBSPMaxQueueSize"),

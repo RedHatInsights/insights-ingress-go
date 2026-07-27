@@ -71,6 +71,10 @@ objects:
           value: ${INGRESS_OTELENABLED}
         - name: INGRESS_OTELENDPOINT
           value: ${INGRESS_OTELENDPOINT}
+        - name: INGRESS_OTELINSECURE
+          value: ${INGRESS_OTELINSECURE}
+        - name: INGRESS_OTELSERVICENAME
+          value: ${INGRESS_OTELSERVICENAME}
         - name: INGRESS_OTELSAMPLINGRATE
           value: ${INGRESS_OTELSAMPLINGRATE}
         - name: INGRESS_OTELBSPMAXQUEUESIZE
@@ -166,6 +170,10 @@ parameters:
   value: "false"
 - name: INGRESS_OTELENDPOINT
   value: "localhost:4318"
+- name: INGRESS_OTELINSECURE
+  value: "true"
+- name: INGRESS_OTELSERVICENAME
+  value: "ingress"
 - name: INGRESS_OTELSAMPLINGRATE
   value: "1.0"
 - name: INGRESS_OTELBSPMAXQUEUESIZE

@@ -23,10 +23,14 @@ func InitTracer(cfg config.OtelConfig) (func(context.Context) error, error) {
 
 	ctx := context.Background()
 
-	exporter, err := otlptracehttp.New(ctx,
+	opts := []otlptracehttp.Option{
 		otlptracehttp.WithEndpoint(cfg.Endpoint),
-		otlptracehttp.WithInsecure(),
-	)
+	}
+	if cfg.Insecure {
+		opts = append(opts, otlptracehttp.WithInsecure())
+	}
+
+	exporter, err := otlptracehttp.New(ctx, opts...)
 	if err != nil {
 		return noop, err
 	}

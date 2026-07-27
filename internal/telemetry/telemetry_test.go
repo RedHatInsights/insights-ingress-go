@@ -8,6 +8,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
@@ -59,6 +60,8 @@ var _ = Describe("InitTracer", func() {
 
 			err = shutdown(context.Background())
 			Expect(err).To(BeNil())
+
+			otel.SetTracerProvider(noop.NewTracerProvider())
 		})
 	})
 })

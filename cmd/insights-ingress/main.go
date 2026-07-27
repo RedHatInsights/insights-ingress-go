@@ -83,17 +83,17 @@ func main() {
 	r := chi.NewRouter()
 	mr := chi.NewRouter()
 	r.Use(request_id.ConfiguredRequestID("x-rh-insights-request-id"))
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if header := r.Header.Get("X-Rh-Identity"); header != "" {
-				if id, err := identity.DecodeIdentity(header); err == nil {
-					r = r.WithContext(identity.WithIdentity(r.Context(), id))
-				}
-			}
-			next.ServeHTTP(w, r)
-		})
-	})
 	if cfg.OtelConfig.Enabled {
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if header := r.Header.Get("X-Rh-Identity"); header != "" {
+					if id, err := identity.DecodeIdentity(header); err == nil {
+						r = r.WithContext(identity.WithIdentity(r.Context(), id))
+					}
+				}
+				next.ServeHTTP(w, r)
+			})
+		})
 		r.Use(otelhttp.NewMiddleware("ingress",
 			otelhttp.WithFilter(func(r *http.Request) bool {
 				return r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/upload")
@@ -102,6 +102,7 @@ func main() {
 
 		l.Log.WithFields(logrus.Fields{
 			"endpoint":              cfg.OtelConfig.Endpoint,
+			"insecure":              cfg.OtelConfig.Insecure,
 			"sampling_rate":         cfg.OtelConfig.SamplingRate,
 			"service_name":          cfg.OtelConfig.ServiceName,
 			"bsp_max_queue_size":    cfg.OtelConfig.BSPMaxQueueSize,
@@ -220,16 +221,16 @@ func main() {
 		sigint := make(chan os.Signal)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := shutdown(shutdownCtx); err != nil {
-			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
-		}
 		if err := srv.Shutdown(context.Background()); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
 		if err := msrv.Shutdown(context.Background()); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+		}
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdown(shutdownCtx); err != nil {
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
 		}
 		close(idleConnsClosed)
 	}()
