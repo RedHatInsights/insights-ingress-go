@@ -22,6 +22,8 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type responseBody struct {
@@ -174,6 +176,9 @@ func NewHandler(
 		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
+		if span := trace.SpanFromContext(r.Context()); span.SpanContext().IsValid() {
+			span.SetAttributes(attribute.String("rh.user_agent", userAgent))
+		}
 		requestLogger := l.Log.WithContext(r.Context()).WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
 
 		logerr := func(msg string, err error) {

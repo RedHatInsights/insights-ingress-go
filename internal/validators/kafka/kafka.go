@@ -84,6 +84,8 @@ func (kv *Validator) Validate(ctx context.Context, vr *validators.Request) {
 			attribute.String("messaging.operation.name", "send"),
 			attribute.String("messaging.operation.type", "send"),
 			attribute.String("messaging.destination.name", kv.announceTopic),
+			attribute.String("rh.content_type", vr.Service),
+			attribute.Int64("rh.payload_size", vr.Size),
 		))
 	defer span.End()
 
