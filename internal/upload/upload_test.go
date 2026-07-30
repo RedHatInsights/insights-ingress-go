@@ -257,7 +257,7 @@ var _ = Describe("Upload", func() {
 				vin := validator.In
 				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", Reporter: "ingress", CustomMetadata: map[string]string{"foo": "bar"}, StaleTimestamp: timeNow}))
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "012345", OrgID: "12345", Reporter: "ingress", CustomMetadata: map[string]string{"foo": "bar"}, StaleTimestamp: timeNow}))
 			})
 		})
 
@@ -280,7 +280,8 @@ var _ = Describe("Upload", func() {
 				vin := validator.In
 				vin.Metadata.StaleTimestamp = timeNow
 				Expect(vin).To(Not(BeNil()))
-				Expect(vin.Metadata).To(Equal(validators.Metadata{Reporter: "ingress", QueueKey: "12345", StaleTimestamp: timeNow}))
+				// When metadata account and org_id are empty, they should be populated from the authenticated identity
+				Expect(vin.Metadata).To(Equal(validators.Metadata{Account: "540155", OrgID: "12345", Reporter: "ingress", QueueKey: "12345", StaleTimestamp: timeNow}))
 			})
 		})
 

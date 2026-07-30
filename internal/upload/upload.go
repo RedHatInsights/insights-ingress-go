@@ -225,6 +225,20 @@ func NewHandler(
 
 		b64Identity := r.Header.Get("x-rh-identity")
 
+		// If auth is disabled but we have a b64_identity header, decode it manually
+		// to extract org_id and account for metadata population
+		if cfg.Auth == false && b64Identity != "" {
+			decodedCtx, err := identity.DecodeIdentityCtx(r.Context(), b64Identity)
+			if err != nil {
+				requestLogger.WithFields(logrus.Fields{"error": err}).Warn("Failed to decode b64_identity header")
+			} else {
+				id = identity.GetIdentity(decodedCtx)
+				if id.Identity.OrgID == "" && id.Identity.Internal.OrgID != "" {
+					id.Identity.OrgID = id.Identity.Internal.OrgID
+				}
+			}
+		}
+
 		vr := &validators.Request{
 			RequestID:   reqID,
 			OrgID:       id.Identity.OrgID,
@@ -255,7 +269,7 @@ func NewHandler(
 			return
 		}
 
-		if cfg.Auth == true {
+		if cfg.Auth == true || id.Identity.OrgID != "" {
 			vr.Account = id.Identity.AccountNumber
 			vr.Principal = id.Identity.OrgID
 			vr.OrgID = id.Identity.OrgID
@@ -267,6 +281,13 @@ func NewHandler(
 			requestLogger.WithFields(logrus.Fields{"error": err}).Debug("Failed to read metadata")
 		} else {
 			vr.Metadata = *md
+			// Populate metadata fields from identity if they're empty
+			if vr.Metadata.Account == "" {
+				vr.Metadata.Account = vr.Account
+			}
+			if vr.Metadata.OrgID == "" {
+				vr.Metadata.OrgID = vr.OrgID
+			}
 		}
 
 		ps := &announcers.Status{
