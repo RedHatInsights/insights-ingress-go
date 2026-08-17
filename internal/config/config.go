@@ -169,15 +169,15 @@ func Get() *IngressConfig {
 	options.SetDefault("StagerImplementation", "s3")
 
 	// OpenTelemetry
-	options.SetDefault("OtelEnabled", false)
-	options.SetDefault("OtelEndpoint", "localhost:4318")
-	options.SetDefault("OtelInsecure", true)
-	options.SetDefault("OtelSamplingRate", 1.0)
-	options.SetDefault("OtelServiceName", "ingress")
-	options.SetDefault("OtelBSPMaxQueueSize", 2048)
-	options.SetDefault("OtelBSPMaxExportBatchSize", 512)
-	options.SetDefault("OtelBSPScheduleDelay", 5000)
-	options.SetDefault("OtelBSPExportTimeout", 30000)
+	options.SetDefault("Otel_Enabled", false)
+	options.SetDefault("Otel_Endpoint", "localhost:4318")
+	options.SetDefault("Otel_Insecure", true)
+	options.SetDefault("Otel_Sampling_Rate", 1.0)
+	options.SetDefault("Otel_Service_Name", "ingress")
+	options.SetDefault("Otel_BSP_Max_Queue_Size", 2048)
+	options.SetDefault("Otel_BSP_Max_Export_Batch_Size", 512)
+	options.SetDefault("Otel_BSP_Schedule_Delay", 5000)
+	options.SetDefault("Otel_BSP_Export_Timeout", 30000)
 
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
@@ -287,15 +287,15 @@ func Get() *IngressConfig {
 		ServiceBaseURL:       options.GetString("ServiceBaseURL"),
 		StagerImplementation: options.GetString("StagerImplementation"),
 		OtelConfig: OtelConfig{
-			Enabled:               options.GetBool("OtelEnabled"),
-			Endpoint:              options.GetString("OtelEndpoint"),
-			Insecure:              options.GetBool("OtelInsecure"),
-			SamplingRate:          options.GetFloat64("OtelSamplingRate"),
-			ServiceName:           options.GetString("OtelServiceName"),
-			BSPMaxQueueSize:       options.GetInt("OtelBSPMaxQueueSize"),
-			BSPMaxExportBatchSize: options.GetInt("OtelBSPMaxExportBatchSize"),
-			BSPScheduleDelay:      options.GetInt("OtelBSPScheduleDelay"),
-			BSPExportTimeout:      options.GetInt("OtelBSPExportTimeout"),
+			Enabled:               options.GetBool("Otel_Enabled"),
+			Endpoint:              options.GetString("Otel_Endpoint"),
+			Insecure:              options.GetBool("Otel_Insecure"),
+			SamplingRate:          options.GetFloat64("Otel_Sampling_Rate"),
+			ServiceName:           options.GetString("Otel_Service_Name"),
+			BSPMaxQueueSize:       options.GetInt("Otel_BSP_Max_Queue_Size"),
+			BSPMaxExportBatchSize: options.GetInt("Otel_BSP_Max_Export_Batch_Size"),
+			BSPScheduleDelay:      options.GetInt("Otel_BSP_Schedule_Delay"),
+			BSPExportTimeout:      options.GetInt("Otel_BSP_Export_Timeout"),
 		},
 	}
 
