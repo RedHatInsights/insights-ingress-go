@@ -2,10 +2,15 @@ package telemetry
 
 import (
 	"context"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
@@ -14,11 +19,11 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.41.0"
 )
 
-func InitTracer(cfg config.OtelConfig) (func(context.Context) error, error) {
+func InitTracer(cfg config.OtelConfig, log *logrus.Logger) (func(context.Context) error, []func(http.Handler) http.Handler, error) {
 	noop := func(context.Context) error { return nil }
 
 	if !cfg.Enabled {
-		return noop, nil
+		return noop, nil, nil
 	}
 
 	ctx := context.Background()
@@ -32,7 +37,7 @@ func InitTracer(cfg config.OtelConfig) (func(context.Context) error, error) {
 
 	exporter, err := otlptracehttp.New(ctx, opts...)
 	if err != nil {
-		return noop, err
+		return noop, nil, err
 	}
 
 	version := os.Getenv("IMAGE_TAG")
@@ -49,7 +54,7 @@ func InitTracer(cfg config.OtelConfig) (func(context.Context) error, error) {
 		),
 	)
 	if err != nil {
-		return noop, err
+		return noop, nil, err
 	}
 
 	sampler := sdktrace.ParentBased(
@@ -71,5 +76,34 @@ func InitTracer(cfg config.OtelConfig) (func(context.Context) error, error) {
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
-	return tp.Shutdown, nil
+	middlewares := []func(http.Handler) http.Handler{
+		func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if header := r.Header.Get("X-Rh-Identity"); header != "" {
+					if id, err := identity.DecodeIdentity(header); err == nil {
+						r = r.WithContext(identity.WithIdentity(r.Context(), id))
+					}
+				}
+				next.ServeHTTP(w, r)
+			})
+		},
+		otelhttp.NewMiddleware("ingress",
+			otelhttp.WithFilter(func(r *http.Request) bool {
+				return r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/upload")
+			}),
+		),
+	}
+
+	log.WithFields(logrus.Fields{
+		"endpoint":              cfg.Endpoint,
+		"insecure":              cfg.Insecure,
+		"sampling_rate":         cfg.SamplingRate,
+		"service_name":          cfg.ServiceName,
+		"bsp_max_queue_size":    cfg.BSPMaxQueueSize,
+		"bsp_max_export_batch":  cfg.BSPMaxExportBatchSize,
+		"bsp_schedule_delay_ms": cfg.BSPScheduleDelay,
+		"bsp_export_timeout_ms": cfg.BSPExportTimeout,
+	}).Info("OpenTelemetry tracing enabled")
+
+	return tp.Shutdown, middlewares, nil
 }

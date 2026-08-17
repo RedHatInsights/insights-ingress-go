@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/sirupsen/logrus"
 
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -14,18 +15,21 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
 )
 
+var testLog = &logrus.Logger{Out: logrus.StandardLogger().Out, Level: logrus.FatalLevel, Formatter: &logrus.TextFormatter{}}
+
 var _ = Describe("InitTracer", func() {
 	Context("when OTel is disabled", func() {
-		It("should return a no-op shutdown function", func() {
+		It("should return a no-op shutdown function and no middlewares", func() {
 			cfg := config.OtelConfig{
 				Enabled:      false,
 				Endpoint:     "localhost:4318",
 				SamplingRate: 1.0,
 				ServiceName:  "ingress",
 			}
-			shutdown, err := telemetry.InitTracer(cfg)
+			shutdown, middlewares, err := telemetry.InitTracer(cfg, testLog)
 			Expect(err).To(BeNil())
 			Expect(shutdown).ToNot(BeNil())
+			Expect(middlewares).To(BeNil())
 
 			err = shutdown(context.Background())
 			Expect(err).To(BeNil())
@@ -33,7 +37,7 @@ var _ = Describe("InitTracer", func() {
 
 		It("should not set an SDK TracerProvider", func() {
 			cfg := config.OtelConfig{Enabled: false}
-			_, err := telemetry.InitTracer(cfg)
+			_, _, err := telemetry.InitTracer(cfg, testLog)
 			Expect(err).To(BeNil())
 
 			tp := otel.GetTracerProvider()
@@ -43,16 +47,17 @@ var _ = Describe("InitTracer", func() {
 	})
 
 	Context("when OTel is enabled", func() {
-		It("should set an SDK TracerProvider", func() {
+		It("should set an SDK TracerProvider and return middlewares", func() {
 			cfg := config.OtelConfig{
 				Enabled:      true,
 				Endpoint:     "localhost:4318",
 				SamplingRate: 1.0,
 				ServiceName:  "test-ingress",
 			}
-			shutdown, err := telemetry.InitTracer(cfg)
+			shutdown, middlewares, err := telemetry.InitTracer(cfg, testLog)
 			Expect(err).To(BeNil())
 			Expect(shutdown).ToNot(BeNil())
+			Expect(middlewares).To(HaveLen(2))
 
 			tp := otel.GetTracerProvider()
 			_, isSDK := tp.(*sdktrace.TracerProvider)
