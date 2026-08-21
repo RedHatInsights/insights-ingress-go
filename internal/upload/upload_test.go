@@ -440,6 +440,43 @@ var _ = Describe("Upload", func() {
 			})
 		})
 
+		Context("with a request body larger than the max request body size", func() {
+			It("should return 413 via MaxBytesReader without staging", func() {
+				cfg := config.Get()
+				cfg.DefaultMaxSize = 1
+				handler = NewHandler(stager, validator, tracker, *cfg)
+				req, err := makeMultipartRequest("/api/ingress/v1/upload", &FilePart{
+					Name:        "file",
+					Content:     strings.Repeat("a", 2*1024*1024),
+					ContentType: "application/vnd.redhat.unit.test",
+				})
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(http.StatusRequestEntityTooLarge))
+				Expect(rr.Body.String()).To(ContainSubstring("Upload body exceeds maximum size"))
+				Expect(stager.StageCalled()).To(BeFalse())
+			})
+		})
+
+		Context("with a per-service limit larger than the body", func() {
+			It("should accept a body above DefaultMaxSize but under the service ceiling", func() {
+				TypeMap := map[string]string{"qpc": strconv.Itoa(4 * 1024 * 1024)}
+				cfg := config.Get()
+				cfg.DefaultMaxSize = 1
+				cfg.MaxSizeMap = TypeMap
+				handler = NewHandler(stager, validator, tracker, *cfg)
+				req, err := makeMultipartRequest("/api/ingress/v1/upload", &FilePart{
+					Name:        "file",
+					Content:     strings.Repeat("a", 2*1024*1024),
+					ContentType: "application/vnd.redhat.qpc.test",
+				})
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(http.StatusAccepted))
+				Expect(stager.StageCalled()).To(BeTrue())
+			})
+		})
+
 		Context("when the payload fails to stage", func() {
 			It("should return 413", func() {
 				stager = &stage.Fake{ShouldError: true}

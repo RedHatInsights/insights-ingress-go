@@ -166,8 +166,10 @@ func main() {
 	l.Log.WithFields(logrus.Fields{"Web Port": cfg.WebPort}).Info("Starting Service with mode " + cfg.StagerImplementation)
 
 	srv := http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.WebPort),
-		Handler: r,
+		Addr:              fmt.Sprintf(":%d", cfg.WebPort),
+		Handler:           r,
+		ReadTimeout:       time.Second * cfg.HTTPReadTimeout,
+		ReadHeaderTimeout: time.Second * cfg.HTTPReadHeaderTimeout,
 	}
 
 	l.Log.WithFields(logrus.Fields{"Metrics Port": cfg.MetricsPort}).Info("Starting Service")
