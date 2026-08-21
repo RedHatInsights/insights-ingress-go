@@ -71,11 +71,14 @@ objects:
           limits:
             cpu: ${CPU_LIMIT}
             memory: ${MEMORY_LIMIT}
+            ephemeral-storage: ${EPHEMERAL_STORAGE_LIMIT}
           requests:
             cpu: ${CPU_REQUESTS}
             memory: ${MEMORY_REQUESTS}
+            ephemeral-storage: ${EPHEMERAL_STORAGE_REQUESTS}
         volumes:
-        - emptyDir: {}
+        - emptyDir:
+            sizeLimit: ${TMPDIR_SIZE_LIMIT}
           name: tmpdir
         volumeMounts:
         - mountPath: /tmp
@@ -117,6 +120,15 @@ parameters:
 - description: memory request for service
   name: MEMORY_REQUESTS
   value: 256Mi
+- description: ephemeral storage limit of service
+  name: EPHEMERAL_STORAGE_LIMIT
+  value: 1Gi
+- description: ephemeral storage request for service
+  name: EPHEMERAL_STORAGE_REQUESTS
+  value: 512Mi
+- description: size limit for the /tmp emptyDir volume used to buffer uploads
+  name: TMPDIR_SIZE_LIMIT
+  value: 512Mi
 - name: MIN_REPLICAS
   value: '1'
 - description: Image tag

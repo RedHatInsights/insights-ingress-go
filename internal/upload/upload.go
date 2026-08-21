@@ -34,13 +34,35 @@ type uploadData struct {
 	OrgID   string `json:"org_id,omitempty"`
 }
 
-// GetFile verifies that the proper upload field is in place and returns the file
-func GetFile(r *http.Request, m int64) (multipart.File, *multipart.FileHeader, error) {
+// multipartOverhead is headroom added to the largest allowed file size when
+// enforcing an early request-body limit. It accounts for multipart encoding
+// (boundaries, part headers) and the metadata part that accompany the file.
+const multipartOverhead = 1 * 1024 * 1024
+
+// maxRequestBodySize returns the largest multipart request body ingress will
+// accept before rejecting it outright. It is the largest configured per-service
+// or default file-size limit plus multipartOverhead, so http.MaxBytesReader can
+// reject oversized bodies before ParseMultipartForm buffers them to disk.
+func maxRequestBodySize(cfg config.IngressConfig) int64 {
+	max := cfg.DefaultMaxSize
+	for _, val := range cfg.MaxSizeMap {
+		if size, err := strconv.ParseInt(val, 10, 64); err == nil && size > max {
+			max = size
+		}
+	}
+	return max + multipartOverhead
+}
+
+// GetFile verifies that the proper upload field is in place and returns the file.
+// r.Body is wrapped with http.MaxBytesReader so an oversized multipart body is
+// rejected while streaming, before it is buffered to disk by ParseMultipartForm.
+func GetFile(w http.ResponseWriter, r *http.Request, m int64, maxBodySize int64) (multipart.File, *multipart.FileHeader, error) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	// Reduce memory usage of multipart form. This indicates of memory will be used
 	// before writting to disk. Default: 8MB
 	err := r.ParseMultipartForm(m)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to parse form data: %v", err)
+		return nil, nil, fmt.Errorf("unable to parse form data: %w", err)
 	}
 
 	file, fileHeader, fileErr := r.FormFile("file")
@@ -146,6 +168,7 @@ func NewHandler(
 	cfg config.IngressConfig) http.HandlerFunc {
 
 	isCustomerDenyListed := isRequestFromDenyListedOrgID(cfg)
+	maxBodySize := maxRequestBodySize(cfg)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
@@ -187,8 +210,17 @@ func NewHandler(
 		}
 
 		incRequests(userAgent)
-		file, fileHeader, err := GetFile(r, cfg.MaxUploadMem)
+		file, fileHeader, err := GetFile(w, r, cfg.MaxUploadMem, maxBodySize)
 		if err != nil {
+			var maxBytesErr *http.MaxBytesError
+			if errors.As(err, &maxBytesErr) {
+				errString := fmt.Sprintf("Upload body exceeds maximum size of %v bytes", maxBodySize)
+				w.WriteHeader(http.StatusRequestEntityTooLarge)
+				w.Write([]byte(errString))
+				requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusRequestEntityTooLarge, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info(errString)
+				logerr("Upload body too large", err)
+				return
+			}
 			errString := "File or upload field not found"
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(errString))

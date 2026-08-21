@@ -15,27 +15,29 @@ import (
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
-	Hostname             string
-	DefaultMaxSize       int64
-	MaxSizeMap           map[string]string
-	MaxUploadMem         int64
-	Auth                 bool
-	KafkaConfig          KafkaCfg
-	WebPort              int
-	MetricsPort          int
-	HTTPClientTimeout    time.Duration
-	Profile              bool
-	OpenshiftBuildCommit string
-	Version              string
-	PayloadTrackerURL    string
-	TlsCAPath            string
-	StorageConfig        StorageCfg
-	LoggingConfig        LoggingCfg
-	DenyListedOrgIDs     []string
-	Debug                bool
-	DebugUserAgent       *regexp.Regexp
-	ServiceBaseURL       string
-	StagerImplementation string
+	Hostname              string
+	DefaultMaxSize        int64
+	MaxSizeMap            map[string]string
+	MaxUploadMem          int64
+	Auth                  bool
+	KafkaConfig           KafkaCfg
+	WebPort               int
+	MetricsPort           int
+	HTTPClientTimeout     time.Duration
+	HTTPReadTimeout       time.Duration
+	HTTPReadHeaderTimeout time.Duration
+	Profile               bool
+	OpenshiftBuildCommit  string
+	Version               string
+	PayloadTrackerURL     string
+	TlsCAPath             string
+	StorageConfig         StorageCfg
+	LoggingConfig         LoggingCfg
+	DenyListedOrgIDs      []string
+	Debug                 bool
+	DebugUserAgent        *regexp.Regexp
+	ServiceBaseURL        string
+	StagerImplementation  string
 }
 
 type KafkaCfg struct {
@@ -139,6 +141,8 @@ func Get() *IngressConfig {
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("TlsCAPath", "")
 	options.SetDefault("HTTPClientTimeout", 10)
+	options.SetDefault("HTTPReadTimeout", 900)
+	options.SetDefault("HTTPReadHeaderTimeout", 10)
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
@@ -212,22 +216,24 @@ func Get() *IngressConfig {
 	}
 
 	IngressCfg := &IngressConfig{
-		Hostname:             options.GetString("Hostname"),
-		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
-		MaxSizeMap:           options.GetStringMapString("MaxSizeMap"),
-		MaxUploadMem:         options.GetInt64("MaxUploadMem"),
-		Auth:                 options.GetBool("Auth"),
-		WebPort:              options.GetInt("WebPort"),
-		MetricsPort:          options.GetInt("MetricsPort"),
-		HTTPClientTimeout:    time.Duration(options.GetInt("HTTPClientTimeout")),
-		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
-		Version:              os.Getenv("1.0.8"),
-		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
-		TlsCAPath:            options.GetString("TlsCAPath"),
-		Profile:              options.GetBool("Profile"),
-		DenyListedOrgIDs:     options.GetStringSlice("Deny_Listed_OrgIDs"),
-		Debug:                options.GetBool("Debug"),
-		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
+		Hostname:              options.GetString("Hostname"),
+		DefaultMaxSize:        options.GetInt64("DefaultMaxSize"),
+		MaxSizeMap:            options.GetStringMapString("MaxSizeMap"),
+		MaxUploadMem:          options.GetInt64("MaxUploadMem"),
+		Auth:                  options.GetBool("Auth"),
+		WebPort:               options.GetInt("WebPort"),
+		MetricsPort:           options.GetInt("MetricsPort"),
+		HTTPClientTimeout:     time.Duration(options.GetInt("HTTPClientTimeout")),
+		HTTPReadTimeout:       time.Duration(options.GetInt("HTTPReadTimeout")),
+		HTTPReadHeaderTimeout: time.Duration(options.GetInt("HTTPReadHeaderTimeout")),
+		OpenshiftBuildCommit:  kubenv.GetString("Openshift_Build_Commit"),
+		Version:               os.Getenv("1.0.8"),
+		PayloadTrackerURL:     options.GetString("PayloadTrackerURL"),
+		TlsCAPath:             options.GetString("TlsCAPath"),
+		Profile:               options.GetBool("Profile"),
+		DenyListedOrgIDs:      options.GetStringSlice("Deny_Listed_OrgIDs"),
+		Debug:                 options.GetBool("Debug"),
+		DebugUserAgent:        regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
 			KafkaBrokers:          options.GetStringSlice("KafkaBrokers"),
 			KafkaGroupID:          options.GetString("KafkaGroupID"),
