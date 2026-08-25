@@ -8,6 +8,13 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
+	"github.com/sirupsen/logrus"
+
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/api"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
@@ -17,17 +24,11 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
+	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
 	"github.com/redhatinsights/insights-ingress-go/internal/track"
 	"github.com/redhatinsights/insights-ingress-go/internal/upload"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
 	"github.com/redhatinsights/insights-ingress-go/internal/version"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
-	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
-	"github.com/sirupsen/logrus"
 )
 
 func lubDub(w http.ResponseWriter, r *http.Request) {
@@ -71,10 +72,19 @@ func getStager(cfg config.IngressConfig) (stage.Stager, error) {
 func main() {
 	cfg := config.Get()
 	l.InitLogger(cfg)
+
+	shutdown, otelMiddlewares, err := telemetry.InitTracer(cfg.OtelConfig, l.Log)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Failed to initialize OpenTelemetry")
+	}
+
 	r := chi.NewRouter()
 	mr := chi.NewRouter()
+	r.Use(request_id.ConfiguredRequestID("x-rh-insights-request-id"))
+	for _, mw := range otelMiddlewares {
+		r.Use(mw)
+	}
 	r.Use(
-		request_id.ConfiguredRequestID("x-rh-insights-request-id"),
 		middleware.RealIP,
 		middleware.Recoverer,
 	)
@@ -189,6 +199,11 @@ func main() {
 		}
 		if err := msrv.Shutdown(context.Background()); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+		}
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdown(shutdownCtx); err != nil {
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
 		}
 		close(idleConnsClosed)
 	}()

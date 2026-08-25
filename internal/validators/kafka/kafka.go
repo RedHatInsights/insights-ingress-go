@@ -1,8 +1,15 @@
 package kafka
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
@@ -21,6 +28,7 @@ type Validator struct {
 	CA                        string
 	SASLMechanism             string
 	KafkaSecurityProtocol     string
+	announceTopic             string
 	validUploadTypes          map[string]bool
 }
 
@@ -60,28 +68,43 @@ func New(cfg *Config, validServices ...string) *Validator {
 	}
 
 	kv.validUploadTypes = buildValidUploadTypeMap(validServices)
+	kv.announceTopic = config.Get().KafkaConfig.KafkaAnnounceTopic
 
-	announceTopic := config.Get().KafkaConfig.KafkaAnnounceTopic
-
-	kv.addProducer(announceTopic)
+	kv.addProducer(kv.announceTopic)
 
 	return kv
 }
 
 // Validate validates a ValidationRequest
-func (kv *Validator) Validate(vr *validators.Request) {
+func (kv *Validator) Validate(ctx context.Context, vr *validators.Request) {
+	ctx, span := otel.Tracer("ingress").Start(ctx, "send "+kv.announceTopic,
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			attribute.String("messaging.system", "kafka"),
+			attribute.String("messaging.operation.name", "send"),
+			attribute.String("messaging.operation.type", "send"),
+			attribute.String("messaging.destination.name", kv.announceTopic),
+			attribute.String("rh.content_type", vr.Service),
+			attribute.Int64("rh.payload_size", vr.Size),
+		))
+	defer span.End()
+
 	data, err := json.Marshal(vr)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to marshal validation request")
 		l.Log.WithFields(logrus.Fields{"error": err}).Error("failed to marshal json")
 		return
 	}
-	announceTopic := config.Get().KafkaConfig.KafkaAnnounceTopic
-	l.Log.WithFields(logrus.Fields{"data": data, "topic": announceTopic}).Debug("Posting data to topic")
+	l.Log.WithFields(logrus.Fields{"data": data, "topic": kv.announceTopic}).Debug("Posting data to topic")
+	headers := map[string]string{
+		"service": vr.Service,
+	}
+	otel.GetTextMapPropagator().Inject(ctx, propagation.MapCarrier(headers))
+
 	message := validators.ValidationMessage{
 		Message: data,
-		Headers: map[string]string{
-			"service": vr.Service,
-		},
+		Headers: headers,
 	}
 	if vr.Metadata.QueueKey != "" {
 		message.Key = []byte(vr.Metadata.QueueKey)

@@ -38,6 +38,19 @@ type IngressConfig struct {
 	DebugUserAgent        *regexp.Regexp
 	ServiceBaseURL        string
 	StagerImplementation  string
+	OtelConfig            OtelConfig
+}
+
+type OtelConfig struct {
+	Enabled               bool
+	Endpoint              string
+	Insecure              bool
+	SamplingRate          float64
+	ServiceName           string
+	BSPMaxQueueSize       int
+	BSPMaxExportBatchSize int
+	BSPScheduleDelay      int
+	BSPExportTimeout      int
 }
 
 type KafkaCfg struct {
@@ -154,6 +167,18 @@ func Get() *IngressConfig {
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetDefault("ServiceBaseURL", "http://localhost:3000")
 	options.SetDefault("StagerImplementation", "s3")
+
+	// OpenTelemetry
+	options.SetDefault("Otel_Enabled", false)
+	options.SetDefault("Otel_Endpoint", "localhost:4318")
+	options.SetDefault("Otel_Insecure", true)
+	options.SetDefault("Otel_Sampling_Rate", 1.0)
+	options.SetDefault("Otel_Service_Name", "ingress")
+	options.SetDefault("Otel_BSP_Max_Queue_Size", 2048)
+	options.SetDefault("Otel_BSP_Max_Export_Batch_Size", 512)
+	options.SetDefault("Otel_BSP_Schedule_Delay", 5000)
+	options.SetDefault("Otel_BSP_Export_Timeout", 30000)
+
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 	kubenv := viper.New()
@@ -261,6 +286,17 @@ func Get() *IngressConfig {
 		},
 		ServiceBaseURL:       options.GetString("ServiceBaseURL"),
 		StagerImplementation: options.GetString("StagerImplementation"),
+		OtelConfig: OtelConfig{
+			Enabled:               options.GetBool("Otel_Enabled"),
+			Endpoint:              options.GetString("Otel_Endpoint"),
+			Insecure:              options.GetBool("Otel_Insecure"),
+			SamplingRate:          options.GetFloat64("Otel_Sampling_Rate"),
+			ServiceName:           options.GetString("Otel_Service_Name"),
+			BSPMaxQueueSize:       options.GetInt("Otel_BSP_Max_Queue_Size"),
+			BSPMaxExportBatchSize: options.GetInt("Otel_BSP_Max_Export_Batch_Size"),
+			BSPScheduleDelay:      options.GetInt("Otel_BSP_Schedule_Delay"),
+			BSPExportTimeout:      options.GetInt("Otel_BSP_Export_Timeout"),
+		},
 	}
 
 	if options.IsSet("KafkaUsername") {

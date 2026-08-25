@@ -1,6 +1,7 @@
 package filebased
 
 import (
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -9,6 +10,10 @@ import (
 	"unicode"
 
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Stager provides the mechanism to stage a payload to the file system
@@ -38,20 +43,31 @@ func GetFileStorageName(requestID string, storageDir string) (string, string, er
 }
 
 // Stage stores the file in filesystem storage and returns a presigned url
-func (s *FileBasedStager) Stage(in *stage.Input) (string, error) {
+func (s *FileBasedStager) Stage(ctx context.Context, in *stage.Input) (string, error) {
 	_, filePath, err := GetFileStorageName(in.Key, s.StagePath)
 	if err != nil {
 		return "", err
 	}
+
+	_, span := otel.Tracer("ingress").Start(ctx, "stage.file.write",
+		trace.WithAttributes(
+			attribute.String("file.path", filePath),
+			attribute.Int64("file.size", in.Size),
+		))
+	defer span.End()
 	file := in.Payload
 	dst, err := os.Create(filePath)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return "", err
 	}
 	defer dst.Close()
 
 	_, err = io.Copy(dst, file)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return "", err
 	}
 	return s.GetURL(in.Key)
