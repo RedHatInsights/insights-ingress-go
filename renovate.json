@@ -3,6 +3,13 @@
   "extends": [
     "github>RedHatInsights/konflux-pipelines//renovate/foreman_satellite/renovate.json"
   ],
+  "minimumConfidence": "high",
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["konflux-pipelines"],
+      "minimumConfidence": "neutral"
+    }
+  ],
   "tekton": {
     "schedule": [
       "at any time"
