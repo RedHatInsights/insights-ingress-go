@@ -31,6 +31,21 @@ COPY --from=builder /workspace/insights-ingress-go /usr/bin/insights-ingress-go
 
 COPY licenses/LICENSE /licenses/LICENSE
 
+ARG IMAGE_NAME
+ARG VERSION
+LABEL summary="Insights Ingress for on-premise deployments" \
+    description="Red Hat Insights Ingress for on-premise deployments" \
+    io.k8s.description="Red Hat Insights Ingress for on-premise deployments" \
+    io.k8s.display-name="Insights Ingress" \
+    com.redhat.component="costmanagement-ingress-rhel9-container" \
+    name="$IMAGE_NAME" \
+    version="$VERSION" \
+    release="1" \
+    vendor="Red Hat, Inc." \
+    distribution-scope="public" \
+    cpe="cpe:/a:redhat:cost_management_on_premise:1::el9" \
+    maintainer="Red Hat Cost Management Services <cost-mgmt@redhat.com>"
+
 USER 1001
 
 CMD ["insights-ingress-go"]
