@@ -35,9 +35,9 @@ COPY licenses/LICENSE /licenses/LICENSE
 
 ARG IMAGE_NAME
 ARG VERSION
-LABEL summary="Insights Ingress for on-premise deployments" \
-    description="Red Hat Insights Ingress for on-premise deployments" \
-    io.k8s.description="Red Hat Insights Ingress for on-premise deployments" \
+LABEL summary="Red Hat Insights Ingress" \
+    description="Red Hat Insights Ingress service" \
+    io.k8s.description="Red Hat Insights Ingress service" \
     io.k8s.display-name="Insights Ingress" \
     com.redhat.component="costmanagement-ingress-rhel9-container" \
     name="$IMAGE_NAME" \
