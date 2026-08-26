@@ -21,6 +21,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/download"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
+	"github.com/redhatinsights/insights-ingress-go/internal/securitylog"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
@@ -144,6 +145,8 @@ func main() {
 
 	identityErrorLogFunc := func(ctx context.Context, rawId, msg string) {
 		l.Log.WithFields(logrus.Fields{"error": msg, "rawId": rawId}).Error("Failed to decode Identity header")
+		reqID := request_id.GetReqID(ctx)
+		securitylog.LogAuthFailure(l.Log, msg, reqID)
 	}
 
 	var sub chi.Router = chi.NewRouter()
@@ -174,6 +177,7 @@ func main() {
 	}
 
 	l.Log.WithFields(logrus.Fields{"Web Port": cfg.WebPort}).Info("Starting Service with mode " + cfg.StagerImplementation)
+	securitylog.LogStartup(l.Log)
 
 	srv := http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.WebPort),
@@ -195,9 +199,11 @@ func main() {
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 		if err := srv.Shutdown(context.Background()); err != nil {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
 		if err := msrv.Shutdown(context.Background()); err != nil {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -205,6 +211,7 @@ func main() {
 		if err := shutdown(shutdownCtx); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
 		}
+		securitylog.LogShutdown(l.Log, "success", "")
 		close(idleConnsClosed)
 	}()
 
@@ -214,11 +221,13 @@ func main() {
 	go func() {
 
 		if err := msrv.ListenAndServe(); err != http.ErrServerClosed {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Metrics Service Stopped")
 		}
 	}()
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		securitylog.LogShutdown(l.Log, "failure", err.Error())
 		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Service Stopped")
 	}
 
