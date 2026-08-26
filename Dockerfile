@@ -10,15 +10,17 @@ WORKDIR /workspace
 # Cache deps before copying source so that we do not need to re-download for every build
 COPY go.mod go.sum .
 
-# Fetch dependencies
-RUN go mod download
+# Fetch dependencies hermetically by sourcing the local prefetch cache
+RUN if [ -f /cachi2/cachi2.env ]; then . /cachi2/cachi2.env; fi && \
+    go mod download
 
 # Now copy the rest of the files for build
 COPY cmd cmd
 COPY internal internal
 
-# Build the binary
-RUN go build -ldflags "-w -s" -o insights-ingress-go cmd/insights-ingress/main.go
+# Build the binary using the local cached modules
+RUN if [ -f /cachi2/cachi2.env ]; then . /cachi2/cachi2.env; fi && \
+    go build -ldflags "-w -s" -o insights-ingress-go cmd/insights-ingress/main.go
 
 ############################
 # STEP 2 build a small image
