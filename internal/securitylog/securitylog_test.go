@@ -224,6 +224,70 @@ func TestLogAuthFailure(t *testing.T) {
 	}
 }
 
+func TestLog_CertificatePrincipal(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+
+	Log(logger, Event{
+		Action:       "CREATE",
+		ResourceType: "payload",
+		ResourceID:   "req-cert-1",
+		Outcome:      "success",
+		Principal: Principal{
+			UserID:    "system-cn-123",
+			OrgID:     "org-cert",
+			Type:      "Certificate",
+			CertType:  "system",
+			SubjectDN: "/DC=com/DC=redhat/CN=system-cn-123",
+		},
+	})
+
+	m := parseLine(t, buf)
+
+	principal, ok := m["principal"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected principal to be a map")
+	}
+	if principal["type"] != "Certificate" {
+		t.Errorf("expected principal.type=Certificate, got %v", principal["type"])
+	}
+	if principal["user_id"] != "system-cn-123" {
+		t.Errorf("expected principal.user_id=system-cn-123, got %v", principal["user_id"])
+	}
+	if principal["cert_type"] != "system" {
+		t.Errorf("expected principal.cert_type=system, got %v", principal["cert_type"])
+	}
+	if principal["subject_dn"] != "/DC=com/DC=redhat/CN=system-cn-123" {
+		t.Errorf("expected principal.subject_dn, got %v", principal["subject_dn"])
+	}
+}
+
+func TestLog_CertPrincipalOmitEmptyFields(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+
+	Log(logger, Event{
+		Action:       "CREATE",
+		ResourceType: "payload",
+		ResourceID:   "req-cert-2",
+		Outcome:      "success",
+		Principal:    Principal{UserID: "u1", OrgID: "o1", Type: "User"},
+	})
+
+	m := parseLine(t, buf)
+
+	principal, ok := m["principal"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected principal to be a map")
+	}
+	if _, exists := principal["cert_type"]; exists {
+		t.Error("cert_type should be omitted for non-cert principal")
+	}
+	if _, exists := principal["subject_dn"]; exists {
+		t.Error("subject_dn should be omitted for non-cert principal")
+	}
+}
+
 func TestLog_AllRequiredFields(t *testing.T) {
 	buf := &bytes.Buffer{}
 	logger := newTestLogger(buf)

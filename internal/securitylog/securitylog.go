@@ -13,9 +13,11 @@ import (
 
 // Principal identifies who performed the action.
 type Principal struct {
-	UserID  string `json:"user_id,omitempty"`
-	OrgID   string `json:"org_id,omitempty"`
-	Type    string `json:"type"` // "User", "ServiceAccount", "System", "anonymous"
+	UserID    string `json:"user_id,omitempty"`
+	OrgID     string `json:"org_id,omitempty"`
+	Type      string `json:"type"` // "User", "ServiceAccount", "Certificate", "System", "anonymous"
+	CertType  string `json:"cert_type,omitempty"`
+	SubjectDN string `json:"subject_dn,omitempty"`
 }
 
 // Event holds the data for a single security log entry.
@@ -28,6 +30,23 @@ type Event struct {
 	Reason       string    `json:"reason,omitempty"`
 }
 
+// principalFields builds logrus.Fields for a Principal, including optional
+// cert_type and subject_dn when present.
+func principalFields(p Principal) logrus.Fields {
+	f := logrus.Fields{
+		"user_id": p.UserID,
+		"org_id":  p.OrgID,
+		"type":    p.Type,
+	}
+	if p.CertType != "" {
+		f["cert_type"] = p.CertType
+	}
+	if p.SubjectDN != "" {
+		f["subject_dn"] = p.SubjectDN
+	}
+	return f
+}
+
 // Log emits a security event at the appropriate log level.
 // Success events use Info; failure events use Warn.
 func Log(logger *logrus.Logger, e Event) {
@@ -37,11 +56,7 @@ func Log(logger *logrus.Logger, e Event) {
 		"resource_type":  e.ResourceType,
 		"resource_id":    e.ResourceID,
 		"outcome":        e.Outcome,
-		"principal": logrus.Fields{
-			"user_id": e.Principal.UserID,
-			"org_id":  e.Principal.OrgID,
-			"type":    e.Principal.Type,
-		},
+		"principal": principalFields(e.Principal),
 	}
 	if e.Reason != "" {
 		fields["reason"] = e.Reason

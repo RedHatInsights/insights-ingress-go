@@ -406,6 +406,19 @@ func principalFromIdentity(id identity.XRHID) securitylog.Principal {
 		p.UserID = id.Identity.ServiceAccount.ClientId
 		p.Type = "ServiceAccount"
 	}
+	if id.Identity.System != nil && id.Identity.System.CommonName != "" {
+		p.UserID = id.Identity.System.CommonName
+		p.Type = "Certificate"
+		if id.Identity.System.CertType != "" {
+			p.CertType = id.Identity.System.CertType
+		}
+	}
+	if id.Identity.X509 != nil && id.Identity.X509.SubjectDN != "" {
+		p.SubjectDN = id.Identity.X509.SubjectDN
+		if p.Type != "Certificate" {
+			p.Type = "Certificate"
+		}
+	}
 	if p.OrgID == "" && p.UserID == "" {
 		p.Type = "anonymous"
 	}
