@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/textproto"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -183,6 +184,28 @@ var _ = Describe("Upload", func() {
 				Expect(rr.Code).To(Equal(200))
 				Expect(rr.Body.String()).To(Equal(goodAnemicJsonBody))
 			})
+		})
+	})
+
+	Describe("Health check", func() {
+		It("reports an available writable staging directory", func() {
+			directory, err := os.MkdirTemp("", "ingress-health-")
+			Expect(err).To(BeNil())
+			defer os.RemoveAll(directory)
+
+			stager := &filebased.FileBasedStager{StagePath: directory}
+			Expect(stager.Check(context.Background())).To(BeNil())
+		})
+
+		It("reports a missing staging directory as unavailable", func() {
+			file, err := os.CreateTemp("", "ingress-health-")
+			Expect(err).To(BeNil())
+			fileName := file.Name()
+			Expect(file.Close()).To(BeNil())
+			defer os.Remove(fileName)
+
+			stager := &filebased.FileBasedStager{StagePath: fileName}
+			Expect(stager.Check(context.Background())).To(HaveOccurred())
 		})
 	})
 })

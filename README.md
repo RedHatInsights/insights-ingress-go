@@ -14,6 +14,24 @@ for processing.
 
 The service runs inside Openshift Dedicated.
 
+## Health and readiness
+
+`GET /healthz` is a lightweight liveness endpoint and only indicates that the
+HTTP process is serving requests. `GET /status/` is the readiness endpoint. It
+checks Kafka broker metadata and access to the configured staging backend (the
+S3/MinIO bucket, or the filesystem directory in file-based mode).
+
+Readiness returns HTTP 200 only when all configured critical dependencies are
+available, and HTTP 503 otherwise. Its JSON response includes each dependency's
+status. Detailed connection errors are logged but are not returned to clients.
+
+The Kubernetes liveness probe uses `/healthz`; the readiness probe uses
+`/status/`. For local development, after starting the dependencies and Ingress,
+check them with:
+
+    curl http://localhost:3000/healthz
+    curl -i http://localhost:3000/status/
+
 ## Documentation
 
 - **[AGENTS.md](AGENTS.md)** -- Conventions, architecture decisions, and cross-cutting guidelines for AI agents and contributors

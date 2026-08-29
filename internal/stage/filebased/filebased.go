@@ -16,6 +16,20 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// Check verifies that the local staging directory remains available.
+func (f *FileBasedStager) Check(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+	info, err := os.Stat(f.StagePath)
+	if err != nil || !info.IsDir() || info.Mode().Perm()&0222 == 0 {
+		return errors.New("file staging directory unavailable")
+	}
+	return nil
+}
+
 // Stager provides the mechanism to stage a payload to the file system
 type FileBasedStager struct {
 	StagePath string

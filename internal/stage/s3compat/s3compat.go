@@ -3,6 +3,7 @@ package s3compat
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/minio/minio-go/v6"
@@ -18,6 +19,33 @@ import (
 type S3Stager struct {
 	Bucket string
 	Client *minio.Client
+}
+
+// Check verifies credentials and access to the configured bucket without
+// writing customer data.
+func (s *S3Stager) Check(ctx context.Context) error {
+	if s.Client == nil {
+		return errors.New("object storage client is not configured")
+	}
+	result := make(chan error, 1)
+	go func() {
+		exists, err := s.Client.BucketExists(s.Bucket)
+		if err != nil {
+			result <- fmt.Errorf("object storage bucket unavailable: %w", err)
+			return
+		}
+		if !exists {
+			result <- errors.New("object storage bucket unavailable")
+			return
+		}
+		result <- nil
+	}()
+	select {
+	case err := <-result:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // GetClient gets the s3 compatible client info
