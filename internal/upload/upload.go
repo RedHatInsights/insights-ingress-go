@@ -17,6 +17,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
+	"github.com/redhatinsights/insights-ingress-go/internal/securitylog"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
@@ -211,6 +212,14 @@ func NewHandler(
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("Upload denied. Please contact Red Hat Support."))
 			requestLogger.WithFields(logrus.Fields{"account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info("Upload rejected due to customer being denylisted")
+			securitylog.Log(l.Log, securitylog.Event{
+				Action:       "AUTHZ_FAILURE",
+				ResourceType: "payload",
+				ResourceID:   reqID,
+				Outcome:      "failure",
+				Principal:    principalFromIdentity(id),
+				Reason:       "org_id deny-listed",
+			})
 			return
 		}
 
@@ -331,6 +340,14 @@ func NewHandler(
 		observeStageElapsed(time.Since(start))
 		if err != nil {
 			logerr("Error staging", err)
+			securitylog.Log(l.Log, securitylog.Event{
+				Action:       "CREATE",
+				ResourceType: "payload",
+				ResourceID:   reqID,
+				Outcome:      "failure",
+				Principal:    principalFromIdentity(id),
+				Reason:       err.Error(),
+			})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -347,6 +364,14 @@ func NewHandler(
 		}
 		requestLogger.WithFields(logrus.Fields{"service": vr.Service}).Info("Payload sent to validation service")
 		tracker.Status(ps)
+
+		securitylog.Log(l.Log, securitylog.Event{
+			Action:       "CREATE",
+			ResourceType: "payload",
+			ResourceID:   reqID,
+			Outcome:      "success",
+			Principal:    principalFromIdentity(id),
+		})
 
 		validator.Validate(r.Context(), vr)
 
@@ -366,6 +391,38 @@ func NewHandler(
 		}
 		w.Write(jsonBody)
 	}
+}
+
+// principalFromIdentity builds a securitylog.Principal from the platform identity.
+func principalFromIdentity(id identity.XRHID) securitylog.Principal {
+	p := securitylog.Principal{
+		OrgID: id.Identity.OrgID,
+		Type:  "User",
+	}
+	if id.Identity.User != nil {
+		p.UserID = id.Identity.User.UserID
+	}
+	if id.Identity.ServiceAccount != nil && id.Identity.ServiceAccount.ClientId != "" {
+		p.UserID = id.Identity.ServiceAccount.ClientId
+		p.Type = "ServiceAccount"
+	}
+	if id.Identity.System != nil && id.Identity.System.CommonName != "" {
+		p.UserID = id.Identity.System.CommonName
+		p.Type = "Certificate"
+		if id.Identity.System.CertType != "" {
+			p.CertType = id.Identity.System.CertType
+		}
+	}
+	if id.Identity.X509 != nil && id.Identity.X509.SubjectDN != "" {
+		p.SubjectDN = id.Identity.X509.SubjectDN
+		if p.Type != "Certificate" {
+			p.Type = "Certificate"
+		}
+	}
+	if p.OrgID == "" && p.UserID == "" {
+		p.Type = "anonymous"
+	}
+	return p
 }
 
 func isRequestFromDenyListedOrgID(cfg config.IngressConfig) func(identity.XRHID) bool {
