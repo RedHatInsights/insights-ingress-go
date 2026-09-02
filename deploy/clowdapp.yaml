@@ -32,20 +32,20 @@ objects:
             path: /healthz
             port: 8000
             scheme: HTTP
-          initialDelaySeconds: 15
-          periodSeconds: 10
+          initialDelaySeconds: 35
+          periodSeconds: 5
           successThreshold: 1
-          timeoutSeconds: 5
+          timeoutSeconds: 120
         readinessProbe:
           failureThreshold: 3
           httpGet:
             path: /status/
             port: 8000
             scheme: HTTP
-          initialDelaySeconds: 15
-          periodSeconds: 10
+          initialDelaySeconds: 35
+          periodSeconds: 5
           successThreshold: 1
-          timeoutSeconds: 5
+          timeoutSeconds: 120
         env:
         - name: INGRESS_PAYLOADTRACKERURL
           value: ${INGRESS_PAYLOADTRACKERURL}
