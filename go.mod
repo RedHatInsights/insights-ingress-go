@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8
-	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.15.0
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/google/uuid v1.6.0
 	github.com/jarcoal/httpmock v1.3.1
@@ -31,7 +31,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
