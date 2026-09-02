@@ -6,16 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	prom "github.com/prometheus/client_golang/prometheus"
-	pa "github.com/prometheus/client_golang/prometheus/promauto"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/sirupsen/logrus"
 )
-
-var dependencyHealth = pa.NewGaugeVec(prom.GaugeOpts{
-	Name: "ingress_dependency_health",
-	Help: "Health of an Ingress readiness dependency (1 is healthy, 0 is unhealthy).",
-}, []string{"dependency"})
 
 // Checker verifies that a dependency required by the upload path is usable.
 type Checker interface {
@@ -40,6 +33,11 @@ type response struct {
 	Dependencies map[string]dependencyResult `json:"dependencies"`
 }
 
+type checkResult struct {
+	name   string
+	status dependencyResult
+}
+
 // Handler returns a dependency-aware readiness handler. Checks run in parallel
 // and share one deadline so a slow dependency cannot hold a probe open forever.
 func Handler(dependencies []Dependency, timeout time.Duration) http.HandlerFunc {
@@ -50,39 +48,11 @@ func Handler(dependencies []Dependency, timeout time.Duration) http.HandlerFunc 
 		ctx, cancel := context.WithTimeout(r.Context(), timeout)
 		defer cancel()
 
-		type result struct {
-			name   string
-			status dependencyResult
-		}
-		results := make(chan result, len(dependencies))
+		results := make(chan checkResult, len(dependencies))
 		for _, dependency := range dependencies {
 			dependency := dependency
 			go func() {
-				if dependency.Checker == nil {
-					results <- result{
-						name:   dependency.Name,
-						status: dependencyResult{Status: "error", Backend: dependency.Backend, Error: "check is not configured"},
-					}
-					return
-				}
-
-				err := dependency.Checker.Check(ctx)
-				if err != nil {
-					l.Log.WithFields(logrus.Fields{
-						"request_id": requestID(r),
-						"dependency": dependency.Name,
-						"error":      err,
-					}).Error("Readiness dependency check failed")
-					results <- result{
-						name: dependency.Name,
-						// The detailed error is logged above. Keep credentials and
-						// endpoint details out of the probe response.
-						status: dependencyResult{Status: "error", Backend: dependency.Backend, Error: "dependency check failed"},
-					}
-					return
-				}
-				dependencyHealth.WithLabelValues(dependency.Name).Set(1)
-				results <- result{name: dependency.Name, status: dependencyResult{Status: "ok", Backend: dependency.Backend}}
+				results <- checkDependency(ctx, dependency)
 			}()
 		}
 
@@ -97,43 +67,60 @@ func Handler(dependencies []Dependency, timeout time.Duration) http.HandlerFunc 
 				}
 			case <-ctx.Done():
 				ready = false
-				for _, dependency := range dependencies {
-					if _, ok := dependenciesResult[dependency.Name]; !ok {
-						l.Log.WithFields(logrus.Fields{
-							"request_id": requestID(r),
-							"dependency": dependency.Name,
-							"error":      ctx.Err(),
-						}).Error("Readiness dependency check timed out")
-						dependenciesResult[dependency.Name] = dependencyResult{
-							Status:  "error",
-							Backend: dependency.Backend,
-							Error:   "dependency check timed out",
-						}
-						dependencyHealth.WithLabelValues(dependency.Name).Set(0)
-					}
-				}
+				handleIncompleteChecks(ctx, dependencies, dependenciesResult)
 				completed = len(dependencies)
 			}
 		}
 
-		for _, dependency := range dependencies {
-			if dependenciesResult[dependency.Name].Status != "ok" {
-				dependencyHealth.WithLabelValues(dependency.Name).Set(0)
-			}
-		}
-
-		status := http.StatusOK
-		bodyStatus := "ok"
 		if !ready {
-			status = http.StatusServiceUnavailable
-			bodyStatus = "error"
+			writeJSON(w, http.StatusServiceUnavailable, response{Status: "error", Dependencies: dependenciesResult})
+			return
 		}
-		writeJSON(w, status, response{Status: bodyStatus, Dependencies: dependenciesResult})
+		writeJSON(w, http.StatusOK, response{Status: "ok", Dependencies: dependenciesResult})
 	}
 }
 
-func requestID(r *http.Request) string {
-	return r.Header.Get("x-rh-insights-request-id")
+func checkDependency(ctx context.Context, dependency Dependency) checkResult {
+	if dependency.Checker == nil {
+		dependencyHealth.WithLabelValues(dependency.Name).Set(0)
+		return checkResult{name: dependency.Name, status: dependencyResult{Status: "error", Backend: dependency.Backend, Error: "check is not configured"}}
+	}
+	if err := dependency.Checker.Check(ctx); err != nil {
+		dependencyHealth.WithLabelValues(dependency.Name).Set(0)
+		l.Log.WithFields(logrus.Fields{
+			"dependency": dependency.Name,
+			"error":      err,
+		}).Error("Readiness dependency check failed")
+		return checkResult{name: dependency.Name, status: dependencyResult{Status: "error", Backend: dependency.Backend, Error: "dependency check failed"}}
+	}
+	if err := ctx.Err(); err != nil {
+		dependencyHealth.WithLabelValues(dependency.Name).Set(0)
+		l.Log.WithFields(logrus.Fields{
+			"dependency": dependency.Name,
+			"error":      err,
+		}).Error("Readiness dependency check failed")
+		return checkResult{name: dependency.Name, status: dependencyResult{Status: "error", Backend: dependency.Backend, Error: "dependency check failed"}}
+	}
+	dependencyHealth.WithLabelValues(dependency.Name).Set(1)
+	return checkResult{name: dependency.Name, status: dependencyResult{Status: "ok", Backend: dependency.Backend}}
+}
+
+func handleIncompleteChecks(ctx context.Context, dependencies []Dependency, dependenciesResult map[string]dependencyResult) {
+	for _, dependency := range dependencies {
+		if _, ok := dependenciesResult[dependency.Name]; ok {
+			continue
+		}
+		l.Log.WithFields(logrus.Fields{
+			"dependency": dependency.Name,
+			"error":      ctx.Err(),
+		}).Error("Readiness dependency check timed out")
+		dependenciesResult[dependency.Name] = dependencyResult{
+			Status:  "error",
+			Backend: dependency.Backend,
+			Error:   "dependency check timed out",
+		}
+		dependencyHealth.WithLabelValues(dependency.Name).Set(0)
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, value interface{}) {

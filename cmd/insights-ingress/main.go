@@ -124,15 +124,7 @@ func main() {
 	}
 
 	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidUploadTypes...)
-	kafkaHealth := health.NewKafkaChecker(health.KafkaConfig{
-		Brokers:          cfg.KafkaConfig.KafkaBrokers,
-		SecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
-		CA:               cfg.KafkaConfig.KafkaSSLConfig.KafkaCA,
-		Username:         cfg.KafkaConfig.KafkaSSLConfig.KafkaUsername,
-		Password:         cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword,
-		SASLMechanism:    cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism,
-		Timeout:          2 * time.Second,
-	})
+	kafkaHealth := queue.NewKafkaHealthChecker(producerCfg, 2*time.Second)
 	storageHealth, ok := stager.(health.Checker)
 	if !ok {
 		storageHealth = health.CheckFunc(func(context.Context) error {
