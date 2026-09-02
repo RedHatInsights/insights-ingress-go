@@ -23,8 +23,16 @@ func (f *FileBasedStager) Check(ctx context.Context) error {
 		return ctx.Err()
 	default:
 	}
-	info, err := os.Stat(f.StagePath)
-	if err != nil || !info.IsDir() || info.Mode().Perm()&0222 == 0 {
+	probe, err := os.CreateTemp(f.StagePath, ".ingress-health-*")
+	if err != nil {
+		return errors.New("file staging directory unavailable")
+	}
+	probePath := probe.Name()
+	if err := probe.Close(); err != nil {
+		_ = os.Remove(probePath)
+		return errors.New("file staging directory unavailable")
+	}
+	if err := os.Remove(probePath); err != nil {
 		return errors.New("file staging directory unavailable")
 	}
 	return nil

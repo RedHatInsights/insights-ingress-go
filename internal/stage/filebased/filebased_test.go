@@ -207,5 +207,17 @@ var _ = Describe("Upload", func() {
 			stager := &filebased.FileBasedStager{StagePath: fileName}
 			Expect(stager.Check(context.Background())).To(HaveOccurred())
 		})
+
+		It("reports an unwritable staging directory as unavailable", func() {
+			directory, err := os.MkdirTemp("", "ingress-health-")
+			Expect(err).To(BeNil())
+			defer os.RemoveAll(directory)
+
+			Expect(os.Chmod(directory, 0555)).To(BeNil())
+			defer os.Chmod(directory, 0755)
+
+			stager := &filebased.FileBasedStager{StagePath: directory}
+			Expect(stager.Check(context.Background())).To(HaveOccurred())
+		})
 	})
 })

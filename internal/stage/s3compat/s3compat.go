@@ -27,25 +27,14 @@ func (s *S3Stager) Check(ctx context.Context) error {
 	if s.Client == nil {
 		return errors.New("object storage client is not configured")
 	}
-	result := make(chan error, 1)
-	go func() {
-		exists, err := s.Client.BucketExists(s.Bucket)
-		if err != nil {
-			result <- fmt.Errorf("object storage bucket unavailable: %w", err)
-			return
-		}
-		if !exists {
-			result <- errors.New("object storage bucket unavailable")
-			return
-		}
-		result <- nil
-	}()
-	select {
-	case err := <-result:
-		return err
-	case <-ctx.Done():
-		return ctx.Err()
+	exists, err := s.Client.BucketExistsWithContext(ctx, s.Bucket)
+	if err != nil {
+		return fmt.Errorf("object storage bucket unavailable: %w", err)
 	}
+	if !exists {
+		return errors.New("object storage bucket unavailable")
+	}
+	return nil
 }
 
 // GetClient gets the s3 compatible client info
