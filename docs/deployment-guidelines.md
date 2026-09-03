@@ -11,7 +11,7 @@
 
 - The manifest is an OpenShift Template wrapping a `ClowdApp` of kind `cloud.redhat.com/v1alpha1`, named `ingress`.
 - The single deployment is named `service` with a public web service on API path `ingress`.
-- Health probes use HTTP GET on `/healthz` (liveness) and `/status/` (readiness), port `8000`, with a 15-second initial delay, 10-second period, and 5-second timeout. Liveness is process-only; readiness checks Kafka metadata and staging storage access.
+- Health probes use HTTP GET on `/healthz` (liveness) and `/status/` (readiness), port `8000`, with a 35-second initial delay, 5-second period, and 120-second timeout. Liveness is process-only; readiness checks Kafka metadata and staging storage access.
 - Mount an `emptyDir` volume named `tmpdir` at `/tmp` inside the pod.
 - Declare two Kafka topics: `platform.payload-status` (3 partitions) and `platform.upload.announce` (64 partitions), each with 3 replicas.
 - Declare `objectStore` referencing the `INGRESS_STAGEBUCKET` parameter (default `insights-upload-perma`).
