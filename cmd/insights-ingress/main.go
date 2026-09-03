@@ -19,6 +19,7 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/api"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	"github.com/redhatinsights/insights-ingress-go/internal/download"
+	"github.com/redhatinsights/insights-ingress-go/internal/health"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
 	"github.com/redhatinsights/insights-ingress-go/internal/queue"
 	"github.com/redhatinsights/insights-ingress-go/internal/securitylog"
@@ -123,6 +124,17 @@ func main() {
 	}
 
 	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidUploadTypes...)
+	kafkaHealth := queue.NewKafkaHealthChecker(producerCfg, 2*time.Second)
+	storageHealth, ok := stager.(health.Checker)
+	if !ok {
+		storageHealth = health.CheckFunc(func(context.Context) error {
+			return fmt.Errorf("storage health check is not configured")
+		})
+	}
+	readiness := health.Handler([]health.Dependency{
+		{Name: "kafka", Checker: kafkaHealth},
+		{Name: "storage", Backend: cfg.StagerImplementation, Checker: storageHealth},
+	}, 5*time.Second)
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
@@ -148,6 +160,9 @@ func main() {
 		reqID := request_id.GetReqID(ctx)
 		securitylog.LogAuthFailure(l.Log, msg, reqID)
 	}
+	r.Get("/healthz", lubDub)
+	r.Get("/status", readiness)
+	r.Get("/status/", readiness)
 
 	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
@@ -195,7 +210,7 @@ func main() {
 
 	idleConnsClosed := make(chan struct{})
 	go func() {
-		sigint := make(chan os.Signal)
+		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 		if err := srv.Shutdown(context.Background()); err != nil {
@@ -206,6 +221,7 @@ func main() {
 			securitylog.LogShutdown(l.Log, "failure", err.Error())
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
+		kafkaHealth.Close()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := shutdown(shutdownCtx); err != nil {
