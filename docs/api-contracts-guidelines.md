@@ -9,6 +9,13 @@
 
 ## Endpoints
 
+The unauthenticated root health endpoints are available on the web port:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/healthz` | Lightweight liveness check; does not call dependencies |
+| GET | `/status/` | Readiness check for Kafka and staging storage; returns JSON and HTTP 503 when either is unavailable |
+
 The service exposes exactly these routes on the API subrouter:
 
 | Method | Path                  | Handler                       | Auth Required |

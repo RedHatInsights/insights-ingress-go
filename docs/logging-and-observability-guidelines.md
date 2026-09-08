@@ -54,6 +54,7 @@ logerr := func(msg string, err error) {
   - `internal/validators/kafka/metrics.go`: `ingress_processed_payloads`, `ingress_validate_elapsed_seconds`, `ingress_message_produced`
   - `internal/queue/queue.go`: `ingress_kafka_produced`, `ingress_publish_seconds`, `ingress_kafka_produce_failures`, `ingress_kafka_producer_go_routine_count`
   - `internal/version/version.go`: `ingress_version` (created via `Namespace: "ingress"` + `Name: "version"`)
+  - `internal/health/health.go`: `ingress_dependency_health`
 - Declare metrics as package-level `var` blocks in dedicated `metrics.go` files. Keep metric helper functions unexported and co-located.
 - Normalize user-agent strings through `NormalizeUserAgent()` in `internal/upload/metrics.go` to prevent high-cardinality label explosion.
 - Metrics endpoint served on separate HTTP server on `MetricsPort` (default 8080) via `promhttp.Handler()` at `/metrics`.
