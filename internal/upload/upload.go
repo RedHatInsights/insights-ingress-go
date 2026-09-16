@@ -247,6 +247,14 @@ func NewHandler(
 		// in that case, this defer will return an error because
 		// the file is already closed.
 		defer file.Close()
+
+		// ParseMultipartForm spills file parts larger than cfg.MaxUploadMem to
+		// temporary files in os.TempDir() (/tmp). Closing the returned file does
+		// not remove those spilled temp files; only RemoveAll does. Without this
+		// the /tmp EmptyDir fills up and the pod is evicted.
+		if r.MultipartForm != nil {
+			defer r.MultipartForm.RemoveAll()
+		}
 		contentType := fileHeader.Header.Get("Content-Type")
 		size := fileHeader.Size
 
