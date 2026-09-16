@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/textproto"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -488,6 +489,43 @@ var _ = Describe("Upload", func() {
 				})
 			})
 		})
+		Context("with a file part that spills to a temp file", func() {
+			It("should remove the multipart temp file after handling", func() {
+				tmpDir, err := os.MkdirTemp("", "ingress-multipart-test-")
+				Expect(err).To(BeNil())
+				defer os.RemoveAll(tmpDir)
+
+				// os.CreateTemp (used by ParseMultipartForm for spilled parts)
+				// honors TMPDIR, so redirect spills into our isolated dir.
+				oldTmp := os.Getenv("TMPDIR")
+				Expect(os.Setenv("TMPDIR", tmpDir)).To(BeNil())
+				defer os.Setenv("TMPDIR", oldTmp)
+
+				// MaxUploadMem of 1 forces any file part to spill to disk.
+				cfg := config.Get()
+				cfg.MaxUploadMem = 1
+				handler = NewHandler(stager, validator, tracker, *cfg)
+				reqConfiguredHandlerFunc := request_id.ConfiguredRequestID("x-rh-insights-request-id")
+				handler = reqConfiguredHandlerFunc(handler)
+
+				boiler(http.StatusAccepted, "application/json", &FilePart{
+					Name:        "file",
+					Content:     strings.Repeat("a", 1024),
+					ContentType: "application/vnd.redhat.unit.test",
+				})
+
+				entries, err := os.ReadDir(tmpDir)
+				Expect(err).To(BeNil())
+				var leftover []string
+				for _, e := range entries {
+					if strings.HasPrefix(e.Name(), "multipart-") {
+						leftover = append(leftover, e.Name())
+					}
+				}
+				Expect(leftover).To(BeEmpty())
+			})
+		})
+
 		Context("with a denied orgID", func() {
 			It("should return 403", func() {
 				cfg := config.Get()
