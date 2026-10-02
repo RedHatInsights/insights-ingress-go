@@ -78,8 +78,7 @@
 - **GitHub Actions** (`pr.yml`): Runs `go test ./...` and validates `internal/api/openapi.json` on PRs.
 - **Tekton/Konflux** (`.tekton/`): Hermetic builds with Go module prefetch on `master` branch.
 - **App-SRE** (`pr_check.sh`, `build_deploy.sh`): Bonfire-based ephemeral environment testing and quay.io image publishing.
-- **Renovate** (`renovate.json`): Automated Go dependency updates.
-- **Dependabot** (`.github/dependabot.yml`): Docker base image updates on `security-compliance` branch only.
+- **Renovate** (`renovate.jsonc`): Automated Go dependency, GitHub Actions, Docker base image, and Konflux pipeline updates, with automerge for low-risk bumps on `master`. The `foreman-*`/`SATELLITE-*` branches are managed entirely by the extended shared preset.
 
 ## Detailed Guidelines Index
 

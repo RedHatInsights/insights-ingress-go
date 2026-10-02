@@ -9,9 +9,10 @@
 
 ## Automated Dependency Updates
 
-- Renovate is configured in `renovate.json` and extends the shared preset at `github>RedHatInsights/konflux-pipelines//renovate/foreman_satellite/renovate.json`. Do not add inline package rules that duplicate the shared preset.
-- Dependabot (`.github/dependabot.yml`) is scoped solely to Docker base image updates on the `security-compliance` branch. Do not add `gomod` ecosystem entries to Dependabot; Go dependency updates are handled by Renovate.
-- A Renovate config validator workflow (`.github/workflows/renovate-validator-mintmaker.yaml`) runs on changes to `renovate.json`.
+- Renovate is configured in `renovate.jsonc` and extends the shared preset at `github>RedHatInsights/konflux-pipelines//renovate/foreman_satellite/renovate.json`. Do not add inline package rules that duplicate the shared preset.
+- The shared preset owns the `foreman-*`/`SATELLITE-*` branches. Every inline `packageRule` in `renovate.jsonc` must set `"matchBaseBranches": ["master"]` so it cannot interfere with the preset's handling of those branches.
+- Dependabot is no longer used; it was scoped solely to Docker base image updates on the `security-compliance` branch, which Renovate now covers. Dependabot alerts remain enabled, and Renovate's vulnerability fix PRs are built from them.
+- A Renovate config validator workflow (`.github/workflows/renovate-validator-mintmaker.yaml`) runs on changes to `renovate.jsonc`.
 
 ## Key Direct Dependencies
 
@@ -39,7 +40,7 @@
 
 - Builder stage: `registry.access.redhat.com/ubi9/go-toolset:latest`
 - Runtime stage: `registry.access.redhat.com/ubi9/ubi-minimal:latest`
-- Base image updates on `security-compliance` branch are automated by Dependabot.
+- Base image updates, `security-compliance` branch included, are automated by Renovate.
 
 ## Licenses
 

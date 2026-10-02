@@ -2,7 +2,7 @@
 paths:
   - "go.mod"
   - "go.sum"
-  - "renovate.json"
+  - "renovate.jsonc"
 ---
 
 @docs/dependency-management-guidelines.md

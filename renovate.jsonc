@@ -1,0 +1,79 @@
+// Set up with the MintMaker Automerge plugin v0.12.0: https://github.com/gwenneg/mintmaker-automerge
+// Overrides MintMaker's global config: https://github.com/konflux-ci/mintmaker/blob/main/config/renovate/renovate.json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  // Duplicated from the extended foreman_satellite config below: the config validator doesn't
+  // resolve remote presets, so matchBaseBranches needs this declared here too. Keep in sync.
+  "baseBranchPatterns": ["master", "main", "/^foreman-.*$/", "/^SATELLITE-.*$/"],
+  "extends": [
+    // Repository setting, not written by the plugin:
+    "github>RedHatInsights/konflux-pipelines//renovate/foreman_satellite/renovate.json",
+    // Keep even when every action is pinned: it pins the next one added.
+    "helpers:pinGitHubActionDigests"
+  ],
+  "packageRules": [
+    {
+      // Everything below is scoped to master: the foreman/satellite branches are owned by the
+      // extended foreman_satellite config above and must keep running under its own rules.
+      "matchBaseBranches": ["master"],
+      // GitHub auto-merge never completes when a bypass actor meets the approval rule.
+      // Renovate merges instead, on the first run where GitHub allows it.
+      "platformAutomerge": false,
+      "ignoreTests": false,
+      // Throughput: no rebase or CI rerun after a merge, so each run merges two PRs, not one.
+      // Risk: those two are never tested together. Label a PR keep-updated to rebase it.
+      "rebaseWhen": "conflicted",
+      "keepUpdatedLabel": "keep-updated"
+    },
+    {
+      "matchBaseBranches": ["master"],
+      "matchManagers": ["tekton"],
+      // The PR's own Konflux build runs the updated pipeline.
+      "automerge": true,
+      // Any day, instead of MintMaker's Saturday batch.
+      "schedule": ["at any time"]
+    },
+    {
+      "matchBaseBranches": ["master"],
+      // Needed even when SHA-pinned: without it, a v4-style tag gets only digest PRs, which
+      // never automerge. Expect one manual PR that writes the full version.
+      "matchManagers": ["github-actions"],
+      "matchDepTypes": ["action"],
+      "rangeStrategy": "pin"
+    },
+    {
+      "matchBaseBranches": ["master"],
+      // Named actions only: an action runs code in CI. Digest-only updates stay manual:
+      // a moved tag with no version change is what a hijacked action looks like.
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "matchDepNames": ["actions/checkout", "actions/setup-go", "actions/setup-python"],
+      "automerge": true,
+      "groupName": "GitHub Actions"
+    },
+
+    {
+      "matchBaseBranches": ["master"],
+      // The Konflux PR build builds and tests the image. A digest update rebuilds the same
+      // tag; a new RHEL or JDK line is a major and stays manual.
+      "matchManagers": ["dockerfile"],
+      "matchUpdateTypes": ["digest", "patch", "minor"],
+      "automerge": true,
+      "groupName": "base images"
+    },
+    {
+      "matchBaseBranches": ["master"],
+      // Keep even when every FROM line is pinned: it pins the next image added.
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
+    },
+
+    {
+      "matchBaseBranches": ["master"],
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "groupName": "Go modules"
+    }
+  ]
+}
