@@ -35,7 +35,7 @@
 - `pr.yml`: Runs `go test ./...` and validates `internal/api/openapi.json` with `openapi-spec-validator` on every PR.
 - `container-publish.yaml`: Builds via `Dockerfile.upstream`, pushes to `quay.io/iop/ingress`, and signs with cosign on push to `master` or semver tags.
 - `security-workflow-template.yml`: Invokes the reusable ConsoleDot platform security scan.
-- `renovate-validator-mintmaker.yaml`: Validates `renovate.json` changes.
+- `renovate-validator-mintmaker.yaml`: Validates `renovate.jsonc` changes.
 
 ## CI Scripts (Bonfire / App-SRE)
 
