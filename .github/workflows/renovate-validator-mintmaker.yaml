@@ -4,12 +4,12 @@ on:
     branches:
       - master
     paths:
-      - renovate.json
+      - renovate.jsonc
   push:
     branches:
       - master
     paths:
-      - renovate.json
+      - renovate.jsonc
 
 jobs:
   validate:
@@ -22,10 +22,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate renovate.json
+      - name: Validate renovate.jsonc
         run: |
           podman run \
             --rm \
-            -v ./renovate.json:/tmp/renovate.json \
+            -v ./renovate.jsonc:/tmp/renovate.jsonc \
             ${{ env.TEST_IMAGE }} \
-            /bin/bash -c 'renovate-config-validator /tmp/renovate.json'
+            /bin/bash -c 'renovate-config-validator /tmp/renovate.jsonc'
