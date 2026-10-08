@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -211,20 +212,22 @@ func main() {
 	idleConnsClosed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
-		if err := srv.Shutdown(context.Background()); err != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
 			securitylog.LogShutdown(l.Log, "failure", err.Error())
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
-		if err := msrv.Shutdown(context.Background()); err != nil {
+		if err := msrv.Shutdown(shutdownCtx); err != nil {
 			securitylog.LogShutdown(l.Log, "failure", err.Error())
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
 		}
 		kafkaHealth.Close()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := shutdown(shutdownCtx); err != nil {
+		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer telemetryCancel()
+		if err := shutdown(telemetryCtx); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
 		}
 		securitylog.LogShutdown(l.Log, "success", "")
