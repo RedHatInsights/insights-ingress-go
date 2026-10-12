@@ -214,18 +214,22 @@ func main() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout*time.Second)
 		defer cancel()
+		// Log shutdown errors (including a context deadline during an in-progress
+		// shutdown) and fall through to the remaining cleanup rather than calling
+		// Fatal: exiting here would skip kafka/telemetry cleanup and exit non-zero,
+		// which marks the unit failed - the symptom this shutdown handling fixes.
 		if err := srv.Shutdown(shutdownCtx); err != nil {
 			securitylog.LogShutdown(l.Log, "failure", err.Error())
-			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("HTTP Server Shutdown failed")
 		}
 		if err := msrv.Shutdown(shutdownCtx); err != nil {
 			securitylog.LogShutdown(l.Log, "failure", err.Error())
-			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("Metrics Server Shutdown failed")
 		}
 		kafkaHealth.Close()
-		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), cfg.TelemetryShutdownTimeout*time.Second)
 		defer telemetryCancel()
 		if err := shutdown(telemetryCtx); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
