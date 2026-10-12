@@ -229,7 +229,7 @@ func main() {
 			l.Log.WithFields(logrus.Fields{"error": err}).Error("Metrics Server Shutdown failed")
 		}
 		kafkaHealth.Close()
-		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), cfg.TelemetryShutdownTimeout*time.Second)
+		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), cfg.OtelConfig.ShutdownTimeout*time.Second)
 		defer telemetryCancel()
 		if err := shutdown(telemetryCtx); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
