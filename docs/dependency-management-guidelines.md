@@ -9,9 +9,10 @@
 
 ## Automated Dependency Updates
 
-- Renovate is configured in `renovate.json` and extends the shared preset at `github>RedHatInsights/konflux-pipelines//renovate/foreman_satellite/renovate.json`. Do not add inline package rules that duplicate the shared preset.
-- Dependabot (`.github/dependabot.yml`) is scoped solely to Docker base image updates on the `security-compliance` branch. Do not add `gomod` ecosystem entries to Dependabot; Go dependency updates are handled by Renovate.
-- A Renovate config validator workflow (`.github/workflows/renovate-validator-mintmaker.yaml`) runs on changes to `renovate.json`.
+- Renovate is configured in `renovate.jsonc` and extends the shared preset at `github>RedHatInsights/konflux-pipelines//renovate/foreman_satellite/renovate.json`. Do not add inline package rules that duplicate the shared preset.
+- MintMaker (Renovate) automerges patch and minor Go module bumps (indirect included), patch/minor bumps of `actions/checkout`, `actions/setup-go`, and `actions/setup-python`, and digest/patch/minor base image bumps, gated by the required GitHub checks. Majors always stay on manual review. Every automerge rule carries `matchBaseBranches: ["master"]`, so none of it applies to the `foreman-*`/`SATELLITE-*` branches owned by the extended preset.
+- MintMaker is disabled on `security-compliance` via a Konflux component annotation (`mintmaker.appstudio.redhat.com/disabled=true` on `ingress-sc`); it does not need its own updater because the branch is periodically hard-reset from `master`, so it inherits whatever Renovate already merged there. `.github/dependabot.yml` was removed for this reason: a separate updater on `security-compliance` would only be overwritten by the next reset.
+- A Renovate config validator workflow (`.github/workflows/renovate-validator-mintmaker.yaml`) runs on changes to `renovate.jsonc`.
 
 ## Key Direct Dependencies
 
@@ -39,7 +40,7 @@
 
 - Builder stage: `registry.access.redhat.com/ubi9/go-toolset:latest`
 - Runtime stage: `registry.access.redhat.com/ubi9/ubi-minimal:latest`
-- Base image updates on `security-compliance` branch are automated by Dependabot.
+- `security-compliance` branch is periodically hard-reset from `master`, so its base image follows whatever Renovate already merged on `master`; it has no updater of its own.
 
 ## Licenses
 
