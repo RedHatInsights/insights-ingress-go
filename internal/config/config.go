@@ -26,6 +26,7 @@ type IngressConfig struct {
 	HTTPClientTimeout     time.Duration
 	HTTPReadTimeout       time.Duration
 	HTTPReadHeaderTimeout time.Duration
+	HTTPShutdownTimeout   time.Duration
 	Profile               bool
 	OpenshiftBuildCommit  string
 	Version               string
@@ -51,6 +52,7 @@ type OtelConfig struct {
 	BSPMaxExportBatchSize int
 	BSPScheduleDelay      int
 	BSPExportTimeout      int
+	ShutdownTimeout       time.Duration
 }
 
 type KafkaCfg struct {
@@ -156,6 +158,7 @@ func Get() *IngressConfig {
 	options.SetDefault("HTTPClientTimeout", 10)
 	options.SetDefault("HTTPReadTimeout", 900)
 	options.SetDefault("HTTPReadHeaderTimeout", 10)
+	options.SetDefault("HTTPShutdownTimeout", 10)
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
@@ -178,6 +181,7 @@ func Get() *IngressConfig {
 	options.SetDefault("Otel_BSP_Max_Export_Batch_Size", 512)
 	options.SetDefault("Otel_BSP_Schedule_Delay", 5000)
 	options.SetDefault("Otel_BSP_Export_Timeout", 30000)
+	options.SetDefault("Otel_Shutdown_Timeout", 5)
 
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
@@ -251,6 +255,7 @@ func Get() *IngressConfig {
 		HTTPClientTimeout:     time.Duration(options.GetInt("HTTPClientTimeout")),
 		HTTPReadTimeout:       time.Duration(options.GetInt("HTTPReadTimeout")),
 		HTTPReadHeaderTimeout: time.Duration(options.GetInt("HTTPReadHeaderTimeout")),
+		HTTPShutdownTimeout:   time.Duration(options.GetInt("HTTPShutdownTimeout")),
 		OpenshiftBuildCommit:  kubenv.GetString("Openshift_Build_Commit"),
 		Version:               os.Getenv("1.0.8"),
 		PayloadTrackerURL:     options.GetString("PayloadTrackerURL"),
@@ -296,6 +301,7 @@ func Get() *IngressConfig {
 			BSPMaxExportBatchSize: options.GetInt("Otel_BSP_Max_Export_Batch_Size"),
 			BSPScheduleDelay:      options.GetInt("Otel_BSP_Schedule_Delay"),
 			BSPExportTimeout:      options.GetInt("Otel_BSP_Export_Timeout"),
+			ShutdownTimeout:       time.Duration(options.GetInt("Otel_Shutdown_Timeout")),
 		},
 	}
 

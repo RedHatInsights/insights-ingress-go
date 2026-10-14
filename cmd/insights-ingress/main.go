@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -211,20 +212,26 @@ func main() {
 	idleConnsClosed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
-		if err := srv.Shutdown(context.Background()); err != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout*time.Second)
+		defer cancel()
+		// Log shutdown errors (including a context deadline during an in-progress
+		// shutdown) and fall through to the remaining cleanup rather than calling
+		// Fatal: exiting here would skip kafka/telemetry cleanup and exit non-zero,
+		// which marks the unit failed - the symptom this shutdown handling fixes.
+		if err := srv.Shutdown(shutdownCtx); err != nil {
 			securitylog.LogShutdown(l.Log, "failure", err.Error())
-			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("HTTP Server Shutdown failed")
 		}
-		if err := msrv.Shutdown(context.Background()); err != nil {
+		if err := msrv.Shutdown(shutdownCtx); err != nil {
 			securitylog.LogShutdown(l.Log, "failure", err.Error())
-			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("Metrics Server Shutdown failed")
 		}
 		kafkaHealth.Close()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := shutdown(shutdownCtx); err != nil {
+		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), cfg.OtelConfig.ShutdownTimeout*time.Second)
+		defer telemetryCancel()
+		if err := shutdown(telemetryCtx); err != nil {
 			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
 		}
 		securitylog.LogShutdown(l.Log, "success", "")
