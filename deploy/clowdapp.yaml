@@ -29,7 +29,7 @@ objects:
         livenessProbe:
           failureThreshold: 3
           httpGet:
-            path: /
+            path: /healthz
             port: 8000
             scheme: HTTP
           initialDelaySeconds: 35
@@ -39,7 +39,7 @@ objects:
         readinessProbe:
           failureThreshold: 3
           httpGet:
-            path: /
+            path: /status/
             port: 8000
             scheme: HTTP
           initialDelaySeconds: 35
@@ -67,15 +67,36 @@ objects:
           value: ${INGRESS_DENY_LISTED_ORGIDS}
         - name: SSL_CERT_DIR
           value: ${SSL_CERT_DIR}
+        - name: INGRESS_OTEL_ENABLED
+          value: ${INGRESS_OTEL_ENABLED}
+        - name: INGRESS_OTEL_ENDPOINT
+          value: ${INGRESS_OTEL_ENDPOINT}
+        - name: INGRESS_OTEL_INSECURE
+          value: ${INGRESS_OTEL_INSECURE}
+        - name: INGRESS_OTEL_SERVICE_NAME
+          value: ${INGRESS_OTEL_SERVICE_NAME}
+        - name: INGRESS_OTEL_SAMPLING_RATE
+          value: ${INGRESS_OTEL_SAMPLING_RATE}
+        - name: INGRESS_OTEL_BSP_MAX_QUEUE_SIZE
+          value: ${INGRESS_OTEL_BSP_MAX_QUEUE_SIZE}
+        - name: INGRESS_OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+          value: ${INGRESS_OTEL_BSP_MAX_EXPORT_BATCH_SIZE}
+        - name: INGRESS_OTEL_BSP_SCHEDULE_DELAY
+          value: ${INGRESS_OTEL_BSP_SCHEDULE_DELAY}
+        - name: INGRESS_OTEL_BSP_EXPORT_TIMEOUT
+          value: ${INGRESS_OTEL_BSP_EXPORT_TIMEOUT}
         resources:
           limits:
             cpu: ${CPU_LIMIT}
             memory: ${MEMORY_LIMIT}
+            ephemeral-storage: ${EPHEMERAL_STORAGE_LIMIT}
           requests:
             cpu: ${CPU_REQUESTS}
             memory: ${MEMORY_REQUESTS}
+            ephemeral-storage: ${EPHEMERAL_STORAGE_REQUESTS}
         volumes:
-        - emptyDir: {}
+        - emptyDir:
+            sizeLimit: ${TMPDIR_SIZE_LIMIT}
           name: tmpdir
         volumeMounts:
         - mountPath: /tmp
@@ -117,6 +138,15 @@ parameters:
 - description: memory request for service
   name: MEMORY_REQUESTS
   value: 256Mi
+- description: ephemeral storage limit of service
+  name: EPHEMERAL_STORAGE_LIMIT
+  value: 1Gi
+- description: ephemeral storage request for service
+  name: EPHEMERAL_STORAGE_REQUESTS
+  value: 512Mi
+- description: size limit for the /tmp emptyDir volume used to buffer uploads
+  name: TMPDIR_SIZE_LIMIT
+  value: 512Mi
 - name: MIN_REPLICAS
   value: '1'
 - description: Image tag
@@ -136,3 +166,21 @@ parameters:
   value: ""
 - name: SSL_CERT_DIR
   value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'
+- name: INGRESS_OTEL_ENABLED
+  value: "false"
+- name: INGRESS_OTEL_ENDPOINT
+  value: "localhost:4318"
+- name: INGRESS_OTEL_INSECURE
+  value: "true"
+- name: INGRESS_OTEL_SERVICE_NAME
+  value: "ingress"
+- name: INGRESS_OTEL_SAMPLING_RATE
+  value: "1.0"
+- name: INGRESS_OTEL_BSP_MAX_QUEUE_SIZE
+  value: "2048"
+- name: INGRESS_OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+  value: "512"
+- name: INGRESS_OTEL_BSP_SCHEDULE_DELAY
+  value: "5000"
+- name: INGRESS_OTEL_BSP_EXPORT_TIMEOUT
+  value: "30000"

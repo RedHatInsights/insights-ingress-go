@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
 	lc "github.com/redhatinsights/platform-go-middlewares/v2/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 )
@@ -115,6 +116,10 @@ func InitLogger(cfg *config.IngressConfig) *logrus.Logger {
 		Formatter:    formatter,
 		Hooks:        make(logrus.LevelHooks),
 		ReportCaller: true,
+	}
+
+	if cfg.OtelConfig.Enabled {
+		Log.Hooks.Add(&telemetry.TraceLogHook{})
 	}
 
 	if key != "" {

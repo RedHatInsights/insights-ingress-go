@@ -15,27 +15,44 @@ import (
 
 // IngressConfig represents the runtime configuration
 type IngressConfig struct {
-	Hostname             string
-	DefaultMaxSize       int64
-	MaxSizeMap           map[string]string
-	MaxUploadMem         int64
-	Auth                 bool
-	KafkaConfig          KafkaCfg
-	WebPort              int
-	MetricsPort          int
-	HTTPClientTimeout    time.Duration
-	Profile              bool
-	OpenshiftBuildCommit string
-	Version              string
-	PayloadTrackerURL    string
-	TlsCAPath            string
-	StorageConfig        StorageCfg
-	LoggingConfig        LoggingCfg
-	DenyListedOrgIDs     []string
-	Debug                bool
-	DebugUserAgent       *regexp.Regexp
-	ServiceBaseURL       string
-	StagerImplementation string
+	Hostname              string
+	DefaultMaxSize        int64
+	MaxSizeMap            map[string]string
+	MaxUploadMem          int64
+	Auth                  bool
+	KafkaConfig           KafkaCfg
+	WebPort               int
+	MetricsPort           int
+	HTTPClientTimeout     time.Duration
+	HTTPReadTimeout       time.Duration
+	HTTPReadHeaderTimeout time.Duration
+	HTTPShutdownTimeout   time.Duration
+	Profile               bool
+	OpenshiftBuildCommit  string
+	Version               string
+	PayloadTrackerURL     string
+	TlsCAPath             string
+	StorageConfig         StorageCfg
+	LoggingConfig         LoggingCfg
+	DenyListedOrgIDs      []string
+	Debug                 bool
+	DebugUserAgent        *regexp.Regexp
+	ServiceBaseURL        string
+	StagerImplementation  string
+	OtelConfig            OtelConfig
+}
+
+type OtelConfig struct {
+	Enabled               bool
+	Endpoint              string
+	Insecure              bool
+	SamplingRate          float64
+	ServiceName           string
+	BSPMaxQueueSize       int
+	BSPMaxExportBatchSize int
+	BSPScheduleDelay      int
+	BSPExportTimeout      int
+	ShutdownTimeout       time.Duration
 }
 
 type KafkaCfg struct {
@@ -139,6 +156,9 @@ func Get() *IngressConfig {
 	options.SetDefault("PayloadTrackerURL", "http://payload-tracker/v1/payloads/")
 	options.SetDefault("TlsCAPath", "")
 	options.SetDefault("HTTPClientTimeout", 10)
+	options.SetDefault("HTTPReadTimeout", 900)
+	options.SetDefault("HTTPReadHeaderTimeout", 10)
+	options.SetDefault("HTTPShutdownTimeout", 10)
 	options.SetDefault("Auth", true)
 	options.SetDefault("DefaultMaxSize", 100*1024*1024)
 	options.SetDefault("MaxSizeMap", `{}`)
@@ -150,6 +170,19 @@ func Get() *IngressConfig {
 	options.SetDefault("DebugUserAgent", `unspecified`)
 	options.SetDefault("ServiceBaseURL", "http://localhost:3000")
 	options.SetDefault("StagerImplementation", "s3")
+
+	// OpenTelemetry
+	options.SetDefault("Otel_Enabled", false)
+	options.SetDefault("Otel_Endpoint", "localhost:4318")
+	options.SetDefault("Otel_Insecure", true)
+	options.SetDefault("Otel_Sampling_Rate", 1.0)
+	options.SetDefault("Otel_Service_Name", "ingress")
+	options.SetDefault("Otel_BSP_Max_Queue_Size", 2048)
+	options.SetDefault("Otel_BSP_Max_Export_Batch_Size", 512)
+	options.SetDefault("Otel_BSP_Schedule_Delay", 5000)
+	options.SetDefault("Otel_BSP_Export_Timeout", 30000)
+	options.SetDefault("Otel_Shutdown_Timeout", 5)
+
 	options.SetEnvPrefix("INGRESS")
 	options.AutomaticEnv()
 	kubenv := viper.New()
@@ -212,22 +245,25 @@ func Get() *IngressConfig {
 	}
 
 	IngressCfg := &IngressConfig{
-		Hostname:             options.GetString("Hostname"),
-		DefaultMaxSize:       options.GetInt64("DefaultMaxSize"),
-		MaxSizeMap:           options.GetStringMapString("MaxSizeMap"),
-		MaxUploadMem:         options.GetInt64("MaxUploadMem"),
-		Auth:                 options.GetBool("Auth"),
-		WebPort:              options.GetInt("WebPort"),
-		MetricsPort:          options.GetInt("MetricsPort"),
-		HTTPClientTimeout:    time.Duration(options.GetInt("HTTPClientTimeout")),
-		OpenshiftBuildCommit: kubenv.GetString("Openshift_Build_Commit"),
-		Version:              os.Getenv("1.0.8"),
-		PayloadTrackerURL:    options.GetString("PayloadTrackerURL"),
-		TlsCAPath:            options.GetString("TlsCAPath"),
-		Profile:              options.GetBool("Profile"),
-		DenyListedOrgIDs:     options.GetStringSlice("Deny_Listed_OrgIDs"),
-		Debug:                options.GetBool("Debug"),
-		DebugUserAgent:       regexp.MustCompile(options.GetString("DebugUserAgent")),
+		Hostname:              options.GetString("Hostname"),
+		DefaultMaxSize:        options.GetInt64("DefaultMaxSize"),
+		MaxSizeMap:            options.GetStringMapString("MaxSizeMap"),
+		MaxUploadMem:          options.GetInt64("MaxUploadMem"),
+		Auth:                  options.GetBool("Auth"),
+		WebPort:               options.GetInt("WebPort"),
+		MetricsPort:           options.GetInt("MetricsPort"),
+		HTTPClientTimeout:     time.Duration(options.GetInt("HTTPClientTimeout")),
+		HTTPReadTimeout:       time.Duration(options.GetInt("HTTPReadTimeout")),
+		HTTPReadHeaderTimeout: time.Duration(options.GetInt("HTTPReadHeaderTimeout")),
+		HTTPShutdownTimeout:   time.Duration(options.GetInt("HTTPShutdownTimeout")),
+		OpenshiftBuildCommit:  kubenv.GetString("Openshift_Build_Commit"),
+		Version:               os.Getenv("1.0.8"),
+		PayloadTrackerURL:     options.GetString("PayloadTrackerURL"),
+		TlsCAPath:             options.GetString("TlsCAPath"),
+		Profile:               options.GetBool("Profile"),
+		DenyListedOrgIDs:      options.GetStringSlice("Deny_Listed_OrgIDs"),
+		Debug:                 options.GetBool("Debug"),
+		DebugUserAgent:        regexp.MustCompile(options.GetString("DebugUserAgent")),
 		KafkaConfig: KafkaCfg{
 			KafkaBrokers:          options.GetStringSlice("KafkaBrokers"),
 			KafkaGroupID:          options.GetString("KafkaGroupID"),
@@ -255,6 +291,18 @@ func Get() *IngressConfig {
 		},
 		ServiceBaseURL:       options.GetString("ServiceBaseURL"),
 		StagerImplementation: options.GetString("StagerImplementation"),
+		OtelConfig: OtelConfig{
+			Enabled:               options.GetBool("Otel_Enabled"),
+			Endpoint:              options.GetString("Otel_Endpoint"),
+			Insecure:              options.GetBool("Otel_Insecure"),
+			SamplingRate:          options.GetFloat64("Otel_Sampling_Rate"),
+			ServiceName:           options.GetString("Otel_Service_Name"),
+			BSPMaxQueueSize:       options.GetInt("Otel_BSP_Max_Queue_Size"),
+			BSPMaxExportBatchSize: options.GetInt("Otel_BSP_Max_Export_Batch_Size"),
+			BSPScheduleDelay:      options.GetInt("Otel_BSP_Schedule_Delay"),
+			BSPExportTimeout:      options.GetInt("Otel_BSP_Export_Timeout"),
+			ShutdownTimeout:       time.Duration(options.GetInt("Otel_Shutdown_Timeout")),
+		},
 	}
 
 	if options.IsSet("KafkaUsername") {

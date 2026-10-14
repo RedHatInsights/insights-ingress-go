@@ -11,7 +11,7 @@
 
 - The manifest is an OpenShift Template wrapping a `ClowdApp` of kind `cloud.redhat.com/v1alpha1`, named `ingress`.
 - The single deployment is named `service` with a public web service on API path `ingress`.
-- Health probes (liveness and readiness) use HTTP GET on `/` port `8000`, with `initialDelaySeconds: 35` and `timeoutSeconds: 120`.
+- Health probes use HTTP GET on `/healthz` (liveness) and `/status/` (readiness), port `8000`, with a 35-second initial delay, 5-second period, and 120-second timeout. Liveness is process-only; readiness checks Kafka metadata and staging storage access.
 - Mount an `emptyDir` volume named `tmpdir` at `/tmp` inside the pod.
 - Declare two Kafka topics: `platform.payload-status` (3 partitions) and `platform.upload.announce` (64 partitions), each with 3 replicas.
 - Declare `objectStore` referencing the `INGRESS_STAGEBUCKET` parameter (default `insights-upload-perma`).
@@ -35,7 +35,7 @@
 - `pr.yml`: Runs `go test ./...` and validates `internal/api/openapi.json` with `openapi-spec-validator` on every PR.
 - `container-publish.yaml`: Builds via `Dockerfile.upstream`, pushes to `quay.io/iop/ingress`, and signs with cosign on push to `master` or semver tags.
 - `security-workflow-template.yml`: Invokes the reusable ConsoleDot platform security scan.
-- `renovate-validator-mintmaker.yaml`: Validates `renovate.json` changes.
+- `renovate-validator-mintmaker.yaml`: Validates `renovate.jsonc` changes.
 
 ## CI Scripts (Bonfire / App-SRE)
 

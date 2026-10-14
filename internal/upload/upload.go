@@ -17,11 +17,14 @@ import (
 	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
 	"github.com/redhatinsights/insights-ingress-go/internal/config"
 	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
+	"github.com/redhatinsights/insights-ingress-go/internal/securitylog"
 	"github.com/redhatinsights/insights-ingress-go/internal/stage"
 	"github.com/redhatinsights/insights-ingress-go/internal/validators"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type responseBody struct {
@@ -34,13 +37,35 @@ type uploadData struct {
 	OrgID   string `json:"org_id,omitempty"`
 }
 
-// GetFile verifies that the proper upload field is in place and returns the file
-func GetFile(r *http.Request, m int64) (multipart.File, *multipart.FileHeader, error) {
+// multipartOverhead is headroom added to the largest allowed file size when
+// enforcing an early request-body limit. It accounts for multipart encoding
+// (boundaries, part headers) and the metadata part that accompany the file.
+const multipartOverhead = 1 * 1024 * 1024
+
+// maxRequestBodySize returns the largest multipart request body ingress will
+// accept before rejecting it outright. It is the largest configured per-service
+// or default file-size limit plus multipartOverhead, so http.MaxBytesReader can
+// reject oversized bodies before ParseMultipartForm buffers them to disk.
+func maxRequestBodySize(cfg config.IngressConfig) int64 {
+	max := cfg.DefaultMaxSize
+	for _, val := range cfg.MaxSizeMap {
+		if size, err := strconv.ParseInt(val, 10, 64); err == nil && size > max {
+			max = size
+		}
+	}
+	return max + multipartOverhead
+}
+
+// GetFile verifies that the proper upload field is in place and returns the file.
+// r.Body is wrapped with http.MaxBytesReader so an oversized multipart body is
+// rejected while streaming, before it is buffered to disk by ParseMultipartForm.
+func GetFile(w http.ResponseWriter, r *http.Request, m int64, maxBodySize int64) (multipart.File, *multipart.FileHeader, error) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	// Reduce memory usage of multipart form. This indicates of memory will be used
 	// before writting to disk. Default: 8MB
 	err := r.ParseMultipartForm(m)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to parse form data: %v", err)
+		return nil, nil, fmt.Errorf("unable to parse form data: %w", err)
 	}
 
 	file, fileHeader, fileErr := r.FormFile("file")
@@ -146,12 +171,16 @@ func NewHandler(
 	cfg config.IngressConfig) http.HandlerFunc {
 
 	isCustomerDenyListed := isRequestFromDenyListedOrgID(cfg)
+	maxBodySize := maxRequestBodySize(cfg)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var id identity.XRHID
 		userAgent := r.Header.Get("User-Agent")
 		reqID := request_id.GetReqID(r.Context())
-		requestLogger := l.Log.WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
+		if span := trace.SpanFromContext(r.Context()); span.SpanContext().IsValid() {
+			span.SetAttributes(attribute.String("rh.user_agent", userAgent))
+		}
+		requestLogger := l.Log.WithContext(r.Context()).WithFields(logrus.Fields{"request_id": reqID, "source_host": cfg.Hostname, "name": "ingress"})
 
 		logerr := func(msg string, err error) {
 			requestLogger.WithFields(logrus.Fields{"error": err}).Error(msg)
@@ -183,12 +212,29 @@ func NewHandler(
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("Upload denied. Please contact Red Hat Support."))
 			requestLogger.WithFields(logrus.Fields{"account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info("Upload rejected due to customer being denylisted")
+			securitylog.Log(l.Log, securitylog.Event{
+				Action:       "AUTHZ_FAILURE",
+				ResourceType: "payload",
+				ResourceID:   reqID,
+				Outcome:      "failure",
+				Principal:    principalFromIdentity(id),
+				Reason:       "org_id deny-listed",
+			})
 			return
 		}
 
 		incRequests(userAgent)
-		file, fileHeader, err := GetFile(r, cfg.MaxUploadMem)
+		file, fileHeader, err := GetFile(w, r, cfg.MaxUploadMem, maxBodySize)
 		if err != nil {
+			var maxBytesErr *http.MaxBytesError
+			if errors.As(err, &maxBytesErr) {
+				errString := fmt.Sprintf("Upload body exceeds maximum size of %v bytes", maxBodySize)
+				w.WriteHeader(http.StatusRequestEntityTooLarge)
+				w.Write([]byte(errString))
+				requestLogger.WithFields(logrus.Fields{"request_id": reqID, "status_code": http.StatusRequestEntityTooLarge, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID}).Info(errString)
+				logerr("Upload body too large", err)
+				return
+			}
 			errString := "File or upload field not found"
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(errString))
@@ -201,12 +247,20 @@ func NewHandler(
 		// in that case, this defer will return an error because
 		// the file is already closed.
 		defer file.Close()
+
+		// ParseMultipartForm spills file parts larger than cfg.MaxUploadMem to
+		// temporary files in os.TempDir() (/tmp). Closing the returned file does
+		// not remove those spilled temp files; only RemoveAll does. Without this
+		// the /tmp EmptyDir fills up and the pod is evicted.
+		if r.MultipartForm != nil {
+			defer r.MultipartForm.RemoveAll()
+		}
 		contentType := fileHeader.Header.Get("Content-Type")
 		size := fileHeader.Size
 
 		observeSize(userAgent, size)
 
-		requestLogger = requestLogger.WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID})
+		requestLogger = requestLogger.WithContext(r.Context()).WithFields(logrus.Fields{"content-type": contentType, "size": size, "request_id": reqID, "account": id.Identity.AccountNumber, "org_id": id.Identity.OrgID})
 
 		requestLogger.Debug("ContentType received from client")
 		serviceDescriptor, validationErr := getServiceDescriptor(contentType)
@@ -277,7 +331,7 @@ func NewHandler(
 			Status:    "received",
 			StatusMsg: "Payload received by ingress",
 		}
-		requestLogger.Info("Payload received")
+		requestLogger.WithFields(logrus.Fields{"audit": true}).Info("Payload received")
 		tracker.Status(ps)
 
 		stageInput := &stage.Input{
@@ -289,11 +343,19 @@ func NewHandler(
 		}
 
 		start := time.Now()
-		url, err := stager.Stage(stageInput)
+		url, err := stager.Stage(r.Context(), stageInput)
 		stageInput.Close()
 		observeStageElapsed(time.Since(start))
 		if err != nil {
 			logerr("Error staging", err)
+			securitylog.Log(l.Log, securitylog.Event{
+				Action:       "CREATE",
+				ResourceType: "payload",
+				ResourceID:   reqID,
+				Outcome:      "failure",
+				Principal:    principalFromIdentity(id),
+				Reason:       err.Error(),
+			})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -311,7 +373,15 @@ func NewHandler(
 		requestLogger.WithFields(logrus.Fields{"service": vr.Service}).Info("Payload sent to validation service")
 		tracker.Status(ps)
 
-		validator.Validate(vr)
+		securitylog.Log(l.Log, securitylog.Event{
+			Action:       "CREATE",
+			ResourceType: "payload",
+			ResourceID:   reqID,
+			Outcome:      "success",
+			Principal:    principalFromIdentity(id),
+		})
+
+		validator.Validate(r.Context(), vr)
 
 		jsonBody, err := createUploadResponse(vr)
 		if err != nil {
@@ -329,6 +399,38 @@ func NewHandler(
 		}
 		w.Write(jsonBody)
 	}
+}
+
+// principalFromIdentity builds a securitylog.Principal from the platform identity.
+func principalFromIdentity(id identity.XRHID) securitylog.Principal {
+	p := securitylog.Principal{
+		OrgID: id.Identity.OrgID,
+		Type:  "User",
+	}
+	if id.Identity.User != nil {
+		p.UserID = id.Identity.User.UserID
+	}
+	if id.Identity.ServiceAccount != nil && id.Identity.ServiceAccount.ClientId != "" {
+		p.UserID = id.Identity.ServiceAccount.ClientId
+		p.Type = "ServiceAccount"
+	}
+	if id.Identity.System != nil && id.Identity.System.CommonName != "" {
+		p.UserID = id.Identity.System.CommonName
+		p.Type = "Certificate"
+		if id.Identity.System.CertType != "" {
+			p.CertType = id.Identity.System.CertType
+		}
+	}
+	if id.Identity.X509 != nil && id.Identity.X509.SubjectDN != "" {
+		p.SubjectDN = id.Identity.X509.SubjectDN
+		if p.Type != "Certificate" {
+			p.Type = "Certificate"
+		}
+	}
+	if p.OrgID == "" && p.UserID == "" {
+		p.Type = "anonymous"
+	}
+	return p
 }
 
 func isRequestFromDenyListedOrgID(cfg config.IngressConfig) func(identity.XRHID) bool {

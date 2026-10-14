@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"context"
 	"time"
 )
 
@@ -54,6 +55,6 @@ type ServiceDescriptor struct {
 
 // Validator validates requests
 type Validator interface {
-	Validate(req *Request)
+	Validate(ctx context.Context, req *Request)
 	ValidateService(service *ServiceDescriptor) error
 }

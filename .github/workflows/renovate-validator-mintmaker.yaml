@@ -4,12 +4,12 @@ on:
     branches:
       - master
     paths:
-      - renovate.json
+      - renovate.jsonc
   push:
     branches:
       - master
     paths:
-      - renovate.json
+      - renovate.jsonc
 
 jobs:
   validate:
@@ -18,14 +18,14 @@ jobs:
       TEST_IMAGE: quay.io/konflux-ci/mintmaker-renovate-image:latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
-      - name: Validate renovate.json
+      - name: Validate renovate.jsonc
         run: |
           podman run \
             --rm \
-            -v ./renovate.json:/tmp/renovate.json \
+            -v ./renovate.jsonc:/tmp/renovate.jsonc \
             ${{ env.TEST_IMAGE }} \
-            /bin/bash -c 'renovate-config-validator /tmp/renovate.json'
+            /bin/bash -c 'renovate-config-validator /tmp/renovate.jsonc'

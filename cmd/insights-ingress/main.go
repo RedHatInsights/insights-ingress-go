@@ -8,21 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
-
-	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
-	"github.com/redhatinsights/insights-ingress-go/internal/api"
-	"github.com/redhatinsights/insights-ingress-go/internal/config"
-	"github.com/redhatinsights/insights-ingress-go/internal/download"
-	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
-	"github.com/redhatinsights/insights-ingress-go/internal/queue"
-	"github.com/redhatinsights/insights-ingress-go/internal/stage"
-	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
-	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
-	"github.com/redhatinsights/insights-ingress-go/internal/track"
-	"github.com/redhatinsights/insights-ingress-go/internal/upload"
-	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
-	"github.com/redhatinsights/insights-ingress-go/internal/version"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -30,6 +17,23 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 	"github.com/sirupsen/logrus"
+
+	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
+	"github.com/redhatinsights/insights-ingress-go/internal/api"
+	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	"github.com/redhatinsights/insights-ingress-go/internal/download"
+	"github.com/redhatinsights/insights-ingress-go/internal/health"
+	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
+	"github.com/redhatinsights/insights-ingress-go/internal/queue"
+	"github.com/redhatinsights/insights-ingress-go/internal/securitylog"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
+	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
+	"github.com/redhatinsights/insights-ingress-go/internal/track"
+	"github.com/redhatinsights/insights-ingress-go/internal/upload"
+	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
+	"github.com/redhatinsights/insights-ingress-go/internal/version"
 )
 
 func lubDub(w http.ResponseWriter, r *http.Request) {
@@ -73,10 +77,19 @@ func getStager(cfg config.IngressConfig) (stage.Stager, error) {
 func main() {
 	cfg := config.Get()
 	l.InitLogger(cfg)
+
+	shutdown, otelMiddlewares, err := telemetry.InitTracer(cfg.OtelConfig, l.Log)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Failed to initialize OpenTelemetry")
+	}
+
 	r := chi.NewRouter()
 	mr := chi.NewRouter()
+	r.Use(request_id.ConfiguredRequestID("x-rh-insights-request-id"))
+	for _, mw := range otelMiddlewares {
+		r.Use(mw)
+	}
 	r.Use(
-		request_id.ConfiguredRequestID("x-rh-insights-request-id"),
 		middleware.RealIP,
 		middleware.Recoverer,
 	)
@@ -114,6 +127,17 @@ func main() {
 	}
 
 	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidUploadTypes...)
+	kafkaHealth := queue.NewKafkaHealthChecker(producerCfg, 2*time.Second)
+	storageHealth, ok := stager.(health.Checker)
+	if !ok {
+		storageHealth = health.CheckFunc(func(context.Context) error {
+			return fmt.Errorf("storage health check is not configured")
+		})
+	}
+	readiness := health.Handler([]health.Dependency{
+		{Name: "kafka", Checker: kafkaHealth},
+		{Name: "storage", Backend: cfg.StagerImplementation, Checker: storageHealth},
+	}, 5*time.Second)
 
 	tracker := announcers.NewStatusAnnouncer(&producerCfg)
 
@@ -141,7 +165,12 @@ func main() {
 		// without disclosing their contents to log readers (CWE-532).
 		digest := sha256.Sum256([]byte(rawId))
 		l.Log.WithFields(logrus.Fields{"error": msg, "rawIdSha256": hex.EncodeToString(digest[:])}).Error("Failed to decode Identity header")
+		reqID := request_id.GetReqID(ctx)
+		securitylog.LogAuthFailure(l.Log, msg, reqID)
 	}
+	r.Get("/healthz", lubDub)
+	r.Get("/status", readiness)
+	r.Get("/status/", readiness)
 
 	var sub chi.Router = chi.NewRouter()
 	if cfg.Auth {
@@ -171,10 +200,13 @@ func main() {
 	}
 
 	l.Log.WithFields(logrus.Fields{"Web Port": cfg.WebPort}).Info("Starting Service with mode " + cfg.StagerImplementation)
+	securitylog.LogStartup(l.Log)
 
 	srv := http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.WebPort),
-		Handler: r,
+		Addr:              fmt.Sprintf(":%d", cfg.WebPort),
+		Handler:           r,
+		ReadTimeout:       time.Second * cfg.HTTPReadTimeout,
+		ReadHeaderTimeout: time.Second * cfg.HTTPReadHeaderTimeout,
 	}
 
 	l.Log.WithFields(logrus.Fields{"Metrics Port": cfg.MetricsPort}).Info("Starting Service")
@@ -186,15 +218,30 @@ func main() {
 
 	idleConnsClosed := make(chan struct{})
 	go func() {
-		sigint := make(chan os.Signal)
-		signal.Notify(sigint, os.Interrupt)
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
-		if err := srv.Shutdown(context.Background()); err != nil {
-			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout*time.Second)
+		defer cancel()
+		// Log shutdown errors (including a context deadline during an in-progress
+		// shutdown) and fall through to the remaining cleanup rather than calling
+		// Fatal: exiting here would skip kafka/telemetry cleanup and exit non-zero,
+		// which marks the unit failed - the symptom this shutdown handling fixes.
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("HTTP Server Shutdown failed")
 		}
-		if err := msrv.Shutdown(context.Background()); err != nil {
-			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("HTTP Server Shutdown failed")
+		if err := msrv.Shutdown(shutdownCtx); err != nil {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("Metrics Server Shutdown failed")
 		}
+		kafkaHealth.Close()
+		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), cfg.OtelConfig.ShutdownTimeout*time.Second)
+		defer telemetryCancel()
+		if err := shutdown(telemetryCtx); err != nil {
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
+		}
+		securitylog.LogShutdown(l.Log, "success", "")
 		close(idleConnsClosed)
 	}()
 
@@ -204,11 +251,13 @@ func main() {
 	go func() {
 
 		if err := msrv.ListenAndServe(); err != http.ErrServerClosed {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
 			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Metrics Service Stopped")
 		}
 	}()
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		securitylog.LogShutdown(l.Log, "failure", err.Error())
 		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Service Stopped")
 	}
 
