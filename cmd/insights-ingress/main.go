@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
@@ -157,7 +159,12 @@ func main() {
 	)
 
 	identityErrorLogFunc := func(ctx context.Context, rawId, msg string) {
-		l.Log.WithFields(logrus.Fields{"error": msg, "rawId": rawId}).Error("Failed to decode Identity header")
+		// Never log the raw x-rh-identity header: even a header that fails to
+		// decode can carry PII (username, email, name, account number). Log a
+		// SHA-256 digest instead so identical bad headers stay correlatable
+		// without disclosing their contents to log readers (CWE-532).
+		digest := sha256.Sum256([]byte(rawId))
+		l.Log.WithFields(logrus.Fields{"error": msg, "rawIdSha256": hex.EncodeToString(digest[:])}).Error("Failed to decode Identity header")
 		reqID := request_id.GetReqID(ctx)
 		securitylog.LogAuthFailure(l.Log, msg, reqID)
 	}
