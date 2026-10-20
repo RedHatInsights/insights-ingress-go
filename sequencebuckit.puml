@@ -1,0 +1,18 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+System(cluster, "Cluster", "Insights Operator")
+System(akamai, "Akamai", "CDN")
+System(3scale, "3Scale", "API Gateway")
+System(uhc, "UHC Auth Proxy", "Authentication Service")
+System(ingress, "Ingress", "Upload Service")
+System(storageBroker, "Storage Broker", "S3 Broker Service")
+System(s3, "S3", "Amazon Block Storage Service")
+Rel(cluster, akamai, "Uploads", "HTTPS")
+Rel_R(akamai, 3scale, "Forward based on endpoint", "HTTPS")
+Rel(3scale, uhc, "Authentication")
+Rel(3scale, ingress, "Forward to ingress service", "HTTPS")
+Rel(ingress, s3, "Upload payload to staging bucket", "HTTPS")
+Rel(ingress, storageBroker, "Send message to Storage Broker", "Kafka")
+Rel(storageBroker, s3, "Move payload to 'orgID/clusterID/requestID' in openshift bucket", "HTTPS")
+@enduml

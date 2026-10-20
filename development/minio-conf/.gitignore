@@ -1,0 +1,7 @@
+# This file is a placeholder in order to add these default
+# directories to the repo
+
+# Ignore everything in this direcotry
+*
+# Ignore the gitignore file
+!.gitignore

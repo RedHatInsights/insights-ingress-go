@@ -1,0 +1,80 @@
+# This podman compose file stands up local dependencies for 
+# Kafka, Zookeeper, and Minio and optionally insights-ingress-go itself.
+# Please consult README.md for bucket creation steps
+version: "3"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=32181
+      - ZOOKEEPER_SERVER_ID=1
+  kafka:
+    image: confluentinc/cp-kafka
+    restart: always
+    ports:
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      # - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092  # Use this if you are spinning up the Ingress API without docker
+      - KAFKA_LISTENERS=PLAINTEXT://kafka:29092,CONTROLLER://kafka:9093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092
+      - KAFKA_BROKER_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - CLUSTER_ID=1
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - KAFKA_NUM_PARTITIONS=3
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+  minio:
+    image: minio/minio
+    command: server --address 0.0.0.0:9000 --console-address 0.0.0.0:9990 /data
+    volumes:
+      - './minio-conf:/mnt/config:z'
+      - './minio-data/.minio:/mnt/data:z'
+    ports:
+      - 9000:9000
+      - 9990:9990
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+  minio-createbucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      export MC_HOST_myminio=http://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio:9000;
+      /usr/bin/mc mb --ignore-existing myminio/insights-upload-perma;
+      /usr/bin/mc anonymous set public myminio/insights-upload-perma;
+      "
+  ingress:
+    #image: quay.io/cloudservices/insights-ingress:latest
+    #image: localhost/ingress:latest  # Use this in the case of local changes of ingress (podman build . -t ingress:latest)
+    image: ingress:latest
+    ports:
+      - "3000:3000"
+    mem_limit: 512M
+    environment:
+      - INGRESS_STAGEBUCKET=insights-upload-perma
+        # INGRESS_VALID_UPLOAD_TYPES is required. This is derived from content type. ex: vnd.redhat.advisor.thing+tgz
+      - INGRESS_VALID_UPLOAD_TYPES=$INGRESS_VALID_UPLOAD_TYPES
+      - OPENSHIFT_BUILD_COMMIT=somestring
+      - INGRESS_METRICSPORT=8081
+      - INGRESS_MAXSIZE=104857600
+      - INGRESS_MINIODEV=true
+      - INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY
+      - INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY
+      - INGRESS_MINIOENDPOINT=minio:9000
+    depends_on:
+      - kafka
+      - minio

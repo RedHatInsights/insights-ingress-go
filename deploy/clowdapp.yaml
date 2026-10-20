@@ -1,0 +1,186 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: ingress
+objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: ingress
+  spec:
+    envName: ${ENV_NAME}
+    testing:
+      iqePlugin: ingress
+    dependencies:
+    - storage-broker
+    optionalDependencies:
+    - host-inventory
+    - payload-tracker
+    deployments:
+    - name: service
+      minReplicas: ${{MIN_REPLICAS}}
+      webServices:
+        public:
+          enabled: true
+          apiPath: ingress
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 35
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 120
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /status/
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 35
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 120
+        env:
+        - name: INGRESS_PAYLOADTRACKERURL
+          value: ${INGRESS_PAYLOADTRACKERURL}
+        - name: INGRESS_STAGEBUCKET
+          value: ${INGRESS_STAGEBUCKET}
+        - name: INGRESS_LOG_LEVEL
+          value: ${LOG_LEVEL}
+        - name: INGRESS_VALID_UPLOAD_TYPES
+          value: ${INGRESS_VALID_UPLOAD_TYPES}
+        - name: INGRESS_MAXSIZEMAP
+          value: ${INGRESS_MAXSIZEMAP}
+        - name: INGRESS_DEFAULTMAXSIZE
+          value: ${INGRESS_DEFAULTMAXSIZE}
+        - name: CLOWDER_ENABLED
+          value: ${CLOWDER_ENABLED}
+        - name: INGRESS_MINIOENDPOINT
+          value: ${INGRESS_MINIOENDPOINT}
+        - name: INGRESS_DENY_LISTED_ORGIDS
+          value: ${INGRESS_DENY_LISTED_ORGIDS}
+        - name: SSL_CERT_DIR
+          value: ${SSL_CERT_DIR}
+        - name: INGRESS_OTEL_ENABLED
+          value: ${INGRESS_OTEL_ENABLED}
+        - name: INGRESS_OTEL_ENDPOINT
+          value: ${INGRESS_OTEL_ENDPOINT}
+        - name: INGRESS_OTEL_INSECURE
+          value: ${INGRESS_OTEL_INSECURE}
+        - name: INGRESS_OTEL_SERVICE_NAME
+          value: ${INGRESS_OTEL_SERVICE_NAME}
+        - name: INGRESS_OTEL_SAMPLING_RATE
+          value: ${INGRESS_OTEL_SAMPLING_RATE}
+        - name: INGRESS_OTEL_BSP_MAX_QUEUE_SIZE
+          value: ${INGRESS_OTEL_BSP_MAX_QUEUE_SIZE}
+        - name: INGRESS_OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+          value: ${INGRESS_OTEL_BSP_MAX_EXPORT_BATCH_SIZE}
+        - name: INGRESS_OTEL_BSP_SCHEDULE_DELAY
+          value: ${INGRESS_OTEL_BSP_SCHEDULE_DELAY}
+        - name: INGRESS_OTEL_BSP_EXPORT_TIMEOUT
+          value: ${INGRESS_OTEL_BSP_EXPORT_TIMEOUT}
+        resources:
+          limits:
+            cpu: ${CPU_LIMIT}
+            memory: ${MEMORY_LIMIT}
+            ephemeral-storage: ${EPHEMERAL_STORAGE_LIMIT}
+          requests:
+            cpu: ${CPU_REQUESTS}
+            memory: ${MEMORY_REQUESTS}
+            ephemeral-storage: ${EPHEMERAL_STORAGE_REQUESTS}
+        volumes:
+        - emptyDir:
+            sizeLimit: ${TMPDIR_SIZE_LIMIT}
+          name: tmpdir
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmpdir
+    objectStore:
+    - ${INGRESS_STAGEBUCKET}
+    kafkaTopics:
+    - replicas: 3
+      partitions: 3
+      topicName: platform.payload-status
+    - replicas: 3
+      partitions: 64
+      topicName: platform.upload.announce
+
+parameters:
+- name: INGRESS_STAGEBUCKET
+  value: insights-upload-perma
+- name: INGRESS_VALID_UPLOAD_TYPES
+  value: advisor,compliance,hccm,qpc,rhv,tower,leapp-reporting,xavier,mkt,playbook,playbook-sat,resource-optimization,malware-detection,pinakes,assisted-installer,runtimes-java-general,openshift,tasks,automation-hub,aap-billing-controller,aap-event-driven-ansible,ols,ocm-assisted-chat,rhos-lightspeed
+- name: INGRESS_DEFAULTMAXSIZE
+  value: '104857600'
+- name: INGRESS_MAXSIZEMAP
+  value: '{"qpc": "157286400"}'
+- name: INGRESS_PAYLOADTRACKERURL
+  value: 'payload-tracker'
+- name: INGRESS_MINIOENDPOINT
+  value: "" 
+- name: LOG_LEVEL
+  value: INFO
+- description: Cpu limit of service
+  name: CPU_LIMIT
+  value: 500m
+- description: memory limit of service
+  name: MEMORY_LIMIT
+  value: 512Mi
+- description: cpu request for service
+  name: CPU_REQUESTS
+  value: 200m
+- description: memory request for service
+  name: MEMORY_REQUESTS
+  value: 256Mi
+- description: ephemeral storage limit of service
+  name: EPHEMERAL_STORAGE_LIMIT
+  value: 1Gi
+- description: ephemeral storage request for service
+  name: EPHEMERAL_STORAGE_REQUESTS
+  value: 512Mi
+- description: size limit for the /tmp emptyDir volume used to buffer uploads
+  name: TMPDIR_SIZE_LIMIT
+  value: 512Mi
+- name: MIN_REPLICAS
+  value: '1'
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
+- description: Image name
+  name: IMAGE
+  value: quay.io/redhat-services-prod/hcc-integrations-tenant/insights-ingress-go
+- description: Determines Clowder deployment
+  name: CLOWDER_ENABLED
+  value: "false"
+- description: ClowdEnv Name
+  name: ENV_NAME
+  value: "insights-ingress"
+  required: true
+- name: INGRESS_DENY_LISTED_ORGIDS
+  value: ""
+- name: SSL_CERT_DIR
+  value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'
+- name: INGRESS_OTEL_ENABLED
+  value: "false"
+- name: INGRESS_OTEL_ENDPOINT
+  value: "localhost:4318"
+- name: INGRESS_OTEL_INSECURE
+  value: "true"
+- name: INGRESS_OTEL_SERVICE_NAME
+  value: "ingress"
+- name: INGRESS_OTEL_SAMPLING_RATE
+  value: "1.0"
+- name: INGRESS_OTEL_BSP_MAX_QUEUE_SIZE
+  value: "2048"
+- name: INGRESS_OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+  value: "512"
+- name: INGRESS_OTEL_BSP_SCHEDULE_DELAY
+  value: "5000"
+- name: INGRESS_OTEL_BSP_EXPORT_TIMEOUT
+  value: "30000"

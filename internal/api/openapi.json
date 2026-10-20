@@ -1,0 +1,309 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Ingress",
+        "description": "Payload Ingress Service",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "ingress",
+            "description": "ingress API endpoint"
+        }
+    ],
+    "servers": [
+        {
+            "url": "https://cloud.redhat.com/api/ingress/v1",
+            "description": "Production"
+        }
+    ],
+    "paths": {
+        "/upload": {
+            "post": {
+                "tags": [
+                    "ingress"
+                ],
+                "summary": "Accepts a payload",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "metadata": {
+                                        "$ref": "#/components/schemas/Metadata"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Advisor content type with no metadata accepted for processing",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadResponse"
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "Payload was accepted for processing.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication missing from request"
+                    },
+                    "413": {
+                        "description": "Payload too large"
+                    },
+                    "415": {
+                        "description": "Content type of payload is unsupported."
+                    }
+                }
+            }
+        },
+        "/version": {
+            "get": {
+                "tags": [
+                    "ingress"
+                ],
+                "summary": "Returns version information",
+                "responses": {
+                    "200": {
+                        "description": "Version information"
+                    },
+                    "401": {
+                        "description": "Authentication missing from request"
+                    }
+                }
+            }
+        },
+        "/track/{request_id}": {
+            "get": {
+                "tags": [
+                    "ingress"
+                ],
+                "summary": "Find status of a specific request",
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "verbosity",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0,
+                            "maximum": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payload responses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/TrackResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TrackResponseFull"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Request_id is not in an UUID format"
+                    },
+                    "403": {
+                        "description": "Authentication failure for specific request_id"
+                    },
+                    "404": {
+                        "description": "Request_id not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Metadata": {
+                "type": "object",
+                "properties": {
+                    "account": {
+                        "type": "string"
+                    },
+                    "org_id": {
+                        "type": "string"
+                    },
+                    "insights_id": {
+                        "type": "string"
+                    },
+                    "machine_id": {
+                        "type": "string"
+                    },
+                    "subscription_manager_id": {
+                        "type": "string"
+                    },
+                    "fqdn": {
+                        "type": "string"
+                    },
+                    "bios_uuid": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "ansible_host": {
+                        "type": "string"
+                    },
+                    "reporter": {
+                        "type": "string"
+                    },
+                    "queue_key": {
+                        "type": "string"
+                    },
+                    "ip_addresses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "mac_addresses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "stale_timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "custom_metadata": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "UploadResponse": {
+                "type": "object",
+                "properties": {
+                    "request_id": {
+                        "type": "string"
+                    },
+                    "upload": {
+                        "type": "object",
+                        "properties": {
+                            "account": {
+                                "type": "string"
+                            },
+                            "org_id": {
+                                "type": "string",
+                                "description": "Tennant customer identifier used by front office systems (SSO, RHSM, Customer Portal)"
+                            }
+                        }
+                    }
+                }
+            },
+            "TrackResponse": {
+                "type": "object",
+                "properties": {
+                    "status_msg": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "inventory_id": {
+                        "type": "string"
+                    },
+                    "service": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "TrackResponseFull": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "service": {
+                                    "type": "string"
+                                },
+                                "source": {
+                                    "type": "string"
+                                },
+                                "account": {
+                                    "type": "string"
+                                },
+                                "org_id": {
+                                    "type": "string"
+                                },
+                                "request_id": {
+                                    "type": "string"
+                                },
+                                "inventory_id": {
+                                    "type": "string"
+                                },
+                                "system_id": {
+                                    "type": "string"
+                                },
+                                "created_at": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "status_msg": {
+                                    "type": "string"
+                                },
+                                "date": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "duration": {
+                        "type": "object"
+                    }
+                }
+            }
+        }
+    }
+}

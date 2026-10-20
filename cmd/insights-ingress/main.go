@@ -1,0 +1,266 @@
+package main
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
+	"github.com/sirupsen/logrus"
+
+	"github.com/redhatinsights/insights-ingress-go/internal/announcers"
+	"github.com/redhatinsights/insights-ingress-go/internal/api"
+	"github.com/redhatinsights/insights-ingress-go/internal/config"
+	"github.com/redhatinsights/insights-ingress-go/internal/download"
+	"github.com/redhatinsights/insights-ingress-go/internal/health"
+	l "github.com/redhatinsights/insights-ingress-go/internal/logger"
+	"github.com/redhatinsights/insights-ingress-go/internal/queue"
+	"github.com/redhatinsights/insights-ingress-go/internal/securitylog"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage/filebased"
+	"github.com/redhatinsights/insights-ingress-go/internal/stage/s3compat"
+	"github.com/redhatinsights/insights-ingress-go/internal/telemetry"
+	"github.com/redhatinsights/insights-ingress-go/internal/track"
+	"github.com/redhatinsights/insights-ingress-go/internal/upload"
+	"github.com/redhatinsights/insights-ingress-go/internal/validators/kafka"
+	"github.com/redhatinsights/insights-ingress-go/internal/version"
+)
+
+func lubDub(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("lubdub"))
+}
+
+func apiSpec(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(api.ApiSpec)
+}
+
+func getStager(cfg config.IngressConfig) (stage.Stager, error) {
+	if cfg.StagerImplementation == "s3" {
+		return s3compat.GetClient(&cfg, &s3compat.S3Stager{
+			Bucket: cfg.StorageConfig.StageBucket,
+		}), nil
+	}
+
+	if cfg.StagerImplementation == "filebased" {
+		if cfg.StorageConfig.StorageFileSystemPath == "" {
+			return nil, fmt.Errorf("Invalid StorageFileSystemPath setting")
+		}
+
+		err := os.MkdirAll(cfg.StorageConfig.StorageFileSystemPath, os.ModePerm)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to create StorageFileSystemPath (%s) - %w", cfg.StorageConfig.StorageFileSystemPath, err)
+		}
+
+		return &filebased.FileBasedStager{
+			StagePath: cfg.StorageConfig.StorageFileSystemPath,
+			BaseURL:   cfg.ServiceBaseURL,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("Unknown value for StagerImplementation (%s)", cfg.StagerImplementation)
+}
+
+func main() {
+	cfg := config.Get()
+	l.InitLogger(cfg)
+
+	shutdown, otelMiddlewares, err := telemetry.InitTracer(cfg.OtelConfig, l.Log)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Failed to initialize OpenTelemetry")
+	}
+
+	r := chi.NewRouter()
+	mr := chi.NewRouter()
+	r.Use(request_id.ConfiguredRequestID("x-rh-insights-request-id"))
+	for _, mw := range otelMiddlewares {
+		r.Use(mw)
+	}
+	r.Use(
+		middleware.RealIP,
+		middleware.Recoverer,
+	)
+
+	stager, err := getStager(*cfg)
+	if err != nil {
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Unable to create Stager implementation")
+	}
+
+	kafkaCfg := kafka.Config{
+		Brokers:               cfg.KafkaConfig.KafkaBrokers,
+		GroupID:               cfg.KafkaConfig.KafkaGroupID,
+		KafkaSecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
+	}
+
+	producerCfg := queue.ProducerConfig{
+		Brokers:               cfg.KafkaConfig.KafkaBrokers,
+		Topic:                 cfg.KafkaConfig.KafkaTrackerTopic,
+		Async:                 true,
+		KafkaDeliveryReports:  cfg.KafkaConfig.KafkaDeliveryReports,
+		KafkaSecurityProtocol: cfg.KafkaConfig.KafkaSecurityProtocol,
+		Debug:                 cfg.Debug,
+	}
+
+	// Kafka SSL Config
+	if cfg.KafkaConfig.KafkaSSLConfig != (config.KafkaSSLCfg{}) {
+		kafkaCfg.CA = cfg.KafkaConfig.KafkaSSLConfig.KafkaCA
+		kafkaCfg.Username = cfg.KafkaConfig.KafkaSSLConfig.KafkaUsername
+		kafkaCfg.Password = cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword
+		kafkaCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
+		producerCfg.CA = cfg.KafkaConfig.KafkaSSLConfig.KafkaCA
+		producerCfg.Username = cfg.KafkaConfig.KafkaSSLConfig.KafkaUsername
+		producerCfg.Password = cfg.KafkaConfig.KafkaSSLConfig.KafkaPassword
+		producerCfg.SASLMechanism = cfg.KafkaConfig.KafkaSSLConfig.SASLMechanism
+	}
+
+	validator := kafka.New(&kafkaCfg, cfg.KafkaConfig.ValidUploadTypes...)
+	kafkaHealth := queue.NewKafkaHealthChecker(producerCfg, 2*time.Second)
+	storageHealth, ok := stager.(health.Checker)
+	if !ok {
+		storageHealth = health.CheckFunc(func(context.Context) error {
+			return fmt.Errorf("storage health check is not configured")
+		})
+	}
+	readiness := health.Handler([]health.Dependency{
+		{Name: "kafka", Checker: kafkaHealth},
+		{Name: "storage", Backend: cfg.StagerImplementation, Checker: storageHealth},
+	}, 5*time.Second)
+
+	tracker := announcers.NewStatusAnnouncer(&producerCfg)
+
+	handler := upload.NewHandler(
+		stager, validator, tracker, *cfg,
+	)
+
+	httpClient := &http.Client{
+		Timeout: time.Second * time.Duration(cfg.HTTPClientTimeout),
+	}
+
+	trackEndpoint := track.NewHandler(
+		*cfg,
+		httpClient,
+	)
+
+	downloadEndpoint := download.NewHandler(
+		*cfg,
+	)
+
+	identityErrorLogFunc := func(ctx context.Context, rawId, msg string) {
+		// Never log the raw x-rh-identity header: even a header that fails to
+		// decode can carry PII (username, email, name, account number). Log a
+		// SHA-256 digest instead so identical bad headers stay correlatable
+		// without disclosing their contents to log readers (CWE-532).
+		digest := sha256.Sum256([]byte(rawId))
+		l.Log.WithFields(logrus.Fields{"error": msg, "rawIdSha256": hex.EncodeToString(digest[:])}).Error("Failed to decode Identity header")
+		reqID := request_id.GetReqID(ctx)
+		securitylog.LogAuthFailure(l.Log, msg, reqID)
+	}
+	r.Get("/healthz", lubDub)
+	r.Get("/status", readiness)
+	r.Get("/status/", readiness)
+
+	var sub chi.Router = chi.NewRouter()
+	if cfg.Auth {
+		sub.With(identity.EnforceIdentityWithLogger(identityErrorLogFunc)).Get("/", lubDub)
+		sub.With(upload.ResponseMetricsMiddleware, identity.EnforceIdentityWithLogger(identityErrorLogFunc), middleware.Logger).Post("/upload", handler)
+		sub.With(identity.EnforceIdentityWithLogger(identityErrorLogFunc)).Get("/track/{requestID}", trackEndpoint)
+	} else {
+		sub.Get("/", lubDub)
+		sub.With(upload.ResponseMetricsMiddleware, middleware.Logger).Post("/upload", handler)
+	}
+	sub.With(middleware.Logger).Get("/version", version.GetVersion)
+	sub.With(middleware.Logger).Get("/openapi.json", apiSpec)
+
+	r.Mount("/api/ingress/v1", sub)
+	r.Mount("/r/insights/platform/ingress/v1", sub)
+	r.Get("/", lubDub)
+	if cfg.StagerImplementation == "filebased" {
+		var fbSub chi.Router = chi.NewRouter()
+		fbSub.Get("/{requestID}", downloadEndpoint)
+		r.Mount("/download", fbSub)
+	}
+	mr.Get("/", lubDub)
+	mr.Handle("/metrics", promhttp.Handler())
+
+	if cfg.Profile {
+		r.Mount("/debug", middleware.Profiler())
+	}
+
+	l.Log.WithFields(logrus.Fields{"Web Port": cfg.WebPort}).Info("Starting Service with mode " + cfg.StagerImplementation)
+	securitylog.LogStartup(l.Log)
+
+	srv := http.Server{
+		Addr:              fmt.Sprintf(":%d", cfg.WebPort),
+		Handler:           r,
+		ReadTimeout:       time.Second * cfg.HTTPReadTimeout,
+		ReadHeaderTimeout: time.Second * cfg.HTTPReadHeaderTimeout,
+	}
+
+	l.Log.WithFields(logrus.Fields{"Metrics Port": cfg.MetricsPort}).Info("Starting Service")
+
+	msrv := http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.MetricsPort),
+		Handler: mr,
+	}
+
+	idleConnsClosed := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
+		<-sigint
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout*time.Second)
+		defer cancel()
+		// Log shutdown errors (including a context deadline during an in-progress
+		// shutdown) and fall through to the remaining cleanup rather than calling
+		// Fatal: exiting here would skip kafka/telemetry cleanup and exit non-zero,
+		// which marks the unit failed - the symptom this shutdown handling fixes.
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("HTTP Server Shutdown failed")
+		}
+		if err := msrv.Shutdown(shutdownCtx); err != nil {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("Metrics Server Shutdown failed")
+		}
+		kafkaHealth.Close()
+		telemetryCtx, telemetryCancel := context.WithTimeout(context.Background(), cfg.OtelConfig.ShutdownTimeout*time.Second)
+		defer telemetryCancel()
+		if err := shutdown(telemetryCtx); err != nil {
+			l.Log.WithFields(logrus.Fields{"error": err}).Error("OTel shutdown failed")
+		}
+		securitylog.LogShutdown(l.Log, "success", "")
+		close(idleConnsClosed)
+	}()
+
+	// create and expose the version information as a prometheus metric
+	version.ExposeVersion()
+
+	go func() {
+
+		if err := msrv.ListenAndServe(); err != http.ErrServerClosed {
+			securitylog.LogShutdown(l.Log, "failure", err.Error())
+			l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Metrics Service Stopped")
+		}
+	}()
+
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		securitylog.LogShutdown(l.Log, "failure", err.Error())
+		l.Log.WithFields(logrus.Fields{"error": err}).Fatal("Service Stopped")
+	}
+
+	<-idleConnsClosed
+	l.Log.Info("Everything has shut down, goodbye")
+}
