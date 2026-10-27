@@ -34,7 +34,7 @@
       "matchBaseBranches": ["master"],
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["patch", "minor"],
-      "matchDepNames": ["actions/checkout", "actions/setup-go", "actions/setup-python"],
+      "matchDepNames": ["actions/checkout", "actions/setup-go", "actions/setup-python", "fullsend-ai/fullsend"],
       "automerge": true,
       "groupName": "GitHub Actions"
     },
