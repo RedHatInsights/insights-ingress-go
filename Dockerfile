@@ -25,7 +25,7 @@ RUN if [ -f /cachi2/cachi2.env ]; then . /cachi2/cachi2.env; fi && \
 ############################
 # STEP 2 build a small image
 ############################
-FROM registry.access.redhat.com/hi/go:latest-fips@sha256:46e15fdbacae74a2f44e251fadf404ff8dd8ff93aed1911634fb9444d91b27e2
+FROM registry.access.redhat.com/hi/go:latest-fips@sha256:193259e98aef6bfebf5528261f035eb8b7c95a6ec4a5b339320161b3cf7c1c00
 
 WORKDIR /
 
