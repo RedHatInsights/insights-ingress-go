@@ -142,6 +142,61 @@ var _ = Describe("Track", func() {
 			})
 		})
 
+		Context("when forwarding the caller identity to payload-tracker", func() {
+			It("should send the caller's x-rh-identity header", func() {
+				var forwarded string
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/3e3f56e642a248008811cce123b2c0f2",
+					func(ptReq *http.Request) (*http.Response, error) {
+						forwarded = ptReq.Header.Get("x-rh-identity")
+						return httpmock.NewStringResponse(200, goodJsonBody), nil
+					})
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "12345", "customer")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(forwarded).ToNot(BeEmpty())
+				decoded, err := identity.DecodeIdentity(forwarded)
+				Expect(err).To(BeNil())
+				Expect(decoded.Identity.OrgID).To(Equal("12345"))
+			})
+
+			It("should prefer the raw identity header stored by the identity middleware", func() {
+				var forwarded string
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/3e3f56e642a248008811cce123b2c0f2",
+					func(ptReq *http.Request) (*http.Response, error) {
+						forwarded = ptReq.Header.Get("x-rh-identity")
+						return httpmock.NewStringResponse(200, goodJsonBody), nil
+					})
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "12345", "customer")
+				Expect(err).To(BeNil())
+				req = req.WithContext(identity.WithRawIdentity(req.Context(), "raw-identity-from-middleware"))
+				handler.ServeHTTP(rr, req)
+				Expect(forwarded).To(Equal("raw-identity-from-middleware"))
+			})
+		})
+
+		Context("when payload-tracker rejects the forwarded identity", func() {
+			It("should return HTTP 500 instead of masking it as not found", func() {
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/3e3f56e642a248008811cce123b2c0f2",
+					httpmock.NewStringResponder(401, `{"title":"Unauthorized","message":"Missing Identity Header","status":401}`))
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "12345", "customer")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(500))
+			})
+		})
+
+		Context("when payload-tracker does not know the request-id", func() {
+			It("should return HTTP 404", func() {
+				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/3e3f56e642a248008811cce123b2c0f2",
+					httpmock.NewStringResponder(404, `{"title":"Not Found","message":"payload with id: 3e3f56e642a248008811cce123b2c0f2 not found","status":404}`))
+				req, err := makeTestRequest("/api/ingress/v1/track/3e3f56e642a248008811cce123b2c0f2", "3e3f56e642a248008811cce123b2c0f2", "6089719", "12345", "customer")
+				Expect(err).To(BeNil())
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(404))
+			})
+		})
+
 		Context("with an invalid request-id", func() {
 			It("should return HTTP 404", func() {
 				httpmock.RegisterResponder("GET", "http://payload-tracker/v1/payloads/3e3f56e642a248008811cce123b2c0f2", httpmock.NewStringResponder(200, badJsonID))
