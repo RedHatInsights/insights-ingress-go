@@ -1,5 +1,5 @@
 # This podman compose file stands up local dependencies for 
-# Kafka, Zookeeper, and Minio and optionally insights-ingress-go itself.
+# Kafka, Zookeeper, and an S3 server (moto) and optionally insights-ingress-go itself.
 # Please consult README.md for bucket creation steps
 version: "3"
 services:
@@ -32,31 +32,25 @@ services:
       - KAFKA_NUM_PARTITIONS=3
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
-  minio:
-    image: minio/minio
-    command: server --address 0.0.0.0:9000 --console-address 0.0.0.0:9990 /data
-    volumes:
-      - './minio-conf:/mnt/config:z'
-      - './minio-data/.minio:/mnt/data:z'
+  s3:
+    # MinIO no longer publishes images on Docker Hub, so this runs the moto S3 server.
+    # moto keeps data in memory, so buckets and objects reset when the container restarts.
+    image: motoserver/moto:latest
     ports:
-      - 9000:9000
-      - 9990:9990
-    environment:
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
-      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
-  minio-createbucket:
-    image: minio/mc
+      - 9000:5000
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:5000/moto-api/"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  s3-createbucket:
+    image: motoserver/moto:latest
     depends_on:
-      - minio
+      s3:
+        condition: service_healthy
     restart: on-failure
-    entrypoint: >
-      /bin/sh -c "
-      export MC_HOST_myminio=http://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio:9000;
-      /usr/bin/mc mb --ignore-existing myminio/insights-upload-perma;
-      /usr/bin/mc anonymous set public myminio/insights-upload-perma;
-      "
+    # moto accepts unsigned requests, so a plain PUT creates the bucket and fails loudly if it can't.
+    entrypoint: ["curl", "-fsS", "-X", "PUT", "http://s3:5000/insights-upload-perma"]
   ingress:
     #image: quay.io/cloudservices/insights-ingress:latest
     #image: localhost/ingress:latest  # Use this in the case of local changes of ingress (podman build . -t ingress:latest)
@@ -74,7 +68,9 @@ services:
       - INGRESS_MINIODEV=true
       - INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY
       - INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY
-      - INGRESS_MINIOENDPOINT=minio:9000
+      - INGRESS_MINIOENDPOINT=s3:5000
     depends_on:
-      - kafka
-      - minio
+      kafka:
+        condition: service_started
+      s3-createbucket:
+        condition: service_completed_successfully

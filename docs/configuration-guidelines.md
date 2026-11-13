@@ -65,7 +65,7 @@
 ## Local Development Configuration
 
 - Use `development/.env` to set local env vars (sourced by the Makefile).
-- `make run-api` for S3/MinIO-backed local development.
+- `make run-api` for S3-backed local development (moto S3 server).
 - `make run-filebased-api` for filesystem-backed local development.
 
 ## Verification

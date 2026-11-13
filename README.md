@@ -213,9 +213,9 @@ You can also build ingress using Docker/Podman with the provided Dockerfile.
 
 ### Local Development
 
-To run the full stack locally with dependencies (Kafka, MinIO/filesystem), see [development/README.md](./development/README.md).
+To run the full stack locally with dependencies (Kafka, an S3 server/filesystem), see [development/README.md](./development/README.md).
 
-**Quick start with S3/MinIO backend:**
+**Quick start with S3 backend (moto S3 server):**
 
     $> make start-api-dependencies
     $> make run-api
