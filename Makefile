@@ -29,7 +29,7 @@ run-api: $(BINARY)
 	INGRESS_MINIODEV=true \
 	INGRESS_MINIOACCESSKEY=$(MINIO_ACCESS_KEY) \
 	INGRESS_MINIOSECRETKEY=$(MINIO_SECRET_KEY) \
-	INGRESS_KAFKA_BROKERS=localhost:29092 \
+	INGRESS_KAFKABROKERS=localhost:29092 \
 	INGRESS_MINIOENDPOINT=localhost:9000 \
 	./$(BINARY)
 
@@ -38,7 +38,7 @@ run-filebased-api: $(BINARY) setup-filebased
 	INGRESS_STORAGEFILESYSTEMPATH=$(DATA_DIR) \
 	INGRESS_VALID_UPLOAD_TYPES=advisor,qpc \
 	OPENSHIFT_BUILD_COMMIT=somestring \
-	INGRESS_KAFKA_BROKERS=localhost:29092 \
+	INGRESS_KAFKABROKERS=localhost:29092 \
 	./$(BINARY)
 
 run-upload-test:
@@ -48,7 +48,7 @@ run-upload-test:
 	http://localhost:3000/api/ingress/v1/upload
 
 start-api-dependencies:
-	cd development/ && sh .env && podman-compose -f $(PWD)/development/local-dev-start.yml up zookeeper kafka minio minio-createbucket
+	cd development/ && sh .env && podman-compose -f $(PWD)/development/local-dev-start.yml up zookeeper kafka s3 s3-createbucket
 
 stop-api-dependencies:
 	podman-compose -f $(PWD)/development/local-dev-start.yml down

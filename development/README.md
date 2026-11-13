@@ -1,6 +1,6 @@
 # Local Development
 
-The podman compose file found in this directory will standup kafka and minio for local use.
+The podman compose file found in this directory will standup kafka and an S3 server ([moto](https://github.com/getmoto/moto)) for local use.
 
 ## Requirements
 * podman
@@ -15,11 +15,13 @@ In order to run the local development stack, execute the following command. Subs
 
     $> podman-compose -f local-dev-start.yml up
 
-This should build the ingress image, start the dependencies (kafka, minio, etc) and start the ingress
+This should build the ingress image, start the dependencies (kafka, s3, etc) and start the ingress
 service within podman.
 
-Once the local environment is running, you can load `http://localhost:9990/` to access the minio console.
-The required buckets should be created automatically by podman.
+Once the local environment is running, the S3 API is available at `http://localhost:9000` and the moto dashboard at `http://localhost:9000/moto-api/`.
+The required buckets are created automatically by podman.
+moto keeps data in memory, so buckets and objects are reset whenever the `s3` container restarts.
+(MinIO was used here before, but MinIO no longer publishes its images on Docker Hub.)
 
 ## Building and Running Ingress from Source
 
