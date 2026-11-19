@@ -45,7 +45,7 @@
 
 ## Local Development
 
-- `development/local-dev-start.yml` runs Kafka (KRaft mode), Zookeeper, and MinIO via podman-compose.
+- `development/local-dev-start.yml` runs Kafka (KRaft mode), Zookeeper, and the moto S3 server via podman-compose.
 - Use `make start-api-dependencies` then `make run-api` for S3-backed local dev.
 - Use `make start-filebased-api-dependencies` then `make run-filebased-api` for file-based storage.
 

@@ -44,7 +44,7 @@
 
 ## Local Development
 
-- S3 mode: `make run-api` with MinIO via `make start-api-dependencies`. Compose file creates `insights-upload-perma` bucket.
+- S3 mode: `make run-api` with the moto S3 server via `make start-api-dependencies`. Compose file creates `insights-upload-perma` bucket.
 - File-based mode: `make run-filebased-api` sets `INGRESS_STAGERIMPLEMENTATION=filebased`.
 
 ## Verification
