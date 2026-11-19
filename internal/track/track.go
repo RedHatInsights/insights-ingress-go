@@ -1,6 +1,7 @@
 package track
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -71,12 +72,35 @@ func NewHandler(
 
 		verbosity, _ := strconv.Atoi(r.URL.Query().Get("verbosity"))
 
-		response, err := client.Get(cfg.PayloadTrackerURL + reqID)
+		ptRequest, err := http.NewRequestWithContext(r.Context(), http.MethodGet, cfg.PayloadTrackerURL+reqID, nil)
+		if err != nil {
+			logerr("Failed to build payload-tracker request", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		// Forward the caller's identity so payload-tracker can authenticate
+		// the request. Org-level authorization still happens below.
+		if rawIdentity := forwardedIdentity(r.Context()); rawIdentity != "" {
+			ptRequest.Header.Set("x-rh-identity", rawIdentity)
+		}
+
+		response, err := client.Do(ptRequest)
 		if err != nil {
 			logerr("Failed to get payload status", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		defer response.Body.Close()
+
+		// Payload-tracker answers 404 for unknown request IDs; anything else
+		// that is not a 200 (e.g. 401/403 from its identity check) is an
+		// upstream failure, not a missing payload.
+		if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNotFound {
+			requestLogger.WithFields(logrus.Fields{"status": response.StatusCode}).Error("Unexpected status from payload-tracker")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			logerr("Unable to read response body", err)
@@ -138,6 +162,16 @@ func NewHandler(
 			w.Write(responseBody)
 		}
 	}
+}
+
+// forwardedIdentity returns the caller's raw x-rh-identity header as stored in
+// the request context by the identity middleware, re-encoding the parsed
+// identity if the raw value is not available.
+func forwardedIdentity(ctx context.Context) string {
+	if raw := identity.GetRawIdentity(ctx); raw != "" {
+		return raw
+	}
+	return identity.EncodeIdentity(ctx)
 }
 
 func isTrustedIntegrationTestCert(id identity.XRHID) bool {
