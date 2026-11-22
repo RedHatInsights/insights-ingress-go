@@ -1,7 +1,7 @@
 ################################
 # STEP 1 build executable binary
 ################################
-FROM registry.access.redhat.com/hi/go:latest-fips-builder@sha256:c52ae1e6fe4d3a0bbe3b4457eca4691f762c7f71605423a4069b1c3dbd7daccc AS builder
+FROM registry.access.redhat.com/hi/go:latest-fips-builder@sha256:56051f722eacb34ce7e9c8cec4f5ff2eef10e5f0424a464468b0b35ee76c3c60 AS builder
 
 USER 0
 
@@ -25,7 +25,7 @@ RUN if [ -f /cachi2/cachi2.env ]; then . /cachi2/cachi2.env; fi && \
 ############################
 # STEP 2 build a small image
 ############################
-FROM registry.access.redhat.com/hi/go:latest-fips@sha256:ee1ec2fd8d76564b1d45ba348508db163b2d9d3bb9a9cec166b112ab87c2bbd8
+FROM registry.access.redhat.com/hi/go:latest-fips@sha256:6529d1b9f359d6804d9b069518529a48848d458291ab68da0ea75fa73cce0eb3
 
 WORKDIR /
 
