@@ -1,0 +1,23 @@
+# Overrides the trigger upstream now ships by default (as of the v0.57.1 pin) to
+# add repo-label scoping: upstream's own trigger already matches Jira
+# ready-to-code/`/fs-code` events, but with no `repo:` label check, so
+# without this override every repo polling the same Jira project would
+# dispatch on the same issue. Signed commits are enabled via the harness:
+# block of the code entry in repos.yaml.
+base: https://raw.githubusercontent.com/fullsend-ai/agents/ea29de9bb8b1729b04c0597b48a5c7aae62deb71/harness/code.yaml#sha256=cfa49d4677cc4d6544fcf878e05b0f95620bbb62907289dbc5a22681a7679976
+trigger: >
+    has(event.source) && event.source.system == "jira"
+    && event.entity.kind == "work_item"
+    && !has(event.entity.linked_change_proposal)
+    && "repo:RedHatInsights/insights-ingress-go" in event.state.labels
+    && event.state.labels.filter(label, label.startsWith("repo:")).size() == 1
+    && (
+         (event.transition.kind == "label_changed"
+           && event.transition.label.action == "added"
+           && event.transition.label.name == "ready-to-code")
+         ||
+         (event.transition.kind == "comment_added"
+           && has(event.transition.comment.command)
+           && event.transition.comment.command == "/fs-code"
+           && event.actor.kind == "human")
+       )

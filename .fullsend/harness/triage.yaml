@@ -1,0 +1,24 @@
+# Narrows the (already forge-neutral) upstream trigger to Jira issues
+# carrying exactly this repo's `repo:` label, so a mislabeled issue can't
+# get dispatched by more than one repo's poller. The Jira poller reads only
+# the harness `trigger:`, so this can't live on the agents entry in
+# repos.yaml (that field only affects GitHub routing, where this Jira-only
+# expression would suppress triage altogether).
+#
+# Everything else for triage lives in the agents entry in repos.yaml.
+base: https://raw.githubusercontent.com/fullsend-ai/agents/ea29de9bb8b1729b04c0597b48a5c7aae62deb71/harness/triage.yaml#sha256=ce30d5eea5c13c7cf33a7feffa9342d33cb918d485d0587c1030e04766884a0d
+trigger: >
+    has(event.source) && event.source.system == "jira"
+    && event.entity.kind == "work_item"
+    && "repo:RedHatInsights/insights-ingress-go" in event.state.labels
+    && event.state.labels.filter(label, label.startsWith("repo:")).size() == 1
+    && (
+         (event.transition.kind == "label_changed"
+           && event.transition.label.action == "added"
+           && event.transition.label.name == "ready-for-triage")
+         ||
+         (event.transition.kind == "comment_added"
+           && has(event.transition.comment.command)
+           && event.transition.comment.command == "/fs-triage"
+           && event.actor.kind == "human")
+       )
