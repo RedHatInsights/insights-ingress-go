@@ -36,7 +36,7 @@ concurrency:
 
 jobs:
   prioritize:
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-prioritize.yml@90b7310ff8751a3c70e5d68214770dc168a1cbe7  # v0.54.0
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-prioritize.yml@d11de3ea0dde5aa652110b6716c19e000c426df7  # v0.57.1
     with:
       event_type: ${{ inputs.event_type }}
       source_repo: ${{ inputs.source_repo }}
@@ -52,4 +52,8 @@ jobs:
       FULLSEND_INFERENCE_GATEWAY_API_KEY: ${{ secrets.FULLSEND_INFERENCE_GATEWAY_API_KEY }}
       OTEL_EXPORTER_OTLP_TRACES_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS }}
       OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+      FULLSEND_JIRA_TOKEN: ${{ secrets.FULLSEND_JIRA_TOKEN }}
+      FULLSEND_JIRA_EMAIL: ${{ secrets.FULLSEND_JIRA_EMAIL }}
+      FULLSEND_JIRA_CLIENT_ID: ${{ secrets.FULLSEND_JIRA_CLIENT_ID }}
+      FULLSEND_JIRA_CLIENT_SECRET: ${{ secrets.FULLSEND_JIRA_CLIENT_SECRET }}
       FULLSEND_GITHUB_RUNNER_SECRETS: ${{ secrets.FULLSEND_GITHUB_RUNNER_SECRETS }}

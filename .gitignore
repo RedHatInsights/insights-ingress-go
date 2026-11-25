@@ -7,3 +7,6 @@ coverage.txt
 .sonar/sonar-scanner.properties
 gopath
 development/filebased/
+
+# fullsend lint/run cache
+/.fullsend/.fullsend-cache/
